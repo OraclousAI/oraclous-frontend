@@ -8,22 +8,26 @@ This repo is **`OraclousAI/oraclous-frontend`** — the TypeScript/React codebas
 
 ## 1. Identity and scope
 
-This repo is owned by `frontend-implementer` and reviewed by several others:
+This is the **frontend execution** repository. Currently exactly one persona lives and acts in this repo session:
 
 | Agent | Activity here |
 | --- | --- |
-| `frontend-implementer` | Authors all production TypeScript/React code |
-| `test-author` | Authors tests *before* implementation in a separate PR (Vitest unit/integration; Playwright E2E) |
-| `devops-implementer` | Owns frontend build pipeline, container images, deployment config that lives in this repo |
-| `qa-engineer` | Verifies test suite, coverage, accessibility checks, no flaky tests; authors regression tests |
-| `code-reviewer` | Always on every PR for craft review |
-| `security-architect` | On every security-marked PR (auth flows, CSP, CORS, XSS surfaces, integration-key handling) |
-| `solution-architect` | On any PR that affects the API contract, the embed boundary, or design-system structure |
-| `docs-writer` | Reads merged PRs; updates Confluence; drafts release notes |
+| `frontend-implementer` | Authors all production TypeScript/React code (`[impl]` PRs) |
 
-`tech-lead` (the human, Reza Jahankohan) is the final sign-off on every gate that requires human approval. See **§8 Gates** below.
+`tech-lead` (the human, Reza Jahankohan) reviews frontend code **manually** and is the final sign-off.
 
-The full agent skill definitions live in Confluence under [Agent Skills Catalogue](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753852). Read your own skill page on session start.
+### The deliberate frontend asymmetry
+
+Frontend currently has **no test-author, no test-review, and no code-review agent**. FE tests are deferred and FE craft review is done manually by the human. This is a deliberate, temporary state, to be re-evaluated at the R-Frontend Phase B milestone. Consequences:
+
+- FE tickets move READY → IMPLEMENTATION → CODE REVIEW (human) → DONE, skipping the two test columns.
+- The invariants that a review agent would otherwise catch — the gateway-only API rule (§3.1), the typed api-client rule (§3.2), no tokens in `localStorage` (§3.5), and WCAG AA (§3.3) — are enforced by **CI gates** in this repo, not by an agent. The asymmetry removes review *agents*, not *enforcement*. Do not weaken these CI gates.
+
+### Personas that do NOT live here
+
+Planning, architecture, cross-cutting agreement, infra, and documentation happen in the **coordinator** session at the workspace root. `product-planner`, `solution-architect`, `security-architect`, `devops-implementer`, and `docs-writer` all live there. You receive **ready, briefed stories** with lift-tags via the `Agent Owner` field; you do not plan or architect here. When this session needs an architecture decision, a Contract, a brief fix, or a doc/infra change, it **escalates to the coordinator** by setting `Agent Owner` to the relevant coordinator persona — it does not load that persona here.
+
+Canonical residency map: [Session topology and persona residency](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1736705). Full skill definitions: [Agent Skills Catalogue](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753852). Read your own skill page on session start.
 
 ---
 
@@ -304,16 +308,20 @@ Note from the legacy reference: the old frontend is **Bun + React 18 + Vite**. T
 
 ## 8. Gates
 
+Frontend currently runs an **abbreviated gate sequence** because test and review agents are deferred (see §1). FE stories skip the two test columns:
+
 | From | To | Owner | What's verified |
 | --- | --- | --- | --- |
-| Backlog | Ready | `product-planner` + `solution-architect` + `security-architect` | Brief testable; architecture refs present; threat tags set |
-| Ready | Tests Authoring | `test-author` | Pickup |
-| Tests Authoring | Tests Review | `test-author` | `[tests]` PR with failing tests |
-| Tests Review | Implementation | `solution-architect` + `security-architect` (if security-marked) | Tests assert the right boundary; security tests genuinely exercise threats; merge `[tests]` PR |
-| Implementation | Code Review | implementer | `[impl]` PR with green tests + clean a11y |
-| Code Review | Done | `code-reviewer` + `qa-engineer` + any required architect + `tech-lead` | Craft, coverage, security, accessibility, architecture all signed off |
+| Backlog | Ready | `product-planner` + `solution-architect` + `security-architect` — **all in the coordinator session** | Brief testable; architecture refs present; threat tags set; lift-tag assigned |
+| Ready | Implementation | `frontend-implementer` (this session) | Pickup |
+| Implementation | Code Review | `frontend-implementer` (this session) | `[impl]` PR with green CI: lint, type-check, api-client boundary rule, axe-core AA |
+| Code Review | Done | **human `tech-lead`** (manual review) | Craft, accessibility, gateway-only boundary, no-token-in-storage — all confirmed; merge `[impl]` PR |
 
-Reference: [Definition of Done](https://oraclous.atlassian.net/wiki/spaces/OP/pages/66010).
+The CI gate at Implementation → Code Review is the machine floor that replaces the absent review agents. A PR cannot reach human review with failing lint, type errors, an api-client boundary violation, or axe-core AA violations.
+
+Reference: [Definition of Done](https://oraclous.atlassian.net/wiki/spaces/OP/pages/66010) and [Jira board and workflow mapping](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1671170) Section 4. The Backlog → Ready gate happens entirely in the coordinator session. Infra (`[impl-infra]`) and docs (`[docs]`) PRs against this repo are opened by `devops-implementer` and `docs-writer` **from the coordinator session**, not here.
+
+When FE testing is reintroduced at R-Frontend Phase B, this table returns to the full seven-state sequence.
 
 ---
 
@@ -346,10 +354,12 @@ Reference: [Definition of Done](https://oraclous.atlassian.net/wiki/spaces/OP/pa
 - Edit Confluence architecture pages directly — propose to `solution-architect`.
 - Treat a flaky test as "noise" — flakiness is a bug.
 - Read or write the `legacy-reference/` directory's git state — it is a read-only worktree.
+- Default to a greenfield rewrite when the story carries a `Lift`, `Reshape`, or `Extract` tag — honour the tag and start from the named legacy source (§11).
+- Define a gateway request/response shape locally — open a `Contract` issue and stop (§11.4).
 
 ---
 
-## 11. Legacy reference
+## 11. Legacy reference and the lift-vs-rewrite default
 
 The previous Oraclous frontend codebase is available **read-only** at:
 
@@ -359,14 +369,34 @@ The previous Oraclous frontend codebase is available **read-only** at:
 
 It is a **git worktree pinned to the `develop` branch** of the previous frontend repository. `develop` is the most current branch of that codebase.
 
-**Rules for the legacy reference:**
+### 11.1 This is a migration, not a rewrite
 
-- Reference material for **behaviour to preserve**, not patterns to reproduce.
-- Target: Confluence (Frontend Stack Reference, Design System, Component Conventions, State and Data Patterns). The legacy code is what we are migrating from.
-- When in doubt: Confluence wins, this `CLAUDE.md` wins, legacy is third-place.
-- Specifically watch out for: API call patterns (the legacy frontend likely talks to services other than the gateway), token storage (the legacy may persist tokens to `localStorage`), and ad-hoc styling (the new frontend uses the design system exclusively).
+The previous frontend is a working application (Bun + React 18 + Vite). The default for frontend work is **clone-and-refactor** — the new repo is seeded from the legacy frontend's contents and refactored in place to the target stack, design system, and gateway-only API rule. **Greenfield is the exception, not the default.**
+
+> The legacy codebase is always at minimum the **behavioural specification** — even when its code is not reusable. New code passes when it does what the legacy did, plus the architectural invariants. "Start from scratch" must be justified, not assumed.
+
+### 11.2 The lift-vs-rewrite rubric
+
+You do not decide lift-vs-rewrite yourself per file. The verdict is decided once per deliverable in the release page's **Migration source map** (see [09. Releases](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160) Section 7) and arrives in your story brief as a **lift-tag**: `Lift`, `Reshape`, `Extract`, or `Greenfield`, with the specific legacy source path named. Honour the tag:
+
+- **Lift** — start from the named legacy component/module, light refactor only.
+- **Reshape** — start from the named legacy logic, refit it to the target stack, design system, and gateway-only API rule, keep the behaviour.
+- **Extract** — lift a piece out of a larger legacy area into its target package/app.
+- **Greenfield** — no usable precursor; write fresh against the Frontend Stack Reference and Design System.
+
+If a story brief lacks a lift-tag for UI that you believe has a legacy precursor, that is a planning gap — flag it to `product-planner` (via the coordinator) rather than silently choosing greenfield.
+
+### 11.3 Rules for the legacy reference
+
+- Reference material for behaviour to preserve, read in light of the lift-tag.
+- When in doubt: Confluence wins, this `CLAUDE.md` wins, legacy is the behavioural reference.
+- Specifically watch out for, when reshaping legacy code: API call patterns (the legacy frontend likely talks to services other than the gateway — the new frontend only talks to `application-gateway-service`), token storage (the legacy may persist tokens to `localStorage` — the new frontend does not), and ad-hoc styling (the new frontend uses the design system exclusively). These are exactly the things a Reshape tag requires you to fix while keeping behaviour.
 - Never write to `legacy-reference/`. It is a read-only worktree by convention.
 - If the worktree is on a branch other than `develop`, surface to the human and stop — do not switch branches yourself.
+
+### 11.4 Cross-repo shapes are not yours to define
+
+If you need a data shape or API response that crosses the repo boundary (any shape the gateway returns or accepts), **you do not define it locally**. You open a `Contract` Jira issue with `Agent Owner = solution-architect` and stop, per the [Cross-cutting agreement protocol](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1245185). The shape is decided by `solution-architect`, recorded canonically (the [Interface Contracts](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1277953) page until R6, the gateway's OpenAPI spec after), and the `api-client` derives from it. Inventing a gateway response shape locally is a process violation of the same class as editing tests to make them pass.
 
 ---
 
