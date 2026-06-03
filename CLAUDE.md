@@ -8,16 +8,16 @@ This repo is **`OraclousAI/oraclous-frontend`** — the TypeScript/React codebas
 
 ## 0. Operating Contract (single authority)
 
-All agents operating in this session are governed by the **[ORAA-4 operating contract](/ORAA/issues/ORAA-4#document-operating-contract)** — the canonical source for gate→owner maps, run-completion rules, and engineering governance.
+All agents operating in this session are governed by the **ORAA-4 Operating Contract** — the canonical PaperClip document (`operating-contract`) for gate→owner maps, run-completion rules, and engineering governance.
 
-**When this file and the operating contract diverge, the operating contract wins.** Open a `docs-writer` ticket to reconcile this file.
+**When this file and ORAA-4 diverge, ORAA-4 wins.** File a `docs-writer` issue to reconcile this file.
 
 Key provisions every agent must observe:
 
-- **§7 Linkage invariant:** Every issue must have a `goalId` and a `projectId` set before work begins. Issues missing either field are returned to the backlog for enrichment.
-- **§4 Run-completion extensions:**
-  - A brief is not done until at least one child implementation issue exists.
-  - Human-approval issues remain `in_review` until the human explicitly approves; they do not advance to `done` automatically.
+- **§7 Linkage invariant:** Every issue must have its `goalId` (release) and `projectId` (epic) set before work begins. Issues missing either are returned to the backlog for enrichment.
+- **§4 Run-completion contract:** A run may only end by reassigning the issue to a named next owner, by creating an assigned child issue, or by escalating with a specific question. A run never ends "done, nothing assigned."
+- **§5 Mandatory local pre-push gate:** before any `git push`, run the cheap checks CI's `quality` job runs, locally, and push only if clean (see §5 below).
+- **§12 Workspace discipline:** per-run git worktrees are OFF; every agent writing this repo shares one checkout (see §5.5 below).
 
 ---
 
@@ -29,30 +29,30 @@ This is the **frontend execution** repository. Currently exactly one persona liv
 | --- | --- |
 | `frontend-implementer` | Authors all production TypeScript/React code (`[impl]` PRs) |
 
-`tech-lead` (the human, Reza Jahankohan) reviews frontend code **manually** and is the final sign-off.
+The **CTO agent** holds full technical authority over this repo: it reviews frontend craft, merges feature PRs after gates pass, and is the standing reviewer the absent FE review agents would otherwise be. The CTO escalates to the human (Reza Jahankohan) only when a decision is ambiguous, blocked, or out-of-policy; Reza is the final human sign-off at release level only.
 
 ### The deliberate frontend asymmetry
 
-Frontend currently has **no test-author, no test-review, and no code-review agent**. FE tests are deferred and FE craft review is done manually by the human. This is a deliberate, temporary state, to be re-evaluated at the R-Frontend Phase B milestone. Consequences:
+Frontend currently has **no test-author, no test-review, and no code-review agent**. FE tests are deferred and FE craft review is owned by the **CTO** (per ORAA-4 §2). This is a deliberate, temporary state, to be re-evaluated at the R-Frontend Phase B milestone. Consequences:
 
-- FE tickets move READY → IMPLEMENTATION → CODE REVIEW (human) → DONE, skipping the two test columns.
-- The invariants that a review agent would otherwise catch — the gateway-only API rule (§3.1), the typed api-client rule (§3.2), no tokens in `localStorage` (§3.5), and WCAG AA (§3.3) — are enforced by **CI gates** in this repo, not by an agent. The asymmetry removes review *agents*, not *enforcement*. Do not weaken these CI gates.
+- FE issues move READY → IMPLEMENTATION → CODE REVIEW → DONE, skipping the two test columns.
+- The invariants that a review agent would otherwise catch — the gateway-only API rule (§3.1), the typed api-client rule (§3.2), no tokens in `localStorage` (§3.5), and WCAG AA (§3.3) — are enforced by **FE-repo CI gates**, not by an agent. The asymmetry removes review *agents*, not *enforcement*. Do not weaken these CI gates.
 
 ### Personas that do NOT live here
 
-Planning, architecture, cross-cutting agreement, infra, and documentation happen in the **coordinator** session at the workspace root. `product-planner`, `solution-architect`, `security-architect`, `devops-implementer`, and `docs-writer` all live there. You receive **ready, briefed stories** with lift-tags via the `Agent Owner` field; you do not plan or architect here. When this session needs an architecture decision, a Contract, a brief fix, or a doc/infra change, it **escalates to the coordinator** by setting `Agent Owner` to the relevant coordinator persona — it does not load that persona here.
+Planning, architecture, cross-cutting agreement, infra, and documentation happen in the **coordinator** session at the workspace root. `product-planner`, `solution-architect`, `security-architect`, `devops-implementer`, and `docs-writer` all live there. You receive **ready, briefed issues** with lift-tags by being **assigned the issue on the PaperClip board**; you do not plan or architect here. When this session needs an architecture decision, a Contract, a brief fix, or a doc/infra change, it **escalates to the coordinator** by reassigning the issue (or filing a child issue) to the relevant coordinator persona — it does not load that persona here.
 
-Canonical residency map: [Session topology and persona residency](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1736705). Full skill definitions: [Agent Skills Catalogue](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753852). Read your own skill page on session start.
+Canonical residency map: [Session topology and persona residency](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1736705) (Confluence read-only mirror). Full skill definitions: [Agent Skills Catalogue](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753852) (mirror). Read your own skill page on session start.
 
 ---
 
 ## 2. Source of truth
 
-**Confluence is canonical.** This file summarises invariants and points at Confluence for everything that evolves. When this file disagrees with Confluence, Confluence wins; open a `docs-writer` ticket to reconcile this file.
+**`oraclous-knowledge` is the canonical knowledge base** — a git repository that holds the authoritative architecture, ADRs, contracts, and conventions. **Confluence is now a read-only mirror** of it; the Confluence URLs below are convenience links into that mirror, not the source. **PaperClip** is the master board for all work (Goals → Projects → Issues). This file summarises the invariants that matter most in this repo and points at the knowledge base for everything that evolves. When this file disagrees with the canonical knowledge base, the knowledge base wins; file a `docs-writer` issue to reconcile this file.
 
-The pages an agent in this repo consults most often:
+The pages an agent in this repo consults most often (Confluence read-only mirror; `oraclous-knowledge` is canonical):
 
-| Need | Page |
+| Need | Page (read-only mirror) |
 | --- | --- |
 | Architecture overview | [Platform Architecture v1.1](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753707) |
 | Layer model (where the frontend sits) | [Section 3 — Layered Architecture](https://oraclous.atlassian.net/wiki/spaces/OP/pages/65967) |
@@ -65,14 +65,12 @@ The pages an agent in this repo consults most often:
 | State and data | [State and Data Patterns](https://oraclous.atlassian.net/wiki/spaces/OP/pages/983081) |
 | Test approach | [Testing Approach (Frontend)](https://oraclous.atlassian.net/wiki/spaces/OP/pages/294936) |
 | Releases | [09. Releases](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160) |
-| **Agent Identity Convention (canonical)** | [09. Releases](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160) **Section 6** — authoritative for `Agent Owner` and `needs-human` field handling |
+| **Operating governance (canonical)** | **ORAA-4 Operating Contract** (PaperClip document `operating-contract`) — authoritative for run-completion, gates, identity, and workspace discipline |
 | ADRs | [02. ADRs](https://oraclous.atlassian.net/wiki/spaces/OP/pages/589826) |
 | Code style | [Code Style Guide](https://oraclous.atlassian.net/wiki/spaces/OP/pages/426037) (TypeScript section) |
 | Git workflow | [Git Workflow](https://oraclous.atlassian.net/wiki/spaces/OP/pages/131103) |
 | PR conventions | [PR Conventions](https://oraclous.atlassian.net/wiki/spaces/OP/pages/393465) |
 | Definition of Done | [Definition of Done](https://oraclous.atlassian.net/wiki/spaces/OP/pages/66010) |
-
-Atlassian cloudId: `1eb21297-5f52-49a0-a303-3436694b148c`. Space key: `OP`. Jira project: `ORA`.
 
 ---
 
@@ -124,28 +122,28 @@ Reference: [Section 7 — Portability Story](https://oraclous.atlassian.net/wiki
 
 ### 3.7 No `dangerouslySetInnerHTML` on user-supplied content
 
-If user content needs to render as rich content, it goes through a sanitiser with a strict allowlist. The default is to render as text. Exceptions are reviewed by `security-architect` on every PR that introduces one.
+If user content needs to render as rich content, it goes through a sanitiser with a strict allowlist. The default is to render as text. Exceptions are reviewed by `security-architect` (via the coordinator) on every PR that introduces one.
 
 ### 3.8 Bundle size is a budget, not a free resource
 
-Every dependency addition is justified in the PR description. PRs that grow the bundle by more than ~5% trigger explicit `code-reviewer` review for whether the addition is worth it.
+Every dependency addition is justified in the PR description. PRs that grow the bundle by more than ~5% trigger explicit CTO review for whether the addition is worth it.
 
 ---
 
 ## 4. Working agreement
 
-### 4.1 TDD is the contract
+### 4.1 TDD is the contract (when test agents are present)
 
-Every story that touches code follows the test-first flow:
+Frontend test agents are currently deferred (§1), so FE work runs the abbreviated flow in §8. The full test-first flow below applies when FE testing returns at R-Frontend Phase B:
 
 1. `test-author` opens a `[tests]` PR with failing Vitest and/or Playwright tests.
-2. The `[tests]` PR is reviewed by `solution-architect` (boundaries), `security-architect` (if security-marked), and `code-reviewer` (test code itself).
+2. The `[tests]` PR is reviewed by `solution-architect` (boundaries), `security-architect` (if security-marked), and the relevant reviewer for the test code itself.
 3. The `[tests]` PR merges.
 4. `frontend-implementer` opens an `[impl]` PR with the minimum code that turns the failing tests green and clears accessibility checks.
-5. The `[impl]` PR is reviewed by `code-reviewer`, `qa-engineer`, and any architects whose surfaces are touched.
-6. `tech-lead` final-approves and the `[impl]` PR merges.
+5. The `[impl]` PR is reviewed by a non-implementer and any architects whose surfaces are touched.
+6. The CTO final-approves and merges the `[impl]` PR.
 
-The implementer **never** modifies tests to make them pass. If a test is wrong, that is a discovery: flag it to `test-author` with the specific reason and propose a corrected test.
+The implementer **never** modifies tests to make them pass. If a test is wrong, that is a discovery: flag it to `test-author` (via the coordinator) with the specific reason and propose a corrected test.
 
 Reference: [ADR-010 — Test-Driven Development with Test-Author Agent](https://oraclous.atlassian.net/wiki/spaces/OP/pages/557078).
 
@@ -157,7 +155,7 @@ Reference: [ADR-010 — Test-Driven Development with Test-Author Agent](https://
 | `[impl]` | Implementation PR against merged tests | `frontend-implementer` |
 | `[impl-infra]` | Build pipeline, container images, deployment config | `devops-implementer` |
 | `[impl-design-system]` | Design-system extension (new token or component) | `frontend-implementer` |
-| `[regression]` | Regression test for a discovered bug | `qa-engineer` |
+| `[regression]` | Regression test/fix for a discovered bug in another issue | `qa-engineer` / implementer |
 | `[docs]` | Repo-level docs (this file, READMEs) | `docs-writer` |
 | `[chore]` | Dependency bumps, version pins, formatting | any implementer |
 
@@ -167,80 +165,68 @@ Target under 300 net lines of code per PR. UI work tends to be diff-heavy becaus
 
 ### 4.4 Branch model
 
-`main` is protected; no direct pushes. Branches: `<agent-name>/<story-key>-<slug>`, e.g. `frontend-implementer/ora-67-chat-message-list-virtualisation`.
+`main` is protected; no direct pushes. Branches: `<agent-name>/<issue-key>-<slug>`, where the issue-key is the PaperClip identifier (e.g. `frontend-implementer/ORAA-178-chat-message-list-virtualisation`).
 
 ### 4.5 Commits
 
 ```
-[ORA-67] [agent:frontend-implementer] Short imperative description
+[ORAA-67] [agent:frontend-implementer] Short imperative description
 
 Longer body if needed.
 ```
 
-The agent prefix is mandatory; see §5 below.
+**One commit per concern** — never bundle unrelated changes into a single commit. The agent prefix is mandatory; see §5 below. **Forbidden in every commit message:** `Co-Authored-By` (any variant), "Generated with"/"Generated by", `claude.ai`, `paperclip.ing`, any Anthropic attribution, and the robot emoji. These are enforced by `.githooks/commit-msg` wired in via `core.hooksPath`.
 
 ### 4.6 Spikes are explicit
 
-Prototype work that does not follow TDD is a **spike**, marked `[spike]` in the Jira ticket and PR. Spikes do not merge to `main`.
+Prototype work that does not follow TDD is a **spike**, marked `[spike]` on the PaperClip issue and the PR. Spikes do not merge to `main`.
 
 ---
 
-## 5. Agent identity convention (operational)
+## 5. Agent identity, assignment, and workspace discipline (operational)
 
-The canonical convention lives in [09. Releases Section 6](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160). The operational summary for this repo:
+The canonical convention lives in the **ORAA-4 Operating Contract**. The operational summary for this repo:
 
-### 5.1 The `Agent Owner` Jira custom field
+### 5.1 Identity is issue assignment
 
-- Field name: `Agent Owner`
-- Field ID: `customfield_10074`
-- Type: single-select
-- Values: the 11 agent persona names plus `human` (option ID `10031`)
-- Set this field to your persona's name while you are acting on a ticket. Update it when handing off.
+Your agent identity in any unit of work is the **assignee of the PaperClip issue** you are acting on — there is no Jira custom field. You act as the persona to whom the issue is assigned. When you hand work off, you reassign the issue (see §5.3).
 
 ### 5.2 The `needs-human` attention flag
 
-- Field name: `needs-human` (display label may vary)
-- Field ID: `customfield_10075`
-- Type: **multi-checkbox custom field** (NOT a Jira label)
-- Option value: `needs-human`, option ID `10032`
-- To flag a ticket: write `customfield_10075: [{id: "10032"}]` via the Atlassian MCP.
-- To clear: write `customfield_10075: []`.
-- Query for tickets needing human attention: `project = ORA AND cf[10075] = "needs-human"`.
+PaperClip issues carry a **needs-human attention flag**. Set it when a decision requires the human; clear it once the human has answered. It is the queryable signal the CTO and Reza use to find escalations; do not substitute an ad-hoc label or comment.
 
-> **Why a multi-checkbox and not a label?** It is controlled (you can't typo it), it can't be removed by someone unfamiliar with the convention, and it is more queryable. This is the deliberate design.
+### 5.3 Board operations (PaperClip)
 
-### 5.3 Comment prefix on everything you write
+| Operation | How it works on the board |
+| --- | --- |
+| Find my work | The board shows the issues assigned to you; pick the highest-priority in-progress one. |
+| Claim | Take an unassigned ready issue whose role matches, assign it to yourself, move it to in-progress, and post a claim comment. |
+| Handoff | **Reassign** the issue to the next owner, set the next state, and post a handoff comment that states the acceptance criteria the next owner must meet. |
+| Escalate to human | Reassign to the CTO/Reza, **set the issue's needs-human flag**, and post a structured escalation comment with the specific question. All three together. |
+| Complete | Per the run-completion contract (§0): never end a run idle — reassign to a named next owner, create an assigned child issue, or escalate with a specific question. |
+| Review request | Reassign the issue to a non-implementer reviewer, move it to review, and post a review-request comment. |
 
-Every Jira comment, Jira worklog, Confluence inline comment, GitHub commit message, GitHub PR description, and GitHub PR review comment you write while acting as agent `NAME` begins with:
+### 5.4 Comment and message prefix
+
+Every PaperClip comment, GitHub commit message, GitHub PR description, and GitHub PR review comment you write while acting as agent `NAME` begins with:
 
 ```
 [agent:NAME]
 ```
 
-Comments that carry an action end with a structured trailer:
+Comments that carry an action state the action and its target plainly (e.g. "handoff to `frontend-implementer`: <acceptance criteria>", "escalation: <question>", "review-request to CTO").
 
-```
----
-agent: NAME
-action: handoff_to | status_change | escalation | observation | review_request | complete
-to: target-agent-name (for handoff_to)
-from_status: STATUS (for status_change)
-to_status: STATUS (for status_change)
-```
+### 5.5 The mandatory local pre-push gate
 
-### 5.4 Operations
+Per ORAA-4 §5, before **any** `git push`, run — locally — the cheap checks CI's `quality` job runs, and push only if they are clean. For this frontend repo, those are the lint, type-check, and format-check scripts defined in `package.json` (e.g. the `lint`, `typecheck`, and `format:check` scripts). A push that fails these is **your** responsibility to fix before re-pushing; it does **not** become a separate `[fix]` issue.
 
-| Operation | Implementation |
-| --- | --- |
-| `my_tasks` | JQL: `project = ORA AND "Agent Owner" = "<your-name>" AND status != Done ORDER BY priority DESC` |
-| `claim_next` | Find highest-priority unassigned ticket where the role matches; set `Agent Owner = $self`; transition to In Progress; post a claim comment |
-| `handoff_to` | Set `Agent Owner` to target; transition status; post handoff comment with `action: handoff_to` trailer |
-| `escalate_to_human` | (1) Set `Agent Owner = human`. (2) Set `customfield_10075: [{id: "10032"}]`. (3) Post structured escalation comment with `action: escalation` trailer. **All three together.** |
-| `complete` | Transition to Done; post completion comment with `action: complete` trailer |
-| `observe` | Post comment with `action: observation` trailer; no field or status change |
-| `review_request` | Set `Agent Owner` to reviewer; transition to In Review; post `action: review_request` trailer |
+### 5.6 Shared-checkout workspace discipline
 
-Enforced by skill discipline through R6; by Capability Registry entry from R7 onward.
+Per ORAA-4 §12, per-run git worktrees are currently OFF, so every agent that writes this repo shares one checkout. Therefore:
+
+- Writer runs operate at `maxConcurrentRuns=1`; the CTO must not route two concurrent write-tasks at this repo.
+- Every writer run **starts clean** — check out the intended base before working — and **ends by committing and pushing all its changes**. Never leave uncommitted changes in the shared checkout.
+- Use issue blocking to serialise same-repo work.
 
 ---
 
@@ -263,9 +249,11 @@ oraclous-frontend/
 ├── .prettierrc
 ├── vitest.config.ts                # base config; per-package overrides as needed
 ├── playwright.config.ts            # E2E config
+├── .githooks/
+│   └── commit-msg                  # enforces commit policy (wired via core.hooksPath)
 ├── .github/
 │   ├── workflows/
-│   │   ├── ci.yml                  # lint, type-check, unit/integration, build
+│   │   ├── ci.yml                  # quality (lint, type-check, format), unit/integration, build
 │   │   ├── e2e.yml                 # Playwright on protected branches and on demand
 │   │   └── release.yml             # build + publish on tag
 │   └── CODEOWNERS
@@ -288,7 +276,7 @@ oraclous-frontend/
 
 ### 6.1 `packages/` is shared
 
-Code in `packages/` is consumed by `apps/` and by other packages. Adding a new package requires `solution-architect` approval.
+Code in `packages/` is consumed by `apps/` and by other packages. Adding a new package requires `solution-architect` approval (via the coordinator).
 
 ### 6.2 `apps/` is what ships
 
@@ -315,7 +303,7 @@ The expected stack — confirm against [Frontend Stack Reference](https://oraclo
 - **Tailwind, CSS Modules, or vanilla-extract** — confirmed by Frontend Stack Reference; do not assume.
 - **Vite or Next.js** as build tool — confirmed by Frontend Stack Reference.
 
-If Confluence contradicts this list, Confluence wins. If you discover the stack is undefined for a question that matters, escalate to `solution-architect` rather than picking arbitrarily.
+If the canonical knowledge base contradicts this list, the knowledge base wins. If you discover the stack is undefined for a question that matters, escalate to `solution-architect` (via the coordinator) rather than picking arbitrarily.
 
 Note from the legacy reference: the old frontend is **Bun + React 18 + Vite**. That fact is informational, not prescriptive — the target stack is whatever Frontend Stack Reference specifies, which may or may not retain Bun.
 
@@ -323,18 +311,18 @@ Note from the legacy reference: the old frontend is **Bun + React 18 + Vite**. T
 
 ## 8. Gates
 
-Frontend currently runs an **abbreviated gate sequence** because test and review agents are deferred (see §1). FE stories skip the two test columns:
+Frontend currently runs an **abbreviated gate sequence** because test and review agents are deferred (see §1). FE issues skip the two test columns:
 
 | From | To | Owner | What's verified |
 | --- | --- | --- | --- |
-| Backlog | Ready | `product-planner` + `solution-architect` + `security-architect` — **all in the coordinator session** | Brief testable; architecture refs present; threat tags set; lift-tag assigned |
-| Ready | Implementation | `frontend-implementer` (this session) | Pickup |
+| Backlog | Ready | `product-planner` + `solution-architect` + `security-architect` — **all in the coordinator session** | Brief testable; architecture refs present; threat tags set; lift-tag assigned; `goalId`/`projectId` linked |
+| Ready | Implementation | `frontend-implementer` (this session) | Pickup of the assigned issue |
 | Implementation | Code Review | `frontend-implementer` (this session) | `[impl]` PR with green CI: lint, type-check, api-client boundary rule, axe-core AA |
-| Code Review | Done | **human `tech-lead`** (manual review) | Craft, accessibility, gateway-only boundary, no-token-in-storage — all confirmed; merge `[impl]` PR |
+| Code Review | Done | **CTO** (craft review) | Craft, accessibility, gateway-only boundary, no-token-in-storage — all confirmed; CTO merges the `[impl]` PR |
 
-The CI gate at Implementation → Code Review is the machine floor that replaces the absent review agents. A PR cannot reach human review with failing lint, type errors, an api-client boundary violation, or axe-core AA violations.
+The CI gate at Implementation → Code Review is the machine floor that replaces the absent review agents. A PR cannot reach CTO review with failing lint, type errors, an api-client boundary violation, or axe-core AA violations. The CTO is the merging reviewer; the PR author is never the sole merger, and there is no self-merge.
 
-Reference: [Definition of Done](https://oraclous.atlassian.net/wiki/spaces/OP/pages/66010) and [Jira board and workflow mapping](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1671170) Section 4. The Backlog → Ready gate happens entirely in the coordinator session. Infra (`[impl-infra]`) and docs (`[docs]`) PRs against this repo are opened by `devops-implementer` and `docs-writer` **from the coordinator session**, not here.
+Reference: ORAA-4 Operating Contract §2 and the [Definition of Done](https://oraclous.atlassian.net/wiki/spaces/OP/pages/66010) (read-only mirror). The Backlog → Ready gate happens entirely in the coordinator session. Infra (`[impl-infra]`) and docs (`[docs]`) PRs against this repo are opened by `devops-implementer` and `docs-writer` **from the coordinator session**, not here.
 
 When FE testing is reintroduced at R-Frontend Phase B, this table returns to the full seven-state sequence.
 
@@ -342,14 +330,18 @@ When FE testing is reintroduced at R-Frontend Phase B, this table returns to the
 
 ## 9. Done means done
 
-1. Tests PR merged; implementation PR merged; both passed full CI including a11y checks.
-2. All gates have been transitioned through in order; no skips.
-3. Every required reviewer signed off explicitly.
-4. `Agent Owner` (`customfield_10074`) is set to whoever last touched it (typically `tech-lead` after merge).
+An issue is `done` only when **all** of the following hold:
+
+1. CI is green on the PR: the `quality` job (lint, type-check, format), unit + integration tests, security checks where applicable, and the a11y (axe-core AA) checks.
+2. The PR has been **reviewed by a non-implementer** (the CTO for FE craft) — explicit sign-off, never a self-review.
+3. The PR is **merged** by the CTO. "PR opened" is not done; an open or approved-but-unmerged PR is not done.
+4. All gates have been transitioned through in order; no skips.
 5. Coverage on new code is adequate; no new flaky tests; no a11y regressions in axe-core.
 6. Bundle-size impact (if any) is documented and within budget.
-7. If a user-visible behaviour changed: `docs-writer` has updated the operator-facing docs or has an open ticket within the sprint.
-8. The Jira ticket is transitioned to `Done` by the human (`tech-lead`).
+7. If a user-visible behaviour changed: `docs-writer` has updated the operator-facing docs or has an open assigned issue for it.
+8. The run ended per the run-completion contract (§0) — the issue is reassigned, a child issue exists, or an escalation is open. No idle "done."
+
+The CTO maintains a merge digest of feature merges for Reza's async spot-audit; Reza merges only at release level.
 
 ---
 
@@ -364,9 +356,12 @@ When FE testing is reintroduced at R-Frontend Phase B, this table returns to the
 - Read or write the host page's DOM from a widget outside the widget's own root.
 - Modify tests during implementation to make them pass.
 - Use `latest` for a Docker base image or a peer-dependency version.
-- Merge a PR without explicit reviewer sign-off, or while `customfield_10075` (`needs-human`) is ticked.
+- Merge a PR without explicit non-implementer sign-off, while the issue's needs-human flag is set, or as the PR's own author (no self-merge).
+- `git push` without first running the local pre-push gate (§5.5) clean.
+- Leave uncommitted changes in the shared checkout, or run two concurrent write-tasks against this repo (§5.6).
+- Bundle unrelated changes into one commit, or add a `Co-Authored-By` / "Generated with" / attribution trailer (§4.5).
 - Add or modify ADRs directly — propose to `solution-architect`.
-- Edit Confluence architecture pages directly — propose to `solution-architect`.
+- Edit the canonical knowledge base or its Confluence mirror directly — propose to `solution-architect` / `docs-writer`.
 - Treat a flaky test as "noise" — flakiness is a bug.
 - Read or write the `legacy-reference/` directory's git state — it is a read-only worktree.
 - Default to a greenfield rewrite when the story carries a `Lift`, `Reshape`, or `Extract` tag — honour the tag and start from the named legacy source (§11).
@@ -392,71 +387,62 @@ The previous frontend is a working application (Bun + React 18 + Vite). The defa
 
 ### 11.2 The lift-vs-rewrite rubric
 
-You do not decide lift-vs-rewrite yourself per file. The verdict is decided once per deliverable in the release page's **Migration source map** (see [09. Releases](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160) Section 7) and arrives in your story brief as a **lift-tag**: `Lift`, `Reshape`, `Extract`, or `Greenfield`, with the specific legacy source path named. Honour the tag:
+You do not decide lift-vs-rewrite yourself per file. The verdict is decided once per deliverable in the release page's **Migration source map** (see [09. Releases](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160) Section 7, read-only mirror) and arrives in your issue brief as a **lift-tag**: `Lift`, `Reshape`, `Extract`, or `Greenfield`, with the specific legacy source path named. Honour the tag:
 
 - **Lift** — start from the named legacy component/module, light refactor only.
 - **Reshape** — start from the named legacy logic, refit it to the target stack, design system, and gateway-only API rule, keep the behaviour.
 - **Extract** — lift a piece out of a larger legacy area into its target package/app.
 - **Greenfield** — no usable precursor; write fresh against the Frontend Stack Reference and Design System.
 
-If a story brief lacks a lift-tag for UI that you believe has a legacy precursor, that is a planning gap — flag it to `product-planner` (via the coordinator) rather than silently choosing greenfield.
+If an issue brief lacks a lift-tag for UI that you believe has a legacy precursor, that is a planning gap — flag it to `product-planner` (via the coordinator) rather than silently choosing greenfield.
 
 ### 11.3 Rules for the legacy reference
 
 - Reference material for behaviour to preserve, read in light of the lift-tag.
-- When in doubt: Confluence wins, this `CLAUDE.md` wins, legacy is the behavioural reference.
+- When in doubt: the canonical knowledge base wins, then this `CLAUDE.md`, then legacy as the behavioural reference.
 - Specifically watch out for, when reshaping legacy code: API call patterns (the legacy frontend likely talks to services other than the gateway — the new frontend only talks to `application-gateway-service`), token storage (the legacy may persist tokens to `localStorage` — the new frontend does not), and ad-hoc styling (the new frontend uses the design system exclusively). These are exactly the things a Reshape tag requires you to fix while keeping behaviour.
 - Never write to `legacy-reference/`. It is a read-only worktree by convention.
-- If the worktree is on a branch other than `develop`, surface to the human and stop — do not switch branches yourself.
+- If the worktree is on a branch other than `develop`, surface to the CTO and stop — do not switch branches yourself.
 
 ### 11.4 Cross-repo shapes are not yours to define
 
-If you need a data shape or API response that crosses the repo boundary (any shape the gateway returns or accepts), **you do not define it locally**. You open a `Contract` Jira issue with `Agent Owner = solution-architect` and stop, per the [Cross-cutting agreement protocol](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1245185). The shape is decided by `solution-architect`, recorded canonically (the [Interface Contracts](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1277953) page until R6, the gateway's OpenAPI spec after), and the `api-client` derives from it. Inventing a gateway response shape locally is a process violation of the same class as editing tests to make them pass.
+If you need a data shape or API response that crosses the repo boundary (any shape the gateway returns or accepts), **you do not define it locally**. You open a `Contract` PaperClip issue assigned to `solution-architect` and stop, per the [Cross-cutting agreement protocol](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1245185) (read-only mirror). The shape is decided by `solution-architect`, recorded canonically (the [Interface Contracts](https://oraclous.atlassian.net/wiki/spaces/OP/pages/1277953) page until R6, the gateway's OpenAPI spec after), and the `api-client` derives from it. Inventing a gateway response shape locally is a process violation of the same class as editing tests to make them pass.
 
 ---
 
-## 12. Working with Confluence
+## 12. Working with the knowledge base
 
-Use the Atlassian MCP if available; otherwise the URLs in §2 are direct links.
-
-When you discover a Confluence page is stale, open a `docs-writer` ticket; do not edit architecture, ADR, or design-system pages directly.
+`oraclous-knowledge` is canonical; Confluence is a read-only mirror reached via the URLs in §2. When you discover a mirror page (or the canonical knowledge base) is stale, open a `docs-writer` issue; do not edit architecture, ADR, or design-system pages directly.
 
 ---
 
-## 13. Working with Jira
+## 13. Working with the board (PaperClip)
 
-Project key: `ORA`. Cloud ID: `1eb21297-5f52-49a0-a303-3436694b148c`.
+PaperClip is the master board. Work hierarchy is **Goals (releases) → Projects (epics) → Issues**. There is no Jira board, no sprints. Agents wake on assignment via heartbeats; you act on the issues assigned to you.
 
-| Need | JQL |
-| --- | --- |
-| My open work | `project = ORA AND "Agent Owner" = "<your-name>" AND status != Done ORDER BY priority DESC` |
-| Frontend tickets in current sprint | `project = ORA AND sprint in openSprints() AND labels = frontend` |
-| Needs human attention | `project = ORA AND cf[10075] = "needs-human"` |
-| Done this week | `project = ORA AND status = Done AND resolved >= -7d` |
-
-Custom fields:
-
-- `Agent Owner` — `customfield_10074`, single-select, values are the 11 persona names plus `human` (option id `10031`).
-- `needs-human` — `customfield_10075`, multi-checkbox, option id `10032`. Tick to flag, untick to clear.
+- **Find your work:** the board surfaces the issues assigned to you; the in-progress one is yours to continue.
+- **Linkage:** every issue must have its `goalId` and `projectId` set before work begins (ORAA-4 §7).
+- **needs-human:** set the issue's needs-human flag to request the human; clear it once answered.
+- **Handoff / escalation / completion:** follow §5.3 — every run ends by reassigning, filing a child, or escalating; never idle.
 
 ---
 
 ## 14. Working with this file
 
-Owned by `docs-writer`. Material changes go through a `[docs]` PR with `docs-writer` as author and `tech-lead` as approver. Cosmetic fixes can be batched into a periodic `[chore]` PR.
+Owned by `docs-writer`. Material changes go through a `[docs]` PR with `docs-writer` as author and the CTO as reviewer/merger. Cosmetic fixes can be batched into a periodic `[chore]` PR.
 
-When you find a gap in this file, open a `docs-writer` ticket. Do not silently add to it; this file is short on purpose.
+When you find a gap in this file, open a `docs-writer` issue. Do not silently add to it; this file is short on purpose.
 
 ---
 
 ## 15. Resuming after a context reset
 
 1. Read this file.
-2. Read your own skill page from [Agent Skills Catalogue](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753852).
-3. Read [09. Releases Section 6](https://oraclous.atlassian.net/wiki/spaces/OP/pages/164160) — the canonical Agent Identity Convention. If your skill page's Section 11 disagrees with it on `needs-human`, Section 6 wins (skill pages have known drift on this point pending `docs-writer` reconciliation).
-4. Run the "my open work" JQL above; the ticket with `Agent Owner = you` and `In Progress` status is yours.
-5. Read the ticket's comments; the last `[agent:NAME]` comment with an action trailer tells you where you are.
-6. Read the linked tests PR (if at Implementation stage) or the brief (if at Tests Authoring).
+2. Read the **ORAA-4 Operating Contract** (PaperClip `operating-contract`) — the canonical governance.
+3. Read your own skill page from the [Agent Skills Catalogue](https://oraclous.atlassian.net/wiki/spaces/OP/pages/753852) (read-only mirror).
+4. Look at the board: the in-progress issue assigned to you is yours.
+5. Read that issue's comments; the last `[agent:NAME]` comment with a stated action tells you where you are.
+6. Read the linked `[impl]` PR (if at Implementation/Code Review) or the brief (if just claimed).
 7. Continue.
 
-If the trail is broken or contradictory, escalate via the `escalate_to_human` operation in §5.4.
+If the trail is broken or contradictory, escalate to the human: reassign the issue to the CTO/Reza, set its needs-human flag, and post a specific escalation question.
