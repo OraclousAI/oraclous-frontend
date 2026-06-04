@@ -8,7 +8,7 @@
  * WCAG AA verification (key combos):
  *   ink on paper:       15.6:1 ✓  (body ≥4.5:1 required)
  *   ink on paper-soft:  14.4:1 ✓
- *   mute on paper:       4.2:1 ✓  (large/UI ≥3:1; note: use sparingly for small body text)
+ *   mute on paper:       4.2:1 ✓  (large/UI ≥3:1 only; do NOT use for text <18px non-bold — use --ink instead)
  *   accent-ink on accent: 9.3:1 ✓ (selection / focus surface)
  *   ink on perm-*-bg:   ≥13:1  ✓  (dark ink on 14%-tinted surfaces)
  */

@@ -31,7 +31,14 @@ export const wcagContrastChecks: readonly ContrastCheck[] = [
     bg: '#F4F4F2',
     ratio: 4.2,
     level: 'AA-large',
-    usage: 'mute on paper — captions/helper (large text / UI only)',
+    usage: 'mute on paper — captions/helper (large text / UI only; NOT for <18px non-bold text)',
+  },
+  {
+    fg: '#0B1220',
+    bg: '#F4F4F2',
+    ratio: 15.6,
+    level: 'AA',
+    usage: 'ink on paper — sidebar section labels (10px/600; --ink required for AA at this size)',
   },
   {
     fg: '#73767D',

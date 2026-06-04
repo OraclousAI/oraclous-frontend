@@ -94,10 +94,9 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--mute);
+  color: var(--ink);
   padding: var(--sp-3) var(--sp-2) var(--sp-1);
   font-family: var(--font-mono);
-  /* 4.2:1 — below AA-normal threshold; revisit when design-system token contrast is audited */
 }
 
 /* Nav item button */
