@@ -30,6 +30,7 @@ This is a pointer, not a restatement: ORAA-4 (the PaperClip document `operating-
 - **§9 DoD + handoff.** Done = CI-green + mergeable + CTO craft review + PR merged + handed off to the next owner; small fixes are folded into the current PR, not new tickets. (FE asymmetry: there are no test-author/reviewer agents — `frontend-implementer` → CTO craft review — so §13.4 two-PR sequencing does not apply to FE.)
 - **§9.3 docker.** If a change needs multi-service integration it is `docker-required`; if Docker is down, block `needs-human` — never skip.
 - **§17 structure.** New code lives in its prescribed location for this repo.
+- **R3.5 (active release) — FE context.** The active release is **R3.5: rebuild every backend service real, end-to-end, one service at a time** (ORAA-4 §21/§22/§23) — backend-first; FE foundation stays paused until the backend services are real and reachable. The **old R4–R8 / gateway-from-R5 roadmap is discarded** — do not plan FE work against it; FE re-planning happens only after the backend is real. If FE ever ships services, the canonical layered **Service Architecture Standard** (§21) and the **hardened per-service DoD** (§22, incl. Reza sign-off; a stub never passes done) apply.
 - **§16 KB currency.** If you change `oraclous-knowledge`, keep the docs current and refresh graphify in the same change.
 - Full text: ORAA-4 + `oraclous-knowledge/engineering/`.
 
