@@ -57,6 +57,43 @@ function RouteCrumb({ pathname }: { pathname: string }) {
   );
 }
 
+function getFocusableMenuItems(menu: HTMLElement | null): HTMLElement[] {
+  if (menu == null) return [];
+  return Array.from(
+    menu.querySelectorAll<HTMLElement>(
+      '[role="menuitem"]:not([aria-disabled="true"]), [role="menuitemradio"]'
+    )
+  );
+}
+
+function handleMenuKeyDown(
+  e: React.KeyboardEvent,
+  menuEl: HTMLElement | null,
+  triggerEl: HTMLElement | null,
+  close: () => void
+): void {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    close();
+    triggerEl?.focus();
+    return;
+  }
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault();
+  const items = getFocusableMenuItems(menuEl);
+  if (items.length === 0) return;
+  const idx = items.indexOf(document.activeElement as HTMLElement);
+  const next =
+    e.key === 'ArrowDown'
+      ? idx === -1
+        ? 0
+        : (idx + 1) % items.length
+      : idx === -1
+        ? items.length - 1
+        : (idx - 1 + items.length) % items.length;
+  items[next]?.focus();
+}
+
 export function TopBar() {
   const { tenant, user, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
   const navigate = useNavigate();
@@ -66,6 +103,10 @@ export function TopBar() {
 
   const tenantRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
+  const tenantBtnRef = useRef<HTMLButtonElement>(null);
+  const userBtnRef = useRef<HTMLButtonElement>(null);
+  const tenantMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -95,6 +136,7 @@ export function TopBar() {
       <div className="shell-topbar__left">
         <div className="shell-topbar__tenant-wrap" ref={tenantRef}>
           <button
+            ref={tenantBtnRef}
             type="button"
             className="shell-topbar__tenant-btn"
             onClick={() => setTenantOpen((v) => !v)}
@@ -124,10 +166,16 @@ export function TopBar() {
 
           {tenantOpen && (
             <div
+              ref={tenantMenuRef}
               className="shell-dropdown"
               role="menu"
               aria-label="Organizations"
               style={{ left: 0, minWidth: 300 }}
+              onKeyDown={(e) =>
+                handleMenuKeyDown(e, tenantMenuRef.current, tenantBtnRef.current, () =>
+                  setTenantOpen(false)
+                )
+              }
             >
               <div className="shell-dropdown__eyebrow" aria-hidden="true">
                 Organizations
@@ -257,6 +305,7 @@ export function TopBar() {
 
         <div className="shell-topbar__tenant-wrap" ref={userRef}>
           <button
+            ref={userBtnRef}
             type="button"
             className="shell-icon-btn"
             onClick={() => setUserOpen((v) => !v)}
@@ -276,10 +325,16 @@ export function TopBar() {
 
           {userOpen && (
             <div
+              ref={userMenuRef}
               className="shell-dropdown"
               role="menu"
               aria-label="User menu"
               style={{ right: 0, minWidth: 220 }}
+              onKeyDown={(e) =>
+                handleMenuKeyDown(e, userMenuRef.current, userBtnRef.current, () =>
+                  setUserOpen(false)
+                )
+              }
             >
               <div
                 style={{
