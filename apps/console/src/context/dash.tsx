@@ -1,7 +1,6 @@
 // Dashboard context — persona, current organization, and user identity.
-//
-// API integrations (organizationsApi, AuthService) are stubbed; wire to
-// @oraclous/api-client once it exposes Organization types and auth utilities.
+// Current-org selection is held in-memory only (no localStorage) — §3.5 invariant.
+// Wire to @oraclous/api-client once it exposes Organization types and auth utilities.
 import { createContext, useContext, useMemo, useState, useCallback, type ReactNode } from 'react';
 
 export type Persona = 'owner' | 'member' | 'standalone';
@@ -38,8 +37,6 @@ export interface DashContextValue {
   canCreateOrg: boolean;
   needsOnboarding: boolean;
 }
-
-export const CURRENT_ORG_KEY = 'oraclous.currentOrgId';
 
 function nameFromEmail(email: string): string {
   const local = email.split('@')[0] ?? email;
@@ -83,9 +80,7 @@ export function DashProvider({
   orgs = [],
   orgsLoading = false,
 }: DashProviderProps) {
-  const [currentOrgId, setCurrentOrgId] = useState<string | null>(() =>
-    localStorage.getItem(CURRENT_ORG_KEY)
-  );
+  const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
 
   const currentOrg = useMemo<Organization | null>(
     () => orgs.find((o) => o.id === currentOrgId) ?? orgs[0] ?? null,
@@ -93,7 +88,6 @@ export function DashProvider({
   );
 
   const setCurrentOrg = useCallback((orgId: string) => {
-    localStorage.setItem(CURRENT_ORG_KEY, orgId);
     setCurrentOrgId(orgId);
   }, []);
 
