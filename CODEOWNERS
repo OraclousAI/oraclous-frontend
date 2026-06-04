@@ -1,0 +1,21 @@
+# CODEOWNERS — OraclousAI/oraclous-frontend
+#
+# Maps code ownership so GitHub requests reviews from the right team.
+# Each rule is last-match-wins; more specific patterns are listed after
+# less specific ones so they override correctly.
+#
+# Teams:
+#   @OraclousAI/devops    — infra, CI/CD, deployment manifests, config
+#   @OraclousAI/frontend  — application code, design system, packages
+
+# ─── Default: every file requires both teams ─────────────────────────────────
+*                                @OraclousAI/devops @OraclousAI/frontend
+
+# ─── Application code ────────────────────────────────────────────────────────
+/apps/                           @OraclousAI/frontend
+/packages/                       @OraclousAI/frontend
+
+# ─── Infrastructure / CI / config ────────────────────────────────────────────
+/.github/                        @OraclousAI/devops
+/CODEOWNERS                      @OraclousAI/devops
+/.env.example                    @OraclousAI/devops

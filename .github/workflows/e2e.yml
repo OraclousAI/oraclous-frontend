@@ -1,0 +1,54 @@
+name: E2E — Frontend
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: e2e-fe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # e2e: full Playwright browser tests against a running app + gateway
+  #
+  # Skipped until the Application Gateway lands. Remove the `if: false` guard
+  # and wire the E2E_API_BASE_URL secret to a live gateway when the gateway
+  # service ships. Until then this skeleton documents the intended job shape
+  # without blocking any PRs.
+  #
+  # Test pattern: tests/e2e/**/*.spec.ts — Playwright tests against the
+  # production build served locally, with VITE_API_BASE_URL pointing at the
+  # gateway (§3.1 invariant: one base URL, no split auth/api endpoints).
+  # ─────────────────────────────────────────────────────────────────────────────
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    if: false # remove when Application Gateway is available
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (Chromium only)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build app
+        run: pnpm build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          VITE_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
