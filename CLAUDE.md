@@ -16,7 +16,7 @@ Key provisions every agent must observe:
 
 - **§7 Linkage invariant:** Every issue must have its `goalId` (release) and `projectId` (epic) set before work begins. Issues missing either are returned to the backlog for enrichment.
 - **§4 Run-completion contract:** A run may only end by reassigning the issue to a named next owner, by creating an assigned child issue, or by escalating with a specific question. A run never ends "done, nothing assigned."
-- **§5 Mandatory local pre-push gate:** before any `git push`, run the cheap checks CI's `quality` job runs, locally, and push only if clean (see §5 below).
+- **§5 Pre-push gate is an enforced hook:** this repo ships `.githooks/pre-push` (`core.hooksPath=.githooks`) running `lint` + `typecheck` + `format:check`; a push that fails is **blocked locally** (see §5 below). `main` is protected by a **GitHub ruleset** (public repo, no admin bypass): the CI gate jobs + a non-author review + up-to-date base must pass before merge; the CTO merges via `oraclous-knowledge/operations/gated_merge.sh`. See ORAA-4 §20.
 - **§12 Workspace discipline:** per-run git worktrees are OFF; every agent writing this repo shares one checkout (see §5.5 below).
 
 ---
@@ -25,7 +25,7 @@ Key provisions every agent must observe:
 
 This is a pointer, not a restatement: ORAA-4 (the PaperClip document `operating-contract`) is authoritative, and on any divergence ORAA-4 wins. The gates that bite most in this repo:
 
-- **§5 commits + pre-push + no attribution.** Commit messages are `[ORAA-xx] [agent:NAME] msg`, one commit per concern. Never write `Co-Authored-By`, `Generated`, `claude`, `paperclip`, or 🤖 in commits, PR bodies, or comments. Before any push, run the repo's `package.json` lint + type-check + format-check scripts. The commit-message format is enforced by the `commit-msg` hook (`core.hooksPath=.githooks`).
+- **§5 commits + pre-push + no attribution.** Commit messages are `[ORAA-xx] [agent:NAME] msg`, one commit per concern. Never write `Co-Authored-By`, `Generated`, `claude`, `paperclip`, or 🤖 in commits, PR bodies, or comments. The `pre-push` hook (`lint` + `typecheck` + `format:check`) and the `commit-msg` hook (commit format + no-attribution) are wired via `core.hooksPath=.githooks` and block bad pushes/commits locally.
 - **§13.1 pre-open readiness.** Before OPENING a PR for review it must be lint/type/format clean, CI-green, and rebased onto current `main`.
 - **§9 DoD + handoff.** Done = CI-green + mergeable + CTO craft review + PR merged + handed off to the next owner; small fixes are folded into the current PR, not new tickets. (FE asymmetry: there are no test-author/reviewer agents — `frontend-implementer` → CTO craft review — so §13.4 two-PR sequencing does not apply to FE.)
 - **§9.3 docker.** If a change needs multi-service integration it is `docker-required`; if Docker is down, block `needs-human` — never skip.
