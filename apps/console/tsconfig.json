@@ -1,11 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": {
       "@oraclous/design-system": ["../../packages/design-system/src/index.ts"],
-      "@oraclous/ui-utils": ["../../packages/ui-utils/src/index.ts"]
-    }
+      "@oraclous/ui-utils": ["../../packages/ui-utils/src/index.ts"],
+      "@oraclous/api-client": ["../../packages/api-client/src/index.ts"]
+    },
+    "types": ["vite/client"]
   },
-  "include": ["src"]
+  "include": ["src", "vite.config.ts"]
 }
