@@ -1,0 +1,198 @@
+/*
+ * Oraclous Design System v1 — CSS custom properties
+ * Auto-mirrored from src/tokens.ts — keep in sync.
+ * Import this file globally in the app entry (e.g. main.tsx).
+ */
+
+@layer base {
+  :root {
+    /* ── Core palette (LIGHT — the default surface) ─────────────────────── */
+    --ink: #0b1220;
+    --paper: #f4f4f2;
+    --paper-soft: #eceae5;
+    --rule: #d7d6d2;
+    --mute: #73767d;
+
+    /* The signal. One color, one job. Live state only. */
+    --accent: #10d88a;
+    --accent-ink: #0b1220;
+
+    /* ── ReBAC permission states ────────────────────────────────────────── */
+    --perm-granted: #10d88a;
+    --perm-granted-bg: color-mix(in oklab, #10d88a 14%, var(--paper));
+    --perm-inherited: #6ba0e8;
+    --perm-inherited-bg: color-mix(in oklab, #6ba0e8 14%, var(--paper));
+    --perm-denied: #c8412c;
+    --perm-denied-bg: color-mix(in oklab, #c8412c 14%, var(--paper));
+    --perm-expired: #b5862a;
+    --perm-expired-bg: color-mix(in oklab, #b5862a 14%, var(--paper));
+
+    /* ── Semantic colours ────────────────────────────────────────────────── */
+    --success: #2e8b57;
+    --success-bg: color-mix(in oklab, #2e8b57 12%, var(--paper));
+    --warning: #b5862a;
+    --warning-bg: color-mix(in oklab, #b5862a 12%, var(--paper));
+    --error: #c8412c;
+    --error-bg: color-mix(in oklab, #c8412c 12%, var(--paper));
+    --info: #4a6fa8;
+    --info-bg: color-mix(in oklab, #4a6fa8 12%, var(--paper));
+
+    /* ── Cost / BYOK signal ─────────────────────────────────────────────── */
+    --cost-fg: var(--ink);
+    --cost-bg: var(--paper-soft);
+
+    /* ── Elevation ──────────────────────────────────────────────────────── */
+    --shadow-1: 0 1px 0 color-mix(in oklab, var(--ink) 6%, transparent);
+    --shadow-2: 0 2px 6px -2px color-mix(in oklab, var(--ink) 12%, transparent);
+    --shadow-3: 0 12px 32px -12px color-mix(in oklab, var(--ink) 22%, transparent);
+
+    /* ── Radius scale ───────────────────────────────────────────────────── */
+    --r-0: 0px;
+    --r-1: 2px;
+    --r-2: 4px;
+    --r-3: 6px;
+    --r-4: 10px;
+    --r-pill: 999px;
+
+    /* ── Spacing scale (4px base) ───────────────────────────────────────── */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    --sp-8: 32px;
+    --sp-10: 40px;
+    --sp-12: 48px;
+    --sp-16: 64px;
+    --sp-20: 80px;
+    --sp-24: 96px;
+
+    /* ── Surface aliases (semantic) ─────────────────────────────────────── */
+    --bg: var(--paper);
+    --bg-soft: var(--paper-soft);
+    --fg: var(--ink);
+    --fg-mute: var(--mute);
+    --border-hair: color-mix(in oklab, var(--rule) 60%, transparent);
+
+    /* ── Typography ─────────────────────────────────────────────────────── */
+    --font-sans: 'Sora', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+    --font-serif: 'Iowan Old Style', Georgia, serif;
+
+    /* Type scale — size / weight / line-height / tracking */
+    --t-display-xl-size: 96px;
+    --t-display-xl-weight: 700;
+    --t-display-xl-lh: 0.95;
+    --t-display-xl-track: -0.04em;
+    --t-display-size: 64px;
+    --t-display-weight: 700;
+    --t-display-lh: 1.02;
+    --t-display-track: -0.03em;
+    --t-h1-size: 48px;
+    --t-h1-weight: 600;
+    --t-h1-lh: 1.08;
+    --t-h1-track: -0.025em;
+    --t-h2-size: 32px;
+    --t-h2-weight: 600;
+    --t-h2-lh: 1.15;
+    --t-h2-track: -0.02em;
+    --t-h3-size: 24px;
+    --t-h3-weight: 600;
+    --t-h3-lh: 1.2;
+    --t-h3-track: -0.015em;
+    --t-h4-size: 18px;
+    --t-h4-weight: 600;
+    --t-h4-lh: 1.3;
+    --t-h4-track: -0.005em;
+    --t-body-lg-size: 18px;
+    --t-body-lg-weight: 400;
+    --t-body-lg-lh: 1.55;
+    --t-body-lg-track: 0;
+    --t-body-size: 15px;
+    --t-body-weight: 400;
+    --t-body-lh: 1.55;
+    --t-body-track: 0;
+    --t-dense-size: 13.5px;
+    --t-dense-weight: 500;
+    --t-dense-lh: 1.45;
+    --t-dense-track: 0;
+    --t-caption-size: 12px;
+    --t-caption-weight: 500;
+    --t-caption-lh: 1.4;
+    --t-caption-track: 0.02em;
+    --t-mono-size: 13px;
+    --t-mono-weight: 400;
+    --t-mono-lh: 1.55;
+    --t-mono-track: 0;
+    --t-tiny-size: 11px;
+    --t-tiny-weight: 500;
+    --t-tiny-lh: 1.35;
+    --t-tiny-track: 0.06em;
+
+    /* ── Motion ─────────────────────────────────────────────────────────── */
+    --motion-blink-dur: 1.06s;
+    --motion-blink-ease: steps(1, end);
+    --motion-pulse-dur: 1.4s;
+    --motion-pulse-ease: ease-in-out;
+    --motion-type-char: 110ms;
+    --motion-hover-dur: 120ms;
+    --motion-hover-ease: cubic-bezier(0.2, 0, 0.2, 1);
+    --motion-press-dur: 80ms;
+    --motion-press-ease: cubic-bezier(0.4, 0, 1, 1);
+
+    /* ── shadcn/ui HSL tokens ────────────────────────────────────────────── */
+    --background: 60 8% 95%;
+    --foreground: 220 28% 9%;
+    --card: 60 8% 95%;
+    --card-foreground: 220 28% 9%;
+    --popover: 60 8% 95%;
+    --popover-foreground: 220 28% 9%;
+    --primary: 220 28% 9%;
+    --primary-foreground: 60 8% 95%;
+    --secondary: 40 8% 91%;
+    --secondary-foreground: 220 28% 9%;
+    --muted: 40 8% 91%;
+    --muted-foreground: 220 4% 47%;
+    --ui-accent: 40 8% 91%;
+    --ui-accent-foreground: 220 28% 9%;
+    --destructive: 9 65% 48%;
+    --destructive-foreground: 60 8% 95%;
+    --border: 40 5% 84%;
+    --input: 40 5% 84%;
+    --ring: 220 28% 9%;
+    --radius: 0.375rem;
+    --sidebar-background: 60 8% 95%;
+    --sidebar-foreground: 220 28% 9%;
+    --sidebar-primary: 220 28% 9%;
+    --sidebar-primary-foreground: 60 8% 95%;
+    --sidebar-accent: 40 8% 91%;
+    --sidebar-accent-foreground: 220 28% 9%;
+    --sidebar-border: 40 5% 84%;
+    --sidebar-ring: 220 28% 9%;
+  }
+
+  /* ── Dark surface ─────────────────────────────────────────────────────── */
+  :root[data-surface='dark'],
+  .surface-dark {
+    --paper: #0b1220;
+    --paper-soft: #11192a;
+    --rule: #1e2638;
+    --mute: #8e9199;
+    --ink: #f4f4f2;
+    --bg: #0b1220;
+    --bg-soft: #11192a;
+    --fg: #f4f4f2;
+    --fg-mute: #8e9199;
+    --border-hair: color-mix(in oklab, #1e2638 70%, transparent);
+
+    --shadow-1: 0 1px 0 #00000040;
+    --shadow-2: 0 2px 6px -2px #00000060;
+    --shadow-3: 0 12px 32px -12px #000000a0;
+
+    --perm-granted-bg: color-mix(in oklab, #10d88a 22%, #0b1220);
+    --perm-inherited-bg: color-mix(in oklab, #6ba0e8 22%, #0b1220);
+    --perm-denied-bg: color-mix(in oklab, #c8412c 22%, #0b1220);
+    --perm-expired-bg: color-mix(in oklab, #b5862a 22%, #0b1220);
+  }
+}
