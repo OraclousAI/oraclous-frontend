@@ -9,7 +9,6 @@
   "dependencies": {
     "@oraclous/design-system": "workspace:*",
     "@oraclous/ui-utils": "workspace:*",
-    "@tanstack/react-query": "^5.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.0.0"

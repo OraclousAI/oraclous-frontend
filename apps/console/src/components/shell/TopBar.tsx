@@ -90,7 +90,7 @@ export function TopBar() {
     .toUpperCase();
 
   return (
-    <header className="shell-topbar" role="banner">
+    <header className="shell-topbar">
       {/* Tenant switcher + breadcrumb */}
       <div className="shell-topbar__left">
         <div className="shell-topbar__tenant-wrap" ref={tenantRef}>
@@ -137,19 +137,20 @@ export function TopBar() {
                   No organizations yet.
                 </p>
               )}
+              <div role="group" aria-label="Organizations">
               {orgs.map((o) => {
                 const isActive = o.id === currentOrg?.id;
                 return (
                   <button
                     key={o.id}
                     type="button"
-                    role="menuitem"
+                    role="menuitemradio"
                     className="shell-dropdown__item"
                     onClick={() => {
                       setCurrentOrg(o.id);
                       setTenantOpen(false);
                     }}
-                    aria-pressed={isActive}
+                    aria-checked={isActive}
                   >
                     <span className="shell-org-item" aria-hidden="true">
                       {o.name.slice(0, 2).toUpperCase()}
@@ -189,6 +190,7 @@ export function TopBar() {
                   </button>
                 );
               })}
+              </div>
               {canCreateOrg && (
                 <>
                   <div className="shell-dropdown__divider" role="separator" />

@@ -44,14 +44,9 @@ export function Sidebar() {
         {nav.map((it) => {
           if (it.divider) {
             return (
-              <div
-                key={it.id}
-                className="shell-sidebar__section-label"
-                role="separator"
-                aria-label={it.label}
-              >
+              <h3 key={it.id} className="shell-sidebar__section-label">
                 {it.label}
-              </div>
+              </h3>
             );
           }
           const Icon = it.icon;
@@ -82,9 +77,9 @@ export function Sidebar() {
         {/* Workspace shortcuts */}
         {currentOrg != null && workspaces.length > 0 && (
           <section aria-label="Workspaces">
-            <div className="shell-sidebar__section-label" role="separator">
+            <h3 className="shell-sidebar__section-label">
               {persona === 'member' ? 'My access' : 'Workspaces'}
-            </div>
+            </h3>
             {workspaces.map((org) => {
               const wsPath = `/app/workspaces/${org.id}`;
               const isActive = pathname === wsPath;
