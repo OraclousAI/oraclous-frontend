@@ -3,7 +3,7 @@
 // Usage:
 //   const { transport, handle, reset } = createMockTransport();
 //   handle('GET', '/api/v1/graphs', () => [{ id: '1', name: 'Test' }]);
-//   const client = createApiClient({ baseUrl: '', getToken: () => null, transport });
+//   const client = createApiClient({ transport });
 
 import type { ApiTransport, TransportRequest, TransportResponse } from '../transport';
 import { ApiClientError } from '../errors';
@@ -15,7 +15,16 @@ type HandlerFn = (body: unknown) => unknown;
 type HandlerMap = Map<string, HandlerFn>;
 
 export interface MockTransport extends ApiTransport {
+  /**
+   * Register a persistent handler for METHOD + path.
+   * To simulate gateway errors, throw `ApiClientError` — plain `Error` propagates as-is
+   * and will not be caught by `ApiClientError.is()` or `error.code` branches in callers.
+   */
   handle(method: string, path: string, fn: HandlerFn): void;
+  /**
+   * Register a one-shot handler consumed on the next matching call.
+   * Same error contract as `handle`: throw `ApiClientError`, not plain `Error`.
+   */
   handleOnce(method: string, path: string, fn: HandlerFn): void;
   reset(): void;
   calls(): Array<{ method: string; path: string; body: unknown }>;

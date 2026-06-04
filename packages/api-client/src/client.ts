@@ -1,4 +1,5 @@
 import type { ApiTransport, TransportRequest } from './transport';
+import { ApiClientError, ErrorCode } from './errors';
 import type {
   Graph,
   CreateGraphInput,
@@ -44,11 +45,13 @@ import type {
 import type { FeedbackRating } from './types/common';
 import type { GraphRole } from './types/graph';
 
+/**
+ * Options for createApiClient. Base URL and token injection are transport-constructor
+ * concerns — pass an ApiTransport already configured for your gateway and auth strategy
+ * (platform primitive, never localStorage/sessionStorage).
+ * For tests, pass createMockTransport().
+ */
 export interface ApiClientOptions {
-  // Single VITE_API_BASE_URL — no split auth URL.
-  readonly baseUrl: string;
-  // Caller supplies token retrieval; never stored in localStorage/sessionStorage.
-  readonly getToken: () => string | null;
   readonly transport: ApiTransport;
 }
 
@@ -218,8 +221,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     sendGraph: (body) => req<GraphChatResponse>('POST', '/api/v1/chat', body),
     sendAgent: (gid, aid, body) =>
       req<AgentChatResponse>('POST', `/api/v1/graphs/${gid}/agents/${aid}/chat`, body),
-    // SSE streaming is transport-level; this stub delegates to transport.execute with a streaming flag.
-    // Concrete implementations should override this for their SSE runtime.
+    // SSE streaming is transport-level; this stub always rejects.
+    // @throws {Error} stub-time programming error, not a gateway failure — callers must
+    // supply a streaming-capable transport; do not add this to gateway-error handlers.
     streamGraph: (_body, _handlers, _signal) =>
       Promise.reject(new Error('streamGraph: requires a streaming-capable transport')),
   };
@@ -282,7 +286,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       req<{ graph_id: string; members: GraphMember[] }>('GET', `/api/v1/graphs/${gid}/members`),
     add: (gid, data) => req<GraphMember>('POST', `/api/v1/graphs/${gid}/members`, data),
     remove: (gid, uid, role) =>
-      req<void>('DELETE', `/api/v1/graphs/${gid}/members/${uid}?role=${encodeURIComponent(role)}`),
+      req<void>('DELETE', `/api/v1/graphs/${gid}/members/${uid}${qs({ role })}`),
   };
 
   const serviceAccounts: ServiceAccountsClient = {
@@ -338,7 +342,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         .then((r) => r.data)
         .catch((e: unknown) => {
           // NOT_FOUND → null per contract
-          if (e instanceof Error && 'code' in e && (e as { code?: string }).code === 'NOT_FOUND') {
+          if (ApiClientError.is(e) && e.code === ErrorCode.NOT_FOUND) {
             return null;
           }
           throw e;
@@ -351,7 +355,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         })
         .then((r) => r.data)
         .catch((e: unknown) => {
-          if (e instanceof Error && 'code' in e && (e as { code?: string }).code === 'NOT_FOUND') {
+          if (ApiClientError.is(e) && e.code === ErrorCode.NOT_FOUND) {
             return null;
           }
           throw e;

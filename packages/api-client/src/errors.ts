@@ -20,8 +20,11 @@ export const ErrorCode = {
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
-// Retryable codes per ORA-56: RATE_LIMITED, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT are
-// server-authoritative; always read the envelope's `retryable` boolean, never hardcode.
+/**
+ * Informational reference set — the ORA-56 codes that gateways typically mark retryable.
+ * Do NOT use this to decide retry logic; always read `error.retryable` from the envelope.
+ * The server is authoritative; this set exists for documentation, not branching.
+ */
 export const RETRYABLE_BY_DEFAULT: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   ErrorCode.RATE_LIMITED,
   ErrorCode.SERVICE_UNAVAILABLE,
