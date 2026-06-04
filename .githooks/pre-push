@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# .githooks/pre-push — ENFORCED frontend quality gate (ORAA-4 §5/§13.1), enacted 2026-06-04 (ORAA-250).
+# Runs the package.json lint/typecheck/format:check and BLOCKS a dirty push.
+set -uo pipefail
+PM=""
+command -v pnpm >/dev/null 2>&1 && PM=pnpm
+[ -z "$PM" ] && command -v npm >/dev/null 2>&1 && PM=npm
+if [ -z "$PM" ] || [ ! -f package.json ]; then
+  echo "[pre-push] no package manager / package.json — skipping FE quality gate." >&2; exit 0
+fi
+has(){ node -e "process.exit(require('./package.json').scripts?.['$1']?0:1)" 2>/dev/null; }
+fail(){ echo "[pre-push] ❌ BLOCKED: $1 failed — fix before pushing (do not push red, §13.1)." >&2; exit 1; }
+echo "[pre-push] running FE quality gate ($PM)…" >&2
+has lint         && { $PM run lint || fail "lint"; }
+has typecheck    && { $PM run typecheck || fail "typecheck"; }
+has format:check && { $PM run format:check || fail "format:check (run: $PM run format)"; }
+echo "[pre-push] ✅ FE quality gate passed." >&2
