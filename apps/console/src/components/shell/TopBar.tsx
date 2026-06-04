@@ -138,58 +138,58 @@ export function TopBar() {
                 </p>
               )}
               <div role="group" aria-label="Organizations">
-              {orgs.map((o) => {
-                const isActive = o.id === currentOrg?.id;
-                return (
-                  <button
-                    key={o.id}
-                    type="button"
-                    role="menuitemradio"
-                    className="shell-dropdown__item"
-                    onClick={() => {
-                      setCurrentOrg(o.id);
-                      setTenantOpen(false);
-                    }}
-                    aria-checked={isActive}
-                  >
-                    <span className="shell-org-item" aria-hidden="true">
-                      {o.name.slice(0, 2).toUpperCase()}
-                    </span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: 13,
-                          fontWeight: 500,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {o.name}
+                {orgs.map((o) => {
+                  const isActive = o.id === currentOrg?.id;
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="menuitemradio"
+                      className="shell-dropdown__item"
+                      onClick={() => {
+                        setCurrentOrg(o.id);
+                        setTenantOpen(false);
+                      }}
+                      aria-checked={isActive}
+                    >
+                      <span className="shell-org-item" aria-hidden="true">
+                        {o.name.slice(0, 2).toUpperCase()}
                       </span>
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: 11.5,
-                          color: 'var(--mute)',
-                          textTransform: 'capitalize',
-                          fontFamily: 'var(--font-mono)',
-                        }}
-                      >
-                        {o.org_role ?? 'member'}
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: 13,
+                            fontWeight: 500,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {o.name}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: 11.5,
+                            color: 'var(--mute)',
+                            textTransform: 'capitalize',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {o.org_role ?? 'member'}
+                        </span>
                       </span>
-                    </span>
-                    {isActive && (
-                      <IconCheck
-                        size={14}
-                        aria-hidden="true"
-                        style={{ color: 'var(--ink)', flexShrink: 0 }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
+                      {isActive && (
+                        <IconCheck
+                          size={14}
+                          aria-hidden="true"
+                          style={{ color: 'var(--ink)', flexShrink: 0 }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               {canCreateOrg && (
                 <>

@@ -97,8 +97,7 @@
   color: var(--mute);
   padding: var(--sp-3) var(--sp-2) var(--sp-1);
   font-family: var(--font-mono);
-  /* mute on paper = 4.2:1; at this size + weight it passes AA-large.
-     Section labels are decorative separators — not body text. */
+  /* 4.2:1 — below AA-normal threshold; revisit when design-system token contrast is audited */
 }
 
 /* Nav item button */
