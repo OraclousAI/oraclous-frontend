@@ -21,6 +21,20 @@ Key provisions every agent must observe:
 
 ---
 
+## Governance gates — canonical in ORAA-4
+
+This is a pointer, not a restatement: ORAA-4 (the PaperClip document `operating-contract`) is authoritative, and on any divergence ORAA-4 wins. The gates that bite most in this repo:
+
+- **§5 commits + pre-push + no attribution.** Commit messages are `[ORAA-xx] [agent:NAME] msg`, one commit per concern. Never write `Co-Authored-By`, `Generated`, `claude`, `paperclip`, or 🤖 in commits, PR bodies, or comments. Before any push, run the repo's `package.json` lint + type-check + format-check scripts. The commit-message format is enforced by the `commit-msg` hook (`core.hooksPath=.githooks`).
+- **§13.1 pre-open readiness.** Before OPENING a PR for review it must be lint/type/format clean, CI-green, and rebased onto current `main`.
+- **§9 DoD + handoff.** Done = CI-green + mergeable + CTO craft review + PR merged + handed off to the next owner; small fixes are folded into the current PR, not new tickets. (FE asymmetry: there are no test-author/reviewer agents — `frontend-implementer` → CTO craft review — so §13.4 two-PR sequencing does not apply to FE.)
+- **§9.3 docker.** If a change needs multi-service integration it is `docker-required`; if Docker is down, block `needs-human` — never skip.
+- **§17 structure.** New code lives in its prescribed location for this repo.
+- **§16 KB currency.** If you change `oraclous-knowledge`, keep the docs current and refresh graphify in the same change.
+- Full text: ORAA-4 + `oraclous-knowledge/engineering/`.
+
+---
+
 ## 1. Identity and scope
 
 This is the **frontend execution** repository. Currently exactly one persona lives and acts in this repo session:
