@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "paths": {
+      "@oraclous/design-system": ["../../packages/design-system/src/index.ts"],
+      "@oraclous/ui-utils": ["../../packages/ui-utils/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}
