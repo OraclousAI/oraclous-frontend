@@ -1,0 +1,238 @@
+name: CI — Frontend
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-fe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # quality: lint, type-check, format — base hygiene for every PR
+  # ─────────────────────────────────────────────────────────────────────────────
+  quality:
+    name: Lint / Type-check / Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (ESLint)
+        run: pnpm lint
+
+      - name: Type-check
+        run: pnpm typecheck
+
+      - name: Format check
+        run: pnpm format:check
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate 1 — api-client-boundary
+  #
+  # All HTTP to the Application Gateway must go through @oraclous/api-client.
+  # Raw fetch() / axios calls in feature code (apps/, or packages/ outside
+  # packages/api-client) bypass the typed contract and are rejected.
+  #
+  # Scope: *.ts, *.tsx in apps/ and packages/ (excluding packages/api-client
+  # itself, node_modules, and test files).
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate-api-client-boundary:
+    name: 'Gate 1: api-client-boundary'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject bare fetch/axios outside packages/api-client
+        run: |
+          violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+            -E "(^|[^a-zA-Z_])(fetch\s*\(|axios\b)" \
+            apps/ packages/ \
+            --exclude-dir=packages/api-client \
+            --exclude-dir=node_modules \
+            --exclude="*.test.ts" \
+            --exclude="*.test.tsx" \
+            --exclude="*.spec.ts" \
+            --exclude="*.spec.tsx" \
+            2>/dev/null || true)
+          # Also catch "import ... from 'axios'" or "import('axios')"
+          import_violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+            -E "from ['\"]axios['\"]|require\(['\"]axios['\"]\)" \
+            apps/ packages/ \
+            --exclude-dir=packages/api-client \
+            --exclude-dir=node_modules \
+            2>/dev/null || true)
+          all="$violations"$'\n'"$import_violations"
+          all=$(echo "$all" | sed '/^[[:space:]]*$/d')
+          if [ -n "$all" ]; then
+            echo "❌ api-client-boundary violated — direct fetch/axios detected outside packages/api-client:"
+            echo "$all"
+            exit 1
+          fi
+          echo "✅ api-client-boundary clean"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate 2 — no-token-in-storage
+  #
+  # Auth tokens (integration key, session token, agent credential) must never
+  # be placed in localStorage or sessionStorage directly. Feature code must call
+  # the platform's storage primitives; direct Web Storage writes are rejected.
+  #
+  # Scope: *.ts, *.tsx everywhere in apps/ and packages/ (excluding node_modules
+  # and test files so that test fixtures can exercise storage primitives).
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate-no-token-in-storage:
+    name: 'Gate 2: no-token-in-storage'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject direct localStorage/sessionStorage usage in feature code
+        run: |
+          # Filter out comment lines (grep -n output: "file:line:content") to avoid
+          # false positives from doc-strings or comments that mention the banned APIs.
+          violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+            -E "(localStorage|sessionStorage)\s*\." \
+            apps/ packages/ \
+            --exclude-dir=node_modules \
+            --exclude="*.test.ts" \
+            --exclude="*.test.tsx" \
+            --exclude="*.spec.ts" \
+            --exclude="*.spec.tsx" \
+            2>/dev/null | grep -vE ":[[:digit:]]+:[[:space:]]*//" || true)
+          if [ -n "$violations" ]; then
+            echo "❌ no-token-in-storage violated — direct localStorage/sessionStorage usage in feature code:"
+            echo "$violations"
+            exit 1
+          fi
+          echo "✅ no-token-in-storage clean"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate 3 — axe-core AA
+  #
+  # Every UI page must pass WCAG AA via axe-core automated scan.
+  # Tests live in tests/a11y/; the gate passes with zero tests on a greenfield
+  # scaffold (--pass-with-no-tests) and becomes a hard gate as pages ship.
+  #
+  # Test pattern: tests/a11y/**/*.spec.ts — each spec navigates to a page and
+  # calls checkA11y() from @axe-core/playwright against the AA ruleset.
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate-axe-core-aa:
+    name: 'Gate 3: axe-core AA'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (Chromium only)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: axe-core AA scan
+        run: pnpm test:a11y
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate 4 — bundle-budget
+  #
+  # Production bundles in apps/*/dist/ must not exceed 500 KB gzipped per JS
+  # entrypoint. The gate passes trivially on a greenfield scaffold with no
+  # built apps; once apps ship, every PR that grows a bundle over the cap blocks.
+  #
+  # Cap: 512 000 bytes (~500 KB) gzipped per JS file under apps/*/dist/.
+  # To adjust the cap, update BUNDLE_CAP_BYTES below and record the decision
+  # in a PR comment; significant cap bumps warrant a CTO review.
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate-bundle-budget:
+    name: 'Gate 4: bundle-budget'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build all apps
+        run: pnpm build
+
+      - name: Check bundle size cap (500 KB gzipped per entrypoint)
+        run: |
+          BUNDLE_CAP_BYTES=512000
+          bundles=$(find apps -name "*.js" -path "*/dist/*" 2>/dev/null | sort)
+          if [ -z "$bundles" ]; then
+            echo "✅ bundle-budget: no production bundles yet — gate passed (greenfield)"
+            exit 0
+          fi
+          failed=0
+          while IFS= read -r file; do
+            gz_bytes=$(gzip -c "$file" | wc -c)
+            kb=$(( gz_bytes / 1024 ))
+            if [ "$gz_bytes" -gt "$BUNDLE_CAP_BYTES" ]; then
+              echo "❌ OVER CAP: $file — ${kb} KB gzipped (cap $((BUNDLE_CAP_BYTES / 1024)) KB)"
+              failed=1
+            else
+              echo "✅ $file — ${kb} KB gzipped"
+            fi
+          done <<< "$bundles"
+          exit $failed
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate 5 — no-dangerouslySetInnerHTML
+  #
+  # dangerouslySetInnerHTML bypasses React's XSS protections and is statically
+  # banned. If user content must render as rich HTML, route it through a
+  # sanitiser with a strict allowlist (security-architect sign-off required).
+  #
+  # Scope: *.ts, *.tsx in apps/ and packages/ (including test files — test
+  # fixtures that exercise dangerouslySetInnerHTML are also prohibited).
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate-no-dangerous-html:
+    name: 'Gate 5: no-dangerouslySetInnerHTML'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject dangerouslySetInnerHTML
+        run: |
+          # Approved exception: packages/design-system/src/components/ui/chart.tsx
+          # ShadCN recharts primitive — injects only controlled CSS custom-property
+          # theme tokens into a <style> element; no user data ever reaches innerHTML.
+          violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+            "dangerouslySetInnerHTML" \
+            apps/ packages/ \
+            --exclude-dir=node_modules \
+            2>/dev/null | grep -v "packages/design-system/src/components/ui/chart.tsx" || true)
+          if [ -n "$violations" ]; then
+            echo "❌ no-dangerouslySetInnerHTML violated:"
+            echo "$violations"
+            exit 1
+          fi
+          echo "✅ no-dangerouslySetInnerHTML clean"
