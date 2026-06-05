@@ -47,7 +47,7 @@ function lazyPlaceholder(title: string) {
 const Dashboard = lazyPlaceholder('Dashboard');
 const Workspaces = lazy(() => import('./pages/WorkspacesPage.js'));
 const Agents = lazyPlaceholder('Agents');
-const Tools = lazyPlaceholder('Tools');
+const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Members = lazyPlaceholder('Members');
 const Billing = lazyPlaceholder('Billing');
 const Settings = lazyPlaceholder('Settings');
