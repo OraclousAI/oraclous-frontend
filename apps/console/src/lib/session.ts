@@ -2,8 +2,14 @@
 // (GET /v1/auth/me); useLogout ends the session (clears the in-memory token + cache).
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiClientError, ErrorCode, type AuthPrincipal, type Org } from '@oraclous/api-client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ApiClientError,
+  ErrorCode,
+  type AuthPrincipal,
+  type CreateOrgInput,
+  type Org,
+} from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -58,6 +64,19 @@ export function useOrgs(): OrgsState {
   });
 
   return { orgs: query.data ?? [], isLoading: query.isLoading };
+}
+
+// Create an organisation, then refresh the org list so the switcher shows it.
+export function useCreateOrg() {
+  const { orgs: orgsClient } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateOrgInput): Promise<Org> => orgsClient.create(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['orgs'] });
+    },
+  });
 }
 
 export function useLogout(): () => void {

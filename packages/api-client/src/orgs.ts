@@ -22,9 +22,15 @@ interface OrgResponseWire {
   readonly owner_user_id: string;
 }
 
+export interface CreateOrgInput {
+  readonly name: string;
+}
+
 export interface OrgsClient {
   // The organisations the authenticated user belongs to.
   list(): Promise<Org[]>;
+  // Create a new organisation (the caller becomes its owner).
+  create(input: CreateOrgInput): Promise<Org>;
 }
 
 function toOrg(wire: OrgResponseWire): Org {
@@ -47,6 +53,14 @@ export function createOrgsClient(transport: ApiTransport): OrgsClient {
         path: '/v1/orgs',
       });
       return data.map(toOrg);
+    },
+    async create(input: CreateOrgInput): Promise<Org> {
+      const { data } = await transport.execute<OrgResponseWire>({
+        method: 'POST',
+        path: '/v1/orgs',
+        body: { name: input.name },
+      });
+      return toOrg(data);
     },
   };
 }
