@@ -170,12 +170,21 @@ const styles = {
     display: 'grid',
     gap: 6,
     padding: 12,
+    minWidth: 0,
     background: '#ffffff',
     border: '1px solid var(--rule, #d7d6d2)',
     borderRadius: 10,
   },
   score: { fontSize: 12, color: 'var(--ink, #0b1220)', fontFamily: 'var(--font-mono, monospace)' },
-  resultText: { margin: 0, fontSize: 13.5, lineHeight: 1.5, color: 'var(--ink, #0b1220)' },
+  resultText: {
+    margin: 0,
+    fontSize: 13.5,
+    lineHeight: 1.5,
+    color: 'var(--ink, #0b1220)',
+    // arbitrary ingested content — wrap long unbreakable tokens (URLs/base64) instead of overflowing
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+  },
 } satisfies Record<string, CSSProperties>;
 
 function JobRow({ job }: { job: IngestJob }) {
@@ -233,6 +242,13 @@ export default function GraphDetailPage() {
     }
     wasActive.current = anyActive;
   }, [anyActive, graphId, queryClient]);
+
+  // Clear stale search results when navigating to a different graph — the route reuses this
+  // component instance, so the mutation's data would otherwise leak across graphs.
+  const { reset: resetSearch } = search;
+  useEffect(() => {
+    resetSearch();
+  }, [graphId, resetSearch]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -342,25 +358,29 @@ export default function GraphDetailPage() {
                 Search failed. Please try again.
               </p>
             )}
-            {search.isSuccess && searchResults.length === 0 && (
-              <p style={styles.muted}>No results for that query.</p>
-            )}
-            {searchResults.length > 0 && (
-              <ul style={styles.results} aria-label="Search results">
-                {searchResults.map((r) => {
-                  const score = resultScore(r);
-                  return (
-                    <li key={r.id} style={styles.result}>
-                      <div style={styles.jobTop}>
-                        <span style={{ ...styles.badge, ...styles.typeBadge }}>{r.type}</span>
-                        {score !== null && <span style={styles.score}>{score.toFixed(3)}</span>}
-                      </div>
-                      <p style={styles.resultText}>{resultText(r)}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            {/* Results are gated on isSuccess so a failed re-search never shows stale rows; the
+                region is a polite live region so arriving results (or none) are announced. */}
+            <div role="status" aria-live="polite">
+              {search.isSuccess && searchResults.length === 0 && (
+                <p style={styles.muted}>No results for that query.</p>
+              )}
+              {search.isSuccess && searchResults.length > 0 && (
+                <ul style={styles.results} aria-label="Search results">
+                  {searchResults.map((r) => {
+                    const score = resultScore(r);
+                    return (
+                      <li key={r.id} style={styles.result}>
+                        <div style={styles.jobTop}>
+                          <span style={{ ...styles.badge, ...styles.typeBadge }}>{r.type}</span>
+                          {score !== null && <span style={styles.score}>{score.toFixed(3)}</span>}
+                        </div>
+                        <p style={styles.resultText}>{resultText(r)}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </form>
 
           <form style={styles.card} onSubmit={onSubmit} aria-label="Add knowledge">
