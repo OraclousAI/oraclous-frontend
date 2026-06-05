@@ -5,10 +5,8 @@ export type { ApiError, ApiErrorDetail, ApiErrorEnvelope } from './errors';
 // Transport interface — consumers who build custom transports depend on this
 export type { ApiTransport, TransportRequest, TransportResponse } from './transport';
 
-// Domain types
+// Domain types (legacy scaffold; Graph/CreateGraphInput now come from ./graphs)
 export type {
-  Graph,
-  CreateGraphInput,
   Document,
   Community,
   GraphMember,
@@ -82,7 +80,6 @@ export { createApiClient } from './client';
 export type {
   ApiClient,
   ApiClientOptions,
-  GraphsClient,
   DocumentsClient,
   ChatClient,
   ConversationsClient,
@@ -114,3 +111,7 @@ export type { LoginInput, AuthSession, AuthPrincipal } from './types/auth';
 // Organisations sub-client
 export { createOrgsClient } from './orgs';
 export type { OrgsClient, Org, CreateOrgInput } from './orgs';
+
+// Knowledge-graph sub-client
+export { createGraphsClient } from './graphs';
+export type { GraphsClient, Graph, CreateGraphInput } from './graphs';
