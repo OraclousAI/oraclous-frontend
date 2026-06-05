@@ -54,7 +54,9 @@ export function createToolsClient(transport: ApiTransport): ToolsClient {
         method: 'GET',
         path: '/api/v1/tools',
       });
-      return data.capabilities.map(toTool);
+      // Defensive: a malformed/empty payload yields an empty catalogue, never a thrown query.
+      const capabilities = Array.isArray(data?.capabilities) ? data.capabilities : [];
+      return capabilities.map(toTool);
     },
   };
 }

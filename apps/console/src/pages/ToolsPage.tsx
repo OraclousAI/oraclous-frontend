@@ -42,7 +42,13 @@ const styles = {
     borderRadius: 12,
   },
   cardTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  name: { fontSize: 15, fontWeight: 600, color: 'var(--ink, #0b1220)' },
+  name: {
+    fontSize: 15,
+    fontWeight: 600,
+    color: 'var(--ink, #0b1220)',
+    minWidth: 0,
+    overflowWrap: 'break-word',
+  },
   badge: {
     fontSize: 11,
     fontWeight: 600,
@@ -86,7 +92,7 @@ export default function ToolsPage() {
       ) : tools.length === 0 ? (
         <p style={styles.muted}>No tools available yet.</p>
       ) : (
-        <ul style={styles.grid}>
+        <ul style={styles.grid} aria-label="Tools catalogue">
           {tools.map((t) => {
             const doc = safeDocUrl(t.documentationUrl);
             return (
