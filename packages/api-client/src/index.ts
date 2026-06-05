@@ -114,4 +114,4 @@ export type { OrgsClient, Org, CreateOrgInput } from './orgs';
 
 // Knowledge-graph sub-client
 export { createGraphsClient } from './graphs';
-export type { GraphsClient, Graph, CreateGraphInput } from './graphs';
+export type { GraphsClient, Graph, CreateGraphInput, IngestTextInput, IngestJob } from './graphs';

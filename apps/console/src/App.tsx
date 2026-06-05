@@ -12,6 +12,7 @@ import { PlaceholderView } from './components/views/PlaceholderView.js';
 const LoginPage = lazy(() => import('./pages/LoginPage.js'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.js'));
 const CreateOrgPage = lazy(() => import('./pages/CreateOrgPage.js'));
+const GraphDetailPage = lazy(() => import('./pages/GraphDetailPage.js'));
 
 function PageLoader() {
   return (
@@ -91,6 +92,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Workspaces />
+                </Suspense>
+              }
+            />
+            <Route
+              path="workspaces/:graphId"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <GraphDetailPage />
                 </Suspense>
               }
             />

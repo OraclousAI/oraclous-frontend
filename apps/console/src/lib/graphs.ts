@@ -1,8 +1,13 @@
-// Knowledge-graph hooks: list the organisation's graphs and create new ones.
+// Knowledge-graph hooks: list/create graphs, read one graph, ingest content, and track jobs.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateGraphInput, Graph } from '@oraclous/api-client';
+import type { CreateGraphInput, Graph, IngestJob, IngestTextInput } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
+
+// A job is still working (so its counts/status will change) while pending or running.
+export function isJobActive(job: IngestJob): boolean {
+  return job.status === 'pending' || job.status === 'running';
+}
 
 export interface GraphsState {
   readonly graphs: readonly Graph[];
@@ -32,6 +37,59 @@ export function useCreateGraph() {
     mutationFn: (input: CreateGraphInput): Promise<Graph> => client.create(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['graphs'] });
+    },
+  });
+}
+
+export interface GraphState {
+  readonly graph: Graph | null;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+export function useGraph(graphId: string): GraphState {
+  const { graphs: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['graph', graphId],
+    queryFn: () => client.get(graphId),
+    enabled: isAuthenticated && graphId !== '',
+  });
+
+  return { graph: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
+}
+
+export interface DocumentsState {
+  readonly documents: readonly IngestJob[];
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+// Polls the graph's jobs while any is still active (pending/running), then stops.
+export function useDocuments(graphId: string): DocumentsState {
+  const { graphs: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['graph-documents', graphId],
+    queryFn: () => client.listDocuments(graphId),
+    enabled: isAuthenticated && graphId !== '',
+    refetchInterval: (q) => ((q.state.data ?? []).some(isJobActive) ? 2000 : false),
+  });
+
+  return { documents: query.data ?? [], isLoading: query.isLoading, isError: query.isError };
+}
+
+export function useIngest(graphId: string) {
+  const { graphs: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: IngestTextInput): Promise<IngestJob> => client.ingestText(graphId, input),
+    onSuccess: () => {
+      // The new job appears in the documents list; its poll then drives the live status.
+      void queryClient.invalidateQueries({ queryKey: ['graph-documents', graphId] });
     },
   });
 }

@@ -1,6 +1,7 @@
 // Workspaces — the organisation's knowledge graphs (GET/POST /api/v1/graphs).
 // Lists existing graphs and creates new ones inline.
 import { useId, useState, type CSSProperties, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useCreateGraph, useGraphs } from '../lib/graphs.js';
 
@@ -201,20 +202,25 @@ export default function WorkspacesPage() {
         ) : (
           <ul style={styles.grid}>
             {graphs.map((g) => (
-              <li key={g.id} style={styles.card}>
-                <div style={styles.cardTop}>
-                  <span style={styles.cardName}>{g.name}</span>
-                  <span style={styles.badge} aria-label={`status: ${g.status}`}>
-                    {g.status}
-                  </span>
-                </div>
-                {g.description !== null && g.description !== '' && (
-                  <p style={styles.cardDesc}>{g.description}</p>
-                )}
-                <p style={styles.cardMeta}>
-                  {g.nodeCount} nodes · {g.relationshipCount} relationships
-                  {formatDate(g.createdAt) !== '' ? ` · created ${formatDate(g.createdAt)}` : ''}
-                </p>
+              <li key={g.id}>
+                <Link
+                  to={`/app/workspaces/${g.id}`}
+                  style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div style={styles.cardTop}>
+                    <span style={styles.cardName}>{g.name}</span>
+                    <span style={styles.badge} aria-label={`status: ${g.status}`}>
+                      {g.status}
+                    </span>
+                  </div>
+                  {g.description !== null && g.description !== '' && (
+                    <p style={styles.cardDesc}>{g.description}</p>
+                  )}
+                  <p style={styles.cardMeta}>
+                    {g.nodeCount} nodes · {g.relationshipCount} relationships
+                    {formatDate(g.createdAt) !== '' ? ` · created ${formatDate(g.createdAt)}` : ''}
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>
