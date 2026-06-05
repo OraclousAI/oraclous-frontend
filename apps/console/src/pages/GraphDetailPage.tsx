@@ -68,7 +68,7 @@ const styles = {
   meta: {
     margin: 0,
     fontSize: 12,
-    color: 'var(--mute, #73767d)',
+    color: 'var(--ink, #0b1220)',
     fontFamily: 'var(--font-mono, monospace)',
   },
   desc: { margin: 0, fontSize: 13.5, color: 'var(--ink, #0b1220)' },
@@ -129,7 +129,7 @@ const styles = {
     border: '1px solid var(--error, #c8412c)',
     borderRadius: 8,
   },
-  muted: { margin: 0, fontSize: 13.5, color: 'var(--mute, #73767d)' },
+  muted: { margin: 0, fontSize: 13.5, color: 'var(--ink, #0b1220)' },
   jobs: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 },
   job: {
     display: 'grid',
@@ -144,22 +144,19 @@ const styles = {
   jobMeta: {
     margin: 0,
     fontSize: 12,
-    color: 'var(--mute, #73767d)',
+    color: 'var(--ink, #0b1220)',
     fontFamily: 'var(--font-mono, monospace)',
   },
   jobError: { margin: 0, fontSize: 12, color: 'var(--error, #c8412c)' },
 } satisfies Record<string, CSSProperties>;
 
 function JobRow({ job }: { job: IngestJob }) {
-  const live = isJobActive(job);
   return (
     <li style={styles.job}>
       <div style={styles.jobTop}>
         <span style={styles.jobName}>{job.filename ?? job.sourceType}</span>
-        <span
-          style={{ ...styles.badge, ...badgeStyle(job.status) }}
-          aria-live={live ? 'polite' : undefined}
-        >
+        {/* Always a live region so the terminal transition (running -> completed/failed) is announced. */}
+        <span style={{ ...styles.badge, ...badgeStyle(job.status) }} aria-live="polite">
           {job.status}
         </span>
       </div>
@@ -188,9 +185,17 @@ export default function GraphDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   // When the last active job finishes, refetch the graph so node/relationship counts update.
+  // The latch is scoped to graphId (the route doesn't remount per :graphId), so navigating between
+  // graphs resets it cleanly rather than firing a spurious cross-graph invalidation.
   const anyActive = documents.some(isJobActive);
   const wasActive = useRef(false);
+  const trackedGraphId = useRef(graphId);
   useEffect(() => {
+    if (trackedGraphId.current !== graphId) {
+      trackedGraphId.current = graphId;
+      wasActive.current = anyActive;
+      return;
+    }
     if (wasActive.current && !anyActive) {
       void queryClient.invalidateQueries({ queryKey: ['graph', graphId] });
     }
