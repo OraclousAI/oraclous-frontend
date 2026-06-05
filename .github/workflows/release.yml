@@ -1,0 +1,57 @@
+name: Release — Frontend
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # release: build production artefacts and publish to the release registry
+  #
+  # Stub — full release workflow pending deployment topology decisions (ADR
+  # required for registry target and deployment mode wiring). Until then this
+  # skeleton enforces that every release starts from a CI-green commit and
+  # documents the intended shape.
+  #
+  # Both deployment modes (self-hosted docker-compose/Helm and cloud-hosted)
+  # share the same build artefact; mode-specific wiring is handled at deploy
+  # time via VITE_API_BASE_URL (§3.1 invariant).
+  # ─────────────────────────────────────────────────────────────────────────────
+  build:
+    name: Build release artefacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build all apps
+        run: pnpm build
+        env:
+          # Injected at build time; value differs per deployment mode.
+          # Self-hosted operators supply their own gateway URL.
+          # Cloud-hosted builds are stamped by the release pipeline.
+          VITE_API_BASE_URL: ${{ secrets.RELEASE_API_BASE_URL }}
+
+      # TODO: publish artefacts once registry target is decided (pending ADR)
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: apps/*/dist/
+          retention-days: 7
