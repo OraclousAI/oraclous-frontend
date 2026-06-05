@@ -1,13 +1,14 @@
 // Workspace (knowledge-graph) detail: live node/relationship counts, an inline ingest form
-// (text/structured content -> async job), and the job history with live status. When the last
-// job finishes, the graph is refetched so the counts update.
+// (text/structured content -> async job) with live job status, and retrieval/search over the graph.
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiClientError, type IngestJob } from '@oraclous/api-client';
+import { ApiClientError, type IngestJob, type SearchMode } from '@oraclous/api-client';
 import { isJobActive, useDocuments, useGraph, useIngest } from '../lib/graphs.js';
+import { resultScore, resultText, useSearch } from '../lib/search.js';
 
 const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
+const SEARCH_MODES = ['semantic', 'fulltext', 'hybrid'] as const;
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -148,6 +149,33 @@ const styles = {
     fontFamily: 'var(--font-mono, monospace)',
   },
   jobError: { margin: 0, fontSize: 12, color: 'var(--error, #c8412c)' },
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '9px 12px',
+    fontSize: 14,
+    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+    color: 'var(--ink, #0b1220)',
+    background: '#ffffff',
+    border: '1px solid var(--rule, #d7d6d2)',
+    borderRadius: 8,
+  },
+  typeBadge: {
+    color: 'var(--ink, #0b1220)',
+    background: 'var(--paper-soft, #eceae5)',
+    borderColor: 'var(--rule, #d7d6d2)',
+  },
+  results: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 },
+  result: {
+    display: 'grid',
+    gap: 6,
+    padding: 12,
+    background: '#ffffff',
+    border: '1px solid var(--rule, #d7d6d2)',
+    borderRadius: 10,
+  },
+  score: { fontSize: 12, color: 'var(--ink, #0b1220)', fontFamily: 'var(--font-mono, monospace)' },
+  resultText: { margin: 0, fontSize: 13.5, lineHeight: 1.5, color: 'var(--ink, #0b1220)' },
 } satisfies Record<string, CSSProperties>;
 
 function JobRow({ job }: { job: IngestJob }) {
@@ -184,6 +212,10 @@ export default function GraphDetailPage() {
   const [sourceType, setSourceType] = useState<string>('text');
   const [error, setError] = useState<string | null>(null);
 
+  const [query, setQuery] = useState('');
+  const [mode, setMode] = useState<SearchMode>('semantic');
+  const search = useSearch(graphId);
+
   // When the last active job finishes, refetch the graph so node/relationship counts update.
   // The latch is scoped to graphId (the route doesn't remount per :graphId), so navigating between
   // graphs resets it cleanly rather than firing a spurious cross-graph invalidation.
@@ -213,7 +245,13 @@ export default function GraphDetailPage() {
     }
   }
 
+  function onSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    search.mutate({ query: query.trim(), mode });
+  }
+
   const busy = ingest.isPending;
+  const searchResults = search.data ?? [];
 
   return (
     <div style={styles.page}>
@@ -256,6 +294,74 @@ export default function GraphDetailPage() {
               created {formatDate(graph.createdAt)} · updated {formatDate(graph.updatedAt)}
             </p>
           </header>
+
+          <form style={styles.card} onSubmit={onSearch} aria-label="Search this workspace">
+            <h2 style={styles.cardTitle}>Search this workspace</h2>
+            <div style={styles.controlRow}>
+              <div style={{ ...styles.field, flex: 1, minWidth: 200 }}>
+                <label htmlFor="search-query" style={styles.label}>
+                  Query
+                </label>
+                <input
+                  id="search-query"
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Ask your knowledge…"
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.field}>
+                <label htmlFor="search-mode" style={styles.label}>
+                  Mode
+                </label>
+                <select
+                  id="search-mode"
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value as SearchMode)}
+                  style={styles.select}
+                >
+                  {SEARCH_MODES.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={search.isPending || query.trim() === ''}
+                aria-busy={search.isPending}
+                style={search.isPending ? { ...styles.primary, ...styles.busy } : styles.primary}
+              >
+                {search.isPending ? 'Searching…' : 'Search'}
+              </button>
+            </div>
+            {search.isError && (
+              <p role="alert" style={styles.error}>
+                Search failed. Please try again.
+              </p>
+            )}
+            {search.isSuccess && searchResults.length === 0 && (
+              <p style={styles.muted}>No results for that query.</p>
+            )}
+            {searchResults.length > 0 && (
+              <ul style={styles.results} aria-label="Search results">
+                {searchResults.map((r) => {
+                  const score = resultScore(r);
+                  return (
+                    <li key={r.id} style={styles.result}>
+                      <div style={styles.jobTop}>
+                        <span style={{ ...styles.badge, ...styles.typeBadge }}>{r.type}</span>
+                        {score !== null && <span style={styles.score}>{score.toFixed(3)}</span>}
+                      </div>
+                      <p style={styles.resultText}>{resultText(r)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </form>
 
           <form style={styles.card} onSubmit={onSubmit} aria-label="Add knowledge">
             <h2 style={styles.cardTitle}>Add knowledge</h2>
