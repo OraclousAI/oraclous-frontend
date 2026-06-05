@@ -4,11 +4,18 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { createAuthClient, createFetchTransport, type AuthClient } from '@oraclous/api-client';
+import {
+  createAuthClient,
+  createFetchTransport,
+  createOrgsClient,
+  type AuthClient,
+  type OrgsClient,
+} from '@oraclous/api-client';
 import { useTokenStore } from './token-store.jsx';
 
 interface ApiContextValue {
   readonly auth: AuthClient;
+  readonly orgs: OrgsClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -36,7 +43,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ApiContextValue>(() => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
     const transport = createFetchTransport({ baseUrl, getToken });
-    return { auth: createAuthClient(transport) };
+    return { auth: createAuthClient(transport), orgs: createOrgsClient(transport) };
   }, [getToken]);
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
