@@ -110,3 +110,7 @@ export type { FetchTransportOptions } from './fetch-transport';
 export { createAuthClient } from './auth';
 export type { AuthClient } from './auth';
 export type { LoginInput, AuthSession, AuthPrincipal } from './types/auth';
+
+// Organisations sub-client
+export { createOrgsClient } from './orgs';
+export type { OrgsClient, Org } from './orgs';

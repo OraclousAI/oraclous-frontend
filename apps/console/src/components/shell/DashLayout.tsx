@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { DashProvider } from '../../context/dash.js';
-import { useLogout, useMe } from '../../lib/session.js';
+import { useLogout, useMe, useOrgs } from '../../lib/session.js';
 import { TopBar } from './TopBar.js';
 import { Sidebar } from './Sidebar.js';
 import './shell.css';
@@ -25,6 +25,7 @@ export function Page({
 
 export function DashLayout({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
   const { principal, isAuthError } = useMe();
+  const { orgs, isLoading: orgsLoading } = useOrgs();
   const logout = useLogout();
 
   // If the server rejects the token (expired/invalid), end the session and return to /login.
@@ -32,8 +33,10 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
     if (isAuthError) logout();
   }, [isAuthError, logout]);
 
+  const dashOrgs = orgs.map((o) => ({ id: o.id, name: o.name, slug: o.slug }));
+
   return (
-    <DashProvider email={principal?.email ?? ''}>
+    <DashProvider email={principal?.email ?? ''} orgs={dashOrgs} orgsLoading={orgsLoading}>
       <div className="shell-root">
         <Sidebar />
         <div className="shell-maincol">

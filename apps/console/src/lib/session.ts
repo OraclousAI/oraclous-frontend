@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiClientError, ErrorCode, type AuthPrincipal } from '@oraclous/api-client';
+import { ApiClientError, ErrorCode, type AuthPrincipal, type Org } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -38,6 +38,26 @@ export function useMe(): MeState {
     isLoading: query.isLoading,
     isAuthError: query.isError && isAuthFailure(query.error),
   };
+}
+
+export interface OrgsState {
+  readonly orgs: readonly Org[];
+  readonly isLoading: boolean;
+}
+
+export function useOrgs(): OrgsState {
+  const { orgs: orgsClient } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['orgs'],
+    queryFn: () => orgsClient.list(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) => !isAuthFailure(error) && failureCount < 1,
+  });
+
+  return { orgs: query.data ?? [], isLoading: query.isLoading };
 }
 
 export function useLogout(): () => void {
