@@ -1,11 +1,12 @@
 // Console app routing skeleton.
-// All feature views are deferred behind lazy() + Suspense; each renders PlaceholderView
-// until its implementation story lands.  Live auth (R6) will replace the mock token seeding
-// in main.tsx; ProtectedRoute and TenantGate are wired and ready.
+// Feature views are lazy() + Suspense, each rendering PlaceholderView until its slice lands.
+// Auth is live: /login signs in against the gateway, and the /app subtree is wrapped in
+// ProtectedRoute, which redirects unauthenticated visitors to /login.
 
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TenantGate } from './components/auth/TenantGate.js';
+import { ProtectedRoute } from './components/auth/ProtectedRoute.js';
 import { AppShell } from './components/shell/AppShell.js';
 import { PlaceholderView } from './components/views/PlaceholderView.js';
 
@@ -67,8 +68,15 @@ export function App() {
             }
           />
 
-          {/* Authenticated shell — /app subtree */}
-          <Route path="/app" element={<AppShell />}>
+          {/* Authenticated shell — /app subtree (redirects to /login when unauthenticated) */}
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <AppShell />
+              </ProtectedRoute>
+            }
+          >
             <Route
               index
               element={

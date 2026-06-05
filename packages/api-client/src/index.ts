@@ -101,3 +101,12 @@ export type {
 // Mock seam — importable in test environments; no live calls
 export { createMockTransport } from './mock';
 export type { MockTransport } from './mock';
+
+// Real gateway transport
+export { createFetchTransport } from './fetch-transport';
+export type { FetchTransportOptions } from './fetch-transport';
+
+// Auth sub-client (pre-session: login is a public gateway path)
+export { createAuthClient } from './auth';
+export type { AuthClient } from './auth';
+export type { LoginInput, AuthSession, AuthPrincipal } from './types/auth';

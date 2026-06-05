@@ -1,6 +1,6 @@
-// In-memory auth token store — no localStorage/sessionStorage.
+// In-memory auth token store — no localStorage/sessionStorage (Gate 2: no-token-in-storage).
 // §3.5 invariant: tokens never touch persistent storage outside the platform's primitives.
-// Live token issuance is gateway-bound and deferred to R6; this store holds the runtime value only.
+// The session token is issued by the gateway via LoginPage and read by the API transport.
 
 import { createContext, useContext, useMemo, useState, useCallback, type ReactNode } from 'react';
 
