@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
+import { useLogout } from '../../lib/session.js';
 import {
   IconChevUpDown,
   IconChevRight,
@@ -97,6 +98,7 @@ function handleMenuKeyDown(
 export function TopBar() {
   const { tenant, user, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
   const navigate = useNavigate();
+  const logout = useLogout();
   const { pathname } = useLocation();
   const [tenantOpen, setTenantOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -401,7 +403,8 @@ export function TopBar() {
                 role="menuitem"
                 className="shell-dropdown__item"
                 onClick={() => {
-                  window.location.href = '/login';
+                  setUserOpen(false);
+                  logout();
                 }}
               >
                 Sign out

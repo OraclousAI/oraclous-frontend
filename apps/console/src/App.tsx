@@ -6,7 +6,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TenantGate } from './components/auth/TenantGate.js';
-import { ProtectedRoute } from './components/auth/ProtectedRoute.js';
 import { AppShell } from './components/shell/AppShell.js';
 import { PlaceholderView } from './components/views/PlaceholderView.js';
 
@@ -68,15 +67,8 @@ export function App() {
             }
           />
 
-          {/* Authenticated shell — /app subtree (redirects to /login when unauthenticated) */}
-          <Route
-            path="/app"
-            element={
-              <ProtectedRoute>
-                <AppShell />
-              </ProtectedRoute>
-            }
-          >
+          {/* Authenticated shell — /app subtree (AppShell self-protects via ProtectedRoute) */}
+          <Route path="/app" element={<AppShell />}>
             <Route
               index
               element={
