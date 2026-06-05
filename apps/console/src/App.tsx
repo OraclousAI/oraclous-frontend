@@ -11,6 +11,7 @@ import { PlaceholderView } from './components/views/PlaceholderView.js';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.js'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.js'));
+const CreateOrgPage = lazy(() => import('./pages/CreateOrgPage.js'));
 
 function PageLoader() {
   return (
@@ -74,6 +75,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Dashboard />
+                </Suspense>
+              }
+            />
+            <Route
+              path="orgs/new"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <CreateOrgPage />
                 </Suspense>
               }
             />
