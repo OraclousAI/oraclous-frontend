@@ -119,3 +119,7 @@ export type { GraphsClient, Graph, CreateGraphInput, IngestTextInput, IngestJob 
 // Retrieval/search sub-client
 export { createSearchClient } from './search';
 export type { SearchClient, SearchMode, SearchInput, SearchResult } from './search';
+
+// Capability-registry tools sub-client
+export { createToolsClient } from './tools';
+export type { ToolsClient, Tool } from './tools';
