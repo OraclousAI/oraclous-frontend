@@ -9,9 +9,11 @@ import {
   createFetchTransport,
   createGraphsClient,
   createOrgsClient,
+  createSearchClient,
   type AuthClient,
   type GraphsClient,
   type OrgsClient,
+  type SearchClient,
 } from '@oraclous/api-client';
 import { useTokenStore } from './token-store.jsx';
 
@@ -19,6 +21,7 @@ interface ApiContextValue {
   readonly auth: AuthClient;
   readonly orgs: OrgsClient;
   readonly graphs: GraphsClient;
+  readonly search: SearchClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -50,6 +53,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       auth: createAuthClient(transport),
       orgs: createOrgsClient(transport),
       graphs: createGraphsClient(transport),
+      search: createSearchClient(transport),
     };
   }, [getToken]);
 
