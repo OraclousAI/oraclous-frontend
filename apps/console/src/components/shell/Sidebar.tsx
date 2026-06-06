@@ -1,18 +1,22 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
+import { useGraphs } from '../../lib/graphs.js';
 import { NAV_BY_PERSONA, activeNavId } from '../../nav/index.js';
 import { Logo } from '../../icons/index.js';
 
 export function Sidebar() {
-  const { persona, currentOrg, orgs } = useDash();
+  const { persona } = useDash();
+  const { graphs } = useGraphs();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const nav = NAV_BY_PERSONA[persona];
   const activeId = activeNavId(pathname);
 
-  // Workspace shortcuts — show up to 6 org-level graphs when available.
-  // Will be populated via api-client once organizationsApi is wired.
-  const workspaces = orgs.slice(0, 6);
+  // Workspace shortcuts — up to 6 of the session's knowledge graphs. These are token-scoped: the
+  // org switcher is cosmetic until token re-exchange lands (multi-org re-scoping follow-up), so for a
+  // multi-org user they track the token's org, not a switched selection. Correct for the common
+  // single-org case; a strict improvement over the prior (dead org-id) links.
+  const workspaces = graphs.slice(0, 6);
 
   return (
     <aside className="shell-sidebar" aria-label="Main navigation">
@@ -62,37 +66,27 @@ export function Sidebar() {
             >
               {Icon != null && <Icon size={15} aria-hidden="true" />}
               <span style={{ flex: 1 }}>{it.label}</span>
-              {it.id === 'agents' && persona === 'owner' && workspaces.length > 0 && (
-                <span
-                  className="shell-nav-item__badge"
-                  aria-label={`${workspaces.length} workspaces`}
-                >
-                  {workspaces.length}
-                </span>
-              )}
             </button>
           );
         })}
 
-        {/* Workspace shortcuts */}
-        {currentOrg != null && workspaces.length > 0 && (
+        {/* Workspace shortcuts — the current org's knowledge graphs */}
+        {workspaces.length > 0 && (
           <section aria-label="Workspaces">
-            <h3 className="shell-sidebar__section-label">
-              {persona === 'member' ? 'My access' : 'Workspaces'}
-            </h3>
-            {workspaces.map((org) => {
-              const wsPath = `/app/workspaces/${org.id}`;
+            <h3 className="shell-sidebar__section-label">Workspaces</h3>
+            {workspaces.map((graph) => {
+              const wsPath = `/app/workspaces/${graph.id}`;
               const isActive = pathname === wsPath;
               return (
                 <button
-                  key={org.id}
+                  key={graph.id}
                   type="button"
                   className="shell-ws-item"
                   onClick={() => navigate(wsPath)}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <span className="shell-ws-item__dot" aria-hidden="true" />
-                  <span className="shell-ws-item__name">{org.name}</span>
+                  <span className="shell-ws-item__name">{graph.name}</span>
                 </button>
               );
             })}
