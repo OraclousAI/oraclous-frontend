@@ -71,7 +71,7 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
           />
         )}
         <div className="shell-maincol">
-          <TopBar onMenuClick={() => setNavOpen((v) => !v)} />
+          <TopBar onMenuClick={() => setNavOpen((v) => !v)} menuOpen={navOpen} />
           <Page padded={padded}>{children}</Page>
         </div>
       </div>

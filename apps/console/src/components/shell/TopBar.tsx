@@ -96,7 +96,7 @@ function handleMenuKeyDown(
   items[next]?.focus();
 }
 
-export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
+export function TopBar({ onMenuClick, menuOpen }: { onMenuClick: () => void; menuOpen: boolean }) {
   const { tenant, user, userId, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
   const navigate = useNavigate();
   const logout = useLogout();
@@ -142,8 +142,14 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <button
           type="button"
           className="shell-menu-btn"
-          onClick={onMenuClick}
-          aria-label="Open navigation menu"
+          onClick={() => {
+            // Closing the topbar menus first avoids a dropdown lingering above the open drawer.
+            setTenantOpen(false);
+            setUserOpen(false);
+            onMenuClick();
+          }}
+          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={menuOpen}
         >
           <span aria-hidden="true">☰</span>
         </button>

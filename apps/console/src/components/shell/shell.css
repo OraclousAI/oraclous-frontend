@@ -528,7 +528,8 @@
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 50;
+    /* Above the topbar dropdowns (z-index 60) so the open drawer is the top surface. */
+    z-index: 80;
     transform: translateX(-100%);
     transition: transform 180ms var(--motion-hover-ease, ease);
   }
@@ -546,12 +547,17 @@
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 40;
+    z-index: 70;
     border: none;
     padding: 0;
     margin: 0;
     background: rgba(11, 18, 32, 0.4);
     cursor: pointer;
+  }
+
+  /* The central search crowds the topbar once the hamburger is added — drop it on phones. */
+  .shell-topbar__search {
+    display: none;
   }
 
   .shell-page-inner {
