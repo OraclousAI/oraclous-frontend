@@ -112,6 +112,17 @@ export type { LoginInput, AuthSession, AuthPrincipal } from './types/auth';
 export { createOrgsClient } from './orgs';
 export type { OrgsClient, Org, CreateOrgInput, UpdateOrgInput } from './orgs';
 
+// Org invitations sub-client
+export { createInvitationsClient } from './invitations';
+export type {
+  InvitationsClient,
+  Invitation,
+  CreatedInvitation,
+  CreateInvitationInput,
+  InvitationPeek,
+  AcceptedInvitation,
+} from './invitations';
+
 // Knowledge-graph sub-client
 export { createGraphsClient } from './graphs';
 export type {

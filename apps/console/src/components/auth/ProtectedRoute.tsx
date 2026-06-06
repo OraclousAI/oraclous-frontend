@@ -7,7 +7,9 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    // Preserve the query string too (e.g. /app/accept-invite?token=…) so deep links survive login.
+    const target = location.pathname + location.search;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(target)}`} replace />;
   }
 
   return <>{children}</>;

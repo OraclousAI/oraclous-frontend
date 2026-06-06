@@ -48,11 +48,12 @@ const Dashboard = lazy(() => import('./pages/DashboardPage.js'));
 const Workspaces = lazy(() => import('./pages/WorkspacesPage.js'));
 const Agents = lazyPlaceholder('Agents');
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
-const Members = lazyPlaceholder('Members');
+const Members = lazy(() => import('./pages/MembersPage.js'));
 const Billing = lazyPlaceholder('Billing');
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
 const Explorer = lazyPlaceholder('Explorer');
+const AcceptInvite = lazy(() => import('./pages/AcceptInvitePage.js'));
 
 export function App() {
   return (
@@ -124,6 +125,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Members />
+                </Suspense>
+              }
+            />
+            <Route
+              path="accept-invite"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AcceptInvite />
                 </Suspense>
               }
             />
