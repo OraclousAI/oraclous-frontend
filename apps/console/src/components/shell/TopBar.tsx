@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
 import { useLogout, useSwitchOrg } from '../../lib/session.js';
+import { useToast } from '../../lib/toast.jsx';
 import {
   IconChevUpDown,
   IconChevRight,
@@ -100,6 +101,7 @@ export function TopBar() {
   const navigate = useNavigate();
   const logout = useLogout();
   const switchOrg = useSwitchOrg();
+  const toast = useToast();
   const { pathname } = useLocation();
   const [tenantOpen, setTenantOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -228,6 +230,7 @@ export function TopBar() {
                           onSuccess: () => {
                             setCurrentOrg(o.id);
                             setTenantOpen(false);
+                            toast.success(`Switched to ${o.name}.`);
                           },
                         });
                       }}

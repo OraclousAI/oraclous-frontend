@@ -5,6 +5,7 @@ import { ApiClientError, type MemberRole } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import { useChangeMemberRole, useMe, useMembers, useOrg, useRemoveMember } from '../lib/session.js';
 import { useCreateInvitation, useInvitations, useRevokeInvitation } from '../lib/invitations.js';
+import { useToast } from '../lib/toast.jsx';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -150,6 +151,7 @@ export default function MembersPage() {
   const revokeInvite = useRevokeInvitation(orgId);
   const changeRole = useChangeMemberRole(orgId);
   const removeMember = useRemoveMember(orgId);
+  const toast = useToast();
 
   const isOwner = principal !== null && org !== null && principal.id === org.ownerUserId;
 
@@ -177,6 +179,7 @@ export default function MembersPage() {
       const invitation = await createInvite.mutateAsync({ email: email.trim(), role });
       setCreatedToken(invitation.token);
       setEmail('');
+      toast.success('Invitation created.');
     } catch (cause) {
       setError(messageFor(cause));
     }
@@ -196,6 +199,7 @@ export default function MembersPage() {
     setListError(null);
     try {
       await revokeInvite.mutateAsync(invitationId);
+      toast.success('Invitation revoked.');
     } catch (cause) {
       setListError(messageFor(cause));
     }
@@ -205,6 +209,7 @@ export default function MembersPage() {
     setMemberError(null);
     try {
       await changeRole.mutateAsync({ userId, role: nextRole });
+      toast.success('Role updated.');
     } catch (cause) {
       setMemberError(messageFor(cause));
     }
@@ -214,6 +219,7 @@ export default function MembersPage() {
     setMemberError(null);
     try {
       await removeMember.mutateAsync(userId);
+      toast.success('Member removed.');
     } catch (cause) {
       setMemberError(messageFor(cause));
     }

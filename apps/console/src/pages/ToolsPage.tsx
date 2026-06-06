@@ -2,6 +2,7 @@
 // org-registered tools), from GET /api/v1/tools.
 import type { CSSProperties } from 'react';
 import { useTools } from '../lib/tools.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 // Only render a documentation link if it is an http(s) URL (org-registered tools could supply
 // arbitrary values; never emit a javascript:/data: href).
@@ -82,9 +83,7 @@ export default function ToolsPage() {
       </header>
 
       {isLoading ? (
-        <p style={styles.muted} role="status">
-          Loading…
-        </p>
+        <SkeletonList rows={4} />
       ) : isError ? (
         <p style={styles.error} role="alert">
           Could not load the tools catalogue.

@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useDash } from '../context/dash.js';
 import { useGraphs } from '../lib/graphs.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -142,9 +143,7 @@ export default function DashboardPage() {
       <section style={styles.section} aria-label="Recent workspaces">
         <h2 style={styles.h2}>Recent workspaces</h2>
         {isLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={3} />
         ) : recent.length === 0 ? (
           <div style={styles.empty}>
             <p style={styles.muted}>
