@@ -13,7 +13,15 @@ interface GraphData {
   readonly edges: readonly GraphEdge[];
 }
 
-const edgeKey = (e: GraphEdge): string => `${e.source}|${e.target}|${e.type}`;
+// Unordered key: the sphere draws undirected lines, and /neighbors is undirected — so a base edge
+// B→A and an expand-synthesized A→B of the same type are the same edge (dedupe → no double-draw, no
+// degree double-count).
+const edgeKey = (e: GraphEdge): string => {
+  const [a, b] = e.source <= e.target ? [e.source, e.target] : [e.target, e.source];
+  return `${a}|${b}|${e.type}`;
+};
+
+const MAX_NODES = 800;
 
 function mergeGraph(base: Subgraph | null, extra: GraphData): GraphData {
   const nodes = new Map<string, GraphNode>();
@@ -198,6 +206,10 @@ export default function ExplorerPage() {
 
   async function onExpand(node: GraphNode) {
     setExpandError(null);
+    if (graph.nodes.length >= MAX_NODES) {
+      setExpandError('This view is already large — open a more focused graph to keep expanding.');
+      return;
+    }
     try {
       const neighbours = await expand.mutateAsync(node.id);
       setExtra((prev) => {
