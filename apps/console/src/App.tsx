@@ -47,7 +47,8 @@ function lazyPlaceholder(title: string) {
 
 const Dashboard = lazy(() => import('./pages/DashboardPage.js'));
 const Workspaces = lazy(() => import('./pages/WorkspacesPage.js'));
-const Agents = lazyPlaceholder('Agents');
+const Agents = lazy(() => import('./pages/AgentsPage.js'));
+const AgentDetail = lazy(() => import('./pages/AgentDetailPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
 const Billing = lazyPlaceholder('Billing');
@@ -113,6 +114,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Agents />
+                </Suspense>
+              }
+            />
+            <Route
+              path="agents/:instanceId"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AgentDetail />
                 </Suspense>
               }
             />
