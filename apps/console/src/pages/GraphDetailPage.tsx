@@ -284,6 +284,7 @@ export default function GraphDetailPage() {
   const [renaming, setRenaming] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [mgmtError, setMgmtError] = useState<string | null>(null);
 
   // When the last active job finishes, refetch the graph so node/relationship counts update.
   // The latch is scoped to graphId (the route doesn't remount per :graphId), so navigating between
@@ -311,6 +312,7 @@ export default function GraphDetailPage() {
     setRenaming(false);
     setConfirmingDelete(false);
     setFileName(null);
+    setMgmtError(null);
   }, [graphId, resetSearch]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -346,23 +348,23 @@ export default function GraphDetailPage() {
     event.preventDefault();
     const trimmed = nameInput.trim();
     if (trimmed === '') return;
-    setError(null);
+    setMgmtError(null);
     try {
       await updateGraph.mutateAsync({ name: trimmed });
       setRenaming(false);
     } catch (cause) {
-      setError(messageFor(cause));
+      setMgmtError(messageFor(cause));
     }
   }
 
   async function onDelete() {
-    setError(null);
+    setMgmtError(null);
     try {
       await deleteGraph.mutateAsync(graphId);
       navigate('/app/workspaces', { replace: true });
     } catch (cause) {
-      setError(messageFor(cause));
-      setConfirmingDelete(false);
+      // keep the confirm row open so the error + retry stay co-located with the action
+      setMgmtError(messageFor(cause));
     }
   }
 
@@ -391,6 +393,13 @@ export default function GraphDetailPage() {
                 <input
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setRenaming(false);
+                      setMgmtError(null);
+                    }
+                  }}
                   aria-label="Workspace name"
                   style={styles.input}
                 />
@@ -401,7 +410,14 @@ export default function GraphDetailPage() {
                 >
                   {updateGraph.isPending ? 'Saving…' : 'Save'}
                 </button>
-                <button type="button" onClick={() => setRenaming(false)} style={styles.secondary}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRenaming(false);
+                    setMgmtError(null);
+                  }}
+                  style={styles.secondary}
+                >
                   Cancel
                 </button>
               </form>
@@ -437,6 +453,7 @@ export default function GraphDetailPage() {
                   onClick={() => {
                     setNameInput(graph.name);
                     setRenaming(true);
+                    setMgmtError(null);
                   }}
                   style={styles.secondary}
                 >
@@ -455,7 +472,10 @@ export default function GraphDetailPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setConfirmingDelete(false)}
+                      onClick={() => {
+                        setConfirmingDelete(false);
+                        setMgmtError(null);
+                      }}
                       style={styles.secondary}
                     >
                       Cancel
@@ -464,13 +484,21 @@ export default function GraphDetailPage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setConfirmingDelete(true)}
+                    onClick={() => {
+                      setConfirmingDelete(true);
+                      setMgmtError(null);
+                    }}
                     style={styles.dangerGhost}
                   >
                     Delete
                   </button>
                 )}
               </div>
+            )}
+            {mgmtError !== null && (
+              <p role="alert" style={styles.error}>
+                {mgmtError}
+              </p>
             )}
           </header>
 
