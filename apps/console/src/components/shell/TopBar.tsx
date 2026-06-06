@@ -142,7 +142,10 @@ export function TopBar() {
             ref={tenantBtnRef}
             type="button"
             className="shell-topbar__tenant-btn"
-            onClick={() => setTenantOpen((v) => !v)}
+            onClick={() => {
+              if (!tenantOpen) switchOrg.reset(); // clear a prior switch error when reopening
+              setTenantOpen((v) => !v);
+            }}
             aria-expanded={tenantOpen}
             aria-haspopup="menu"
             aria-label={`${tenant.name} — switch organization`}
@@ -188,6 +191,22 @@ export function TopBar() {
                   No organizations yet.
                 </p>
               )}
+              {switchOrg.isError && (
+                <p
+                  role="alert"
+                  style={{
+                    fontSize: 12.5,
+                    color: 'var(--ink, #0b1220)',
+                    background: 'var(--error-bg, #fbeae8)',
+                    border: '1px solid var(--error, #c8412c)',
+                    borderRadius: 6,
+                    padding: '6px 8px',
+                    margin: '0 0 8px',
+                  }}
+                >
+                  Couldn&rsquo;t switch organisation. Please try again.
+                </p>
+              )}
               <div role="group" aria-label="Organizations">
                 {orgs.map((o) => {
                   const isActive = o.id === currentOrg?.id;
@@ -198,11 +217,19 @@ export function TopBar() {
                       role="menuitemradio"
                       className="shell-dropdown__item"
                       onClick={() => {
-                        setTenantOpen(false);
-                        if (isActive) return;
-                        // Re-scope the session to the selected org (token swap + cache refetch),
-                        // then reflect it in the UI once the new token is in place.
-                        switchOrg.mutate(o.id, { onSuccess: () => setCurrentOrg(o.id) });
+                        if (isActive) {
+                          setTenantOpen(false);
+                          return;
+                        }
+                        // Re-scope the session to the selected org (token swap + cache refetch);
+                        // close + reflect the selection only once the new token is in place. On
+                        // failure the menu stays open and the error above is shown.
+                        switchOrg.mutate(o.id, {
+                          onSuccess: () => {
+                            setCurrentOrg(o.id);
+                            setTenantOpen(false);
+                          },
+                        });
                       }}
                       disabled={switchOrg.isPending}
                       aria-checked={isActive}
