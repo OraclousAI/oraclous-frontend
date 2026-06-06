@@ -8,6 +8,8 @@ import {
   ErrorCode,
   type AuthPrincipal,
   type CreateOrgInput,
+  type Member,
+  type MemberRole,
   type Org,
   type UpdateOrgInput,
 } from '@oraclous/api-client';
@@ -108,6 +110,50 @@ export function useUpdateOrg(orgId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org', orgId] });
       void queryClient.invalidateQueries({ queryKey: ['orgs'] });
+    },
+  });
+}
+
+export interface MembersState {
+  readonly members: readonly Member[];
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+export function useMembers(orgId: string): MembersState {
+  const { orgs: orgsClient } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['members', orgId],
+    queryFn: () => orgsClient.listMembers(orgId),
+    enabled: isAuthenticated && orgId !== '',
+  });
+
+  return { members: query.data ?? [], isLoading: query.isLoading, isError: query.isError };
+}
+
+export function useChangeMemberRole(orgId: string) {
+  const { orgs: orgsClient } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (vars: { userId: string; role: MemberRole }): Promise<Member> =>
+      orgsClient.changeMemberRole(orgId, vars.userId, vars.role),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['members', orgId] });
+    },
+  });
+}
+
+export function useRemoveMember(orgId: string) {
+  const { orgs: orgsClient } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string): Promise<void> => orgsClient.removeMember(orgId, userId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['members', orgId] });
     },
   });
 }
