@@ -1,9 +1,40 @@
 // Agent detail — one capability instance: readiness (validate), run it (input_data JSON), and the
 // result. /execute returns 201 for both success and failure, so we branch on the execution status.
-import { useState, type CSSProperties, type FormEvent } from 'react';
+import { useId, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ApiClientError } from '@oraclous/api-client';
-import { useExecuteInstance, useInstance, useValidation } from '../lib/agents.js';
+import { ApiClientError, type CredType } from '@oraclous/api-client';
+import {
+  useConfigureCredentials,
+  useCreateCredential,
+  useExecuteInstance,
+  useInstance,
+  useValidation,
+} from '../lib/agents.js';
+import { useMe } from '../lib/session.js';
+import { useTools } from '../lib/tools.js';
+
+interface RequirementForm {
+  readonly credType: CredType;
+  readonly secretKey: string;
+  readonly label: string;
+  // false = the credential needs an OAuth connection, so manual secret entry isn't offered.
+  readonly manual: boolean;
+}
+
+function formForRequirement(type: string): RequirementForm {
+  if (type === 'connection_string')
+    return {
+      credType: 'raw',
+      secretKey: 'connection_string',
+      label: 'Connection string',
+      manual: true,
+    };
+  if (type === 'api_key')
+    return { credType: 'api_key', secretKey: 'api_key', label: 'API key', manual: true };
+  if (type === 'oauth_token')
+    return { credType: 'oauth', secretKey: 'token', label: 'OAuth token', manual: false };
+  return { credType: 'api_key', secretKey: 'value', label: 'Secret', manual: true };
+}
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -117,15 +148,158 @@ const styles = {
     color: 'var(--ink, #0b1220)',
     opacity: 0.8,
   },
+  reqRow: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+  reqLabel: { fontSize: 13, color: 'var(--ink, #0b1220)' },
+  okText: { fontSize: 13, fontWeight: 600, color: 'var(--success, #2e8b57)' },
+  reqForm: { display: 'grid', gap: 6 },
+  reqInputRow: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
+  input: {
+    flex: 1,
+    minWidth: 200,
+    boxSizing: 'border-box',
+    padding: '9px 12px',
+    fontSize: 14,
+    fontFamily: 'var(--font-mono, monospace)',
+    color: 'var(--ink, #0b1220)',
+    background: '#ffffff',
+    border: '1px solid var(--rule, #d7d6d2)',
+    borderRadius: 8,
+  },
+  secondary: {
+    padding: '7px 12px',
+    fontSize: 13,
+    fontWeight: 500,
+    color: 'var(--ink, #0b1220)',
+    background: 'transparent',
+    border: '1px solid var(--rule, #d7d6d2)',
+    borderRadius: 8,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
 } satisfies Record<string, CSSProperties>;
 
 const DEFAULT_INPUT = '{\n  "operation": "list_tables"\n}';
+
+function RequirementRow({
+  type,
+  provider,
+  mapped,
+  onConnect,
+}: {
+  type: string;
+  provider: string;
+  mapped: boolean;
+  onConnect: (secret: string) => Promise<void>;
+}) {
+  const form = formForRequirement(type);
+  const inputId = useId();
+  const [secret, setSecret] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [replacing, setReplacing] = useState(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (secret.trim() === '') return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onConnect(secret);
+      setSecret('');
+      setReplacing(false);
+    } catch (cause) {
+      setError(messageFor(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (mapped && !replacing) {
+    return (
+      <div style={styles.reqRow}>
+        <span style={styles.reqLabel}>
+          {type} · {provider}
+        </span>
+        <span style={styles.okText}>✓ configured</span>
+        <button type="button" onClick={() => setReplacing(true)} style={styles.secondary}>
+          Replace
+        </button>
+      </div>
+    );
+  }
+
+  if (!form.manual) {
+    return (
+      <div style={styles.reqRow}>
+        <span style={styles.reqLabel}>
+          {type} · {provider}
+        </span>
+        <span style={styles.muted}>Needs an OAuth connection (coming soon).</span>
+      </div>
+    );
+  }
+
+  return (
+    <form style={styles.reqForm} onSubmit={onSubmit}>
+      <label htmlFor={inputId} style={styles.label}>
+        {form.label} for {provider}
+      </label>
+      <div style={styles.reqInputRow}>
+        <input
+          id={inputId}
+          type="password"
+          autoComplete="off"
+          value={secret}
+          onChange={(e) => setSecret(e.target.value)}
+          placeholder={form.label}
+          style={styles.input}
+        />
+        <button
+          type="submit"
+          disabled={busy || secret.trim() === ''}
+          aria-busy={busy}
+          style={busy ? { ...styles.primary, ...styles.busy } : styles.primary}
+        >
+          {busy ? 'Connecting…' : 'Connect'}
+        </button>
+      </div>
+      {error !== null && (
+        <p role="alert" style={styles.error}>
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}
 
 export default function AgentDetailPage() {
   const { instanceId = '' } = useParams<{ instanceId: string }>();
   const { instance, isLoading, isError } = useInstance(instanceId);
   const { report, isError: reportError } = useValidation(instanceId, instance !== null);
   const execute = useExecuteInstance(instanceId);
+  const { tools } = useTools();
+  const { principal } = useMe();
+  const createCredential = useCreateCredential();
+  const configure = useConfigureCredentials(instanceId);
+
+  const tool =
+    instance !== null ? (tools.find((t) => t.id === instance.capabilityId) ?? null) : null;
+
+  async function connectRequirement(type: string, provider: string, secret: string): Promise<void> {
+    if (instance === null) return;
+    const userId = principal?.id;
+    if (userId === undefined || userId === '') throw new Error('You are not signed in.');
+    const form = formForRequirement(type);
+    const credential = await createCredential.mutateAsync({
+      toolId: instance.capabilityId,
+      userId,
+      name: `${provider} for ${instance.name}`,
+      provider,
+      credType: form.credType,
+      credential: { [form.secretKey]: secret },
+    });
+    await configure.mutateAsync({ [type]: credential.id });
+  }
 
   const [input, setInput] = useState(DEFAULT_INPUT);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -214,6 +388,29 @@ export default function AgentDetailPage() {
               </>
             )}
           </section>
+
+          {instance.requiredCredentials.length > 0 && (
+            <section style={styles.card} aria-label="Credentials">
+              <h2 style={styles.h2}>Credentials</h2>
+              <p style={styles.muted}>
+                This tool needs credentials to run. Connect one per requirement; the agent becomes
+                ready once they&rsquo;re configured.
+              </p>
+              {instance.requiredCredentials.map((type) => {
+                const provider =
+                  tool?.credentialRequirements.find((r) => r.type === type)?.provider ?? type;
+                return (
+                  <RequirementRow
+                    key={type}
+                    type={type}
+                    provider={provider}
+                    mapped={Boolean(instance.credentialMappings[type])}
+                    onConnect={(secret) => connectRequirement(type, provider, secret)}
+                  />
+                );
+              })}
+            </section>
+          )}
 
           <section style={styles.card} aria-label="Run">
             <h2 style={styles.h2}>Run</h2>

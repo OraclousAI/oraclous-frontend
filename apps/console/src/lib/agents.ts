@@ -1,12 +1,16 @@
-// Agent (capability instance) hooks: list/create/read instances, read readiness, run executions.
+// Agent (capability instance) hooks: list/create/read instances, read readiness, run executions,
+// and the credential configure flow (create a credential + map it so the instance becomes READY).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  CreateCredentialInput,
+  Credential,
   CreateInstanceInput,
   Execution,
   Instance,
   ValidationReport,
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
+import { useMe } from './session.js';
 import { useTokenStore } from './token-store.jsx';
 
 export interface InstancesState {
@@ -93,6 +97,65 @@ export function useExecuteInstance(instanceId: string) {
       void queryClient.invalidateQueries({ queryKey: ['instance', instanceId] });
       void queryClient.invalidateQueries({ queryKey: ['instances'] });
       void queryClient.invalidateQueries({ queryKey: ['instance-validation', instanceId] });
+    },
+  });
+}
+
+export interface CredentialsState {
+  readonly credentials: readonly Credential[];
+  readonly isLoading: boolean;
+}
+
+export function useToolCredentials(toolId: string): CredentialsState {
+  const { credentials: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+  const { principal } = useMe();
+  const userId = principal?.id ?? '';
+
+  const query = useQuery({
+    queryKey: ['credentials', userId, toolId],
+    queryFn: () => client.list(userId, toolId),
+    enabled: isAuthenticated && userId !== '' && toolId !== '',
+  });
+
+  return { credentials: query.data ?? [], isLoading: query.isLoading };
+}
+
+export function useCreateCredential() {
+  const { credentials: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateCredentialInput): Promise<Credential> => client.create(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
+    },
+  });
+}
+
+export function useDeleteCredential() {
+  const { credentials: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (credentialId: string): Promise<void> => client.remove(credentialId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
+    },
+  });
+}
+
+export function useConfigureCredentials(instanceId: string) {
+  const { instances: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (mappings: Record<string, string>): Promise<Instance> =>
+      client.configureCredentials(instanceId, mappings),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['instance', instanceId] });
+      void queryClient.invalidateQueries({ queryKey: ['instance-validation', instanceId] });
+      void queryClient.invalidateQueries({ queryKey: ['instances'] });
     },
   });
 }
