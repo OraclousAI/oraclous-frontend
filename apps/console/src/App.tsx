@@ -54,7 +54,7 @@ const Members = lazy(() => import('./pages/MembersPage.js'));
 const Billing = lazyPlaceholder('Billing');
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
-const Explorer = lazyPlaceholder('Explorer');
+const Explorer = lazy(() => import('./pages/ExplorerPage.js'));
 const AcceptInvite = lazy(() => import('./pages/AcceptInvitePage.js'));
 
 export function App() {
@@ -174,7 +174,7 @@ export function App() {
               }
             />
             <Route
-              path="workspaces/:workspaceId/explorer"
+              path="workspaces/:graphId/explorer"
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Explorer />

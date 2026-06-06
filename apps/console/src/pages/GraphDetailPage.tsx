@@ -448,6 +448,12 @@ export default function GraphDetailPage() {
             </p>
             {!renaming && (
               <div style={styles.headerActions}>
+                <Link
+                  to={`/app/workspaces/${graphId}/explorer`}
+                  style={{ ...styles.secondary, textDecoration: 'none' }}
+                >
+                  Explore
+                </Link>
                 <button
                   type="button"
                   onClick={() => {
