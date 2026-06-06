@@ -27,11 +27,11 @@ export const wcagContrastChecks: readonly ContrastCheck[] = [
     usage: 'ink on paper-soft — hover/inset',
   },
   {
-    fg: '#73767D',
+    fg: '#65686F',
     bg: '#F4F4F2',
-    ratio: 4.2,
-    level: 'AA-large',
-    usage: 'mute on paper — captions/helper (large text / UI only; NOT for <18px non-bold text)',
+    ratio: 5.07,
+    level: 'AA',
+    usage: 'mute on paper — captions/helper text (AA for body text after the #65686f darkening)',
   },
   {
     fg: '#0B1220',
@@ -41,11 +41,12 @@ export const wcagContrastChecks: readonly ContrastCheck[] = [
     usage: 'ink on paper — sidebar section labels (10px/600; --ink required for AA at this size)',
   },
   {
-    fg: '#73767D',
+    fg: '#65686F',
     bg: '#ECEAE5',
-    ratio: 3.9,
-    level: 'AA-large',
-    usage: 'mute on paper-soft — large text / UI only',
+    ratio: 4.64,
+    level: 'AA',
+    usage:
+      'mute on paper-soft — captions/helper text (AA for body text after the #65686f darkening)',
   },
 
   // ── Accent surface ─────────────────────────────────────────────────────
