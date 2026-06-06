@@ -11,6 +11,7 @@ import { PlaceholderView } from './components/views/PlaceholderView.js';
 import { useSilentRefresh } from './lib/session.js';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.js'));
+const OAuthCallback = lazy(() => import('./pages/OAuthCallbackPage.js'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.js'));
 const CreateOrgPage = lazy(() => import('./pages/CreateOrgPage.js'));
 const GraphDetailPage = lazy(() => import('./pages/GraphDetailPage.js'));
@@ -72,6 +73,22 @@ export function App() {
             element={
               <Suspense fallback={<PageLoader />}>
                 <LoginPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <LoginPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/oauth/:provider/callback"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <OAuthCallback />
               </Suspense>
             }
           />
