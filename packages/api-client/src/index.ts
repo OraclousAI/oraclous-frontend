@@ -110,7 +110,7 @@ export type { LoginInput, AuthSession, AuthPrincipal } from './types/auth';
 
 // Organisations sub-client
 export { createOrgsClient } from './orgs';
-export type { OrgsClient, Org, CreateOrgInput } from './orgs';
+export type { OrgsClient, Org, CreateOrgInput, UpdateOrgInput } from './orgs';
 
 // Knowledge-graph sub-client
 export { createGraphsClient } from './graphs';

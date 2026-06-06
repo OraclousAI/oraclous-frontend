@@ -26,6 +26,8 @@ export interface AuthClient {
   login(input: LoginInput): Promise<AuthSession>;
   // GET /v1/auth/me — the authenticated principal (requires a bearer token).
   me(): Promise<AuthPrincipal>;
+  // POST /v1/auth/change-password — set a new password for the authenticated user.
+  changePassword(newPassword: string): Promise<void>;
 }
 
 function toSession(wire: TokenResponseWire): AuthSession {
@@ -60,6 +62,13 @@ export function createAuthClient(transport: ApiTransport): AuthClient {
         organisationId: data.organisation_id,
         email: data.email,
       };
+    },
+    async changePassword(newPassword: string): Promise<void> {
+      await transport.execute<void>({
+        method: 'POST',
+        path: '/v1/auth/change-password',
+        body: { new_password: newPassword },
+      });
     },
   };
 }
