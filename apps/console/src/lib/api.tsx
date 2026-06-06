@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import {
   createAuthClient,
   createCredentialsClient,
+  createExplorerClient,
   createFetchTransport,
   createGraphsClient,
   createInstancesClient,
@@ -16,6 +17,7 @@ import {
   createToolsClient,
   type AuthClient,
   type CredentialsClient,
+  type ExplorerClient,
   type GraphsClient,
   type InstancesClient,
   type InvitationsClient,
@@ -34,6 +36,7 @@ interface ApiContextValue {
   readonly invitations: InvitationsClient;
   readonly instances: InstancesClient;
   readonly credentials: CredentialsClient;
+  readonly explorer: ExplorerClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -63,6 +66,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       invitations: createInvitationsClient(transport),
       instances: createInstancesClient(transport),
       credentials: createCredentialsClient(transport),
+      explorer: createExplorerClient(transport),
     };
   }, [getToken]);
 

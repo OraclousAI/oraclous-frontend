@@ -138,6 +138,10 @@ export type {
 export { createSearchClient } from './search';
 export type { SearchClient, SearchMode, SearchInput, SearchResult } from './search';
 
+// Explorer graph-read sub-client (subgraph for the sphere visualisation)
+export { createExplorerClient } from './explorer';
+export type { ExplorerClient, Subgraph, GraphNode, GraphEdge } from './explorer';
+
 // Capability-registry tools sub-client
 export { createToolsClient } from './tools';
 export type { ToolsClient, Tool, CredentialRequirement } from './tools';
