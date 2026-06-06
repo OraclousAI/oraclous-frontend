@@ -8,12 +8,14 @@ import {
   createAuthClient,
   createFetchTransport,
   createGraphsClient,
+  createInstancesClient,
   createInvitationsClient,
   createOrgsClient,
   createSearchClient,
   createToolsClient,
   type AuthClient,
   type GraphsClient,
+  type InstancesClient,
   type InvitationsClient,
   type OrgsClient,
   type SearchClient,
@@ -28,6 +30,7 @@ interface ApiContextValue {
   readonly search: SearchClient;
   readonly tools: ToolsClient;
   readonly invitations: InvitationsClient;
+  readonly instances: InstancesClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -55,6 +58,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       search: createSearchClient(transport),
       tools: createToolsClient(transport),
       invitations: createInvitationsClient(transport),
+      instances: createInstancesClient(transport),
     };
   }, [getToken]);
 

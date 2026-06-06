@@ -141,3 +141,16 @@ export type { SearchClient, SearchMode, SearchInput, SearchResult } from './sear
 // Capability-registry tools sub-client
 export { createToolsClient } from './tools';
 export type { ToolsClient, Tool } from './tools';
+
+// Capability-registry instances/executions sub-client (the "use a tool" loop)
+export { createInstancesClient } from './instances';
+export type {
+  InstancesClient,
+  Instance,
+  InstanceStatus,
+  CreateInstanceInput,
+  ValidationReport,
+  ValidationError,
+  Execution,
+  ExecutionStatus,
+} from './instances';
