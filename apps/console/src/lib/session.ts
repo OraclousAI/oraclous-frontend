@@ -9,6 +9,7 @@ import {
   type AuthPrincipal,
   type CreateOrgInput,
   type Org,
+  type UpdateOrgInput,
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
@@ -76,6 +77,46 @@ export function useCreateOrg() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['orgs'] });
     },
+  });
+}
+
+export interface OrgState {
+  readonly org: Org | null;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+export function useOrg(orgId: string): OrgState {
+  const { orgs: orgsClient } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['org', orgId],
+    queryFn: () => orgsClient.get(orgId),
+    enabled: isAuthenticated && orgId !== '',
+  });
+
+  return { org: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
+}
+
+export function useUpdateOrg(orgId: string) {
+  const { orgs: orgsClient } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateOrgInput): Promise<Org> => orgsClient.update(orgId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['org', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['orgs'] });
+    },
+  });
+}
+
+export function useChangePassword() {
+  const { auth } = useApi();
+
+  return useMutation({
+    mutationFn: (newPassword: string): Promise<void> => auth.changePassword(newPassword),
   });
 }
 
