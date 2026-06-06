@@ -12,6 +12,8 @@ import {
 } from '../lib/agents.js';
 import { useMe } from '../lib/session.js';
 import { useTools } from '../lib/tools.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
+import { useToast } from '../lib/toast.jsx';
 
 interface RequirementForm {
   readonly credType: CredType;
@@ -281,6 +283,7 @@ export default function AgentDetailPage() {
   const { principal } = useMe();
   const createCredential = useCreateCredential();
   const configure = useConfigureCredentials(instanceId);
+  const toast = useToast();
 
   const tool =
     instance !== null ? (tools.find((t) => t.id === instance.capabilityId) ?? null) : null;
@@ -299,6 +302,7 @@ export default function AgentDetailPage() {
       credential: { [form.secretKey]: secret },
     });
     await configure.mutateAsync({ [type]: credential.id });
+    toast.success(`Connected ${provider}.`);
   }
 
   const [input, setInput] = useState(DEFAULT_INPUT);
@@ -320,7 +324,22 @@ export default function AgentDetailPage() {
       setInputError('Enter a valid JSON object, e.g. {"operation": "list_tables"}');
       return;
     }
-    execute.mutate(parsed);
+    // /execute returns 201 even when the run fails, so branch on the execution status, not the
+    // HTTP code. The inline result panels still render; these toasts are ephemeral feedback.
+    execute.mutate(parsed, {
+      onSuccess: (data) => {
+        if (data.status === 'SUCCESS') {
+          toast.success(
+            data.processingTimeMs !== null
+              ? `Run succeeded · ${data.processingTimeMs} ms`
+              : 'Run succeeded.'
+          );
+        } else {
+          toast.error(data.errorMessage ?? `Run ${data.status.toLowerCase()}.`);
+        }
+      },
+      onError: (err) => toast.error(messageFor(err)),
+    });
   }
 
   const result = execute.data ?? null;
@@ -332,9 +351,7 @@ export default function AgentDetailPage() {
       </Link>
 
       {isLoading ? (
-        <p style={styles.muted} role="status">
-          Loading…
-        </p>
+        <SkeletonList rows={2} />
       ) : isError || instance === null ? (
         <p style={styles.error} role="alert">
           This agent could not be found.
@@ -397,9 +414,7 @@ export default function AgentDetailPage() {
                 ready once they&rsquo;re configured.
               </p>
               {toolsLoading ? (
-                <p style={styles.muted} role="status">
-                  Loading…
-                </p>
+                <SkeletonList rows={1} />
               ) : (
                 instance.requiredCredentials.map((type) => {
                   const provider =
