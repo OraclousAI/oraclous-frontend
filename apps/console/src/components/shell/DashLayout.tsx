@@ -1,4 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { DashProvider } from '../../context/dash.js';
 import { useLogout, useMe, useOrgs } from '../../lib/session.js';
 import { TopBar } from './TopBar.js';
@@ -27,11 +28,23 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
   const { principal, isAuthError } = useMe();
   const { orgs, isLoading: orgsLoading } = useOrgs();
   const logout = useLogout();
+  const [navOpen, setNavOpen] = useState(false);
+  const { pathname } = useLocation();
 
   // If the server rejects the token (expired/invalid), end the session and return to /login.
   useEffect(() => {
     if (isAuthError) logout();
   }, [isAuthError, logout]);
+
+  // Close the mobile drawer on navigation and on Escape.
+  useEffect(() => setNavOpen(false), [pathname]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const dashOrgs = orgs.map((o) => ({
     id: o.id,
@@ -48,9 +61,17 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
       orgsLoading={orgsLoading}
     >
       <div className="shell-root">
-        <Sidebar />
+        <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
+        {navOpen && (
+          <button
+            type="button"
+            className="shell-backdrop"
+            aria-label="Close navigation menu"
+            onClick={() => setNavOpen(false)}
+          />
+        )}
         <div className="shell-maincol">
-          <TopBar />
+          <TopBar onMenuClick={() => setNavOpen((v) => !v)} />
           <Page padded={padded}>{children}</Page>
         </div>
       </div>

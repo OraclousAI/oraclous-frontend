@@ -96,7 +96,7 @@ function handleMenuKeyDown(
   items[next]?.focus();
 }
 
-export function TopBar() {
+export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { tenant, user, userId, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
   const navigate = useNavigate();
   const logout = useLogout();
@@ -139,6 +139,14 @@ export function TopBar() {
     <header className="shell-topbar">
       {/* Tenant switcher + breadcrumb */}
       <div className="shell-topbar__left">
+        <button
+          type="button"
+          className="shell-menu-btn"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
         <div className="shell-topbar__tenant-wrap" ref={tenantRef}>
           <button
             ref={tenantBtnRef}

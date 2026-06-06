@@ -4,13 +4,19 @@ import { useGraphs } from '../../lib/graphs.js';
 import { NAV_BY_PERSONA, activeNavId } from '../../nav/index.js';
 import { Logo } from '../../icons/index.js';
 
-export function Sidebar() {
+export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNavigate?: () => void }) {
   const { persona } = useDash();
   const { graphs } = useGraphs();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const nav = NAV_BY_PERSONA[persona];
   const activeId = activeNavId(pathname);
+
+  // Navigate then let the shell close the mobile drawer.
+  const go = (route: string) => {
+    navigate(route);
+    onNavigate?.();
+  };
 
   // Workspace shortcuts — up to 6 of the session's knowledge graphs. These are token-scoped: the
   // org switcher is cosmetic until token re-exchange lands (multi-org re-scoping follow-up), so for a
@@ -19,13 +25,16 @@ export function Sidebar() {
   const workspaces = graphs.slice(0, 6);
 
   return (
-    <aside className="shell-sidebar" aria-label="Main navigation">
+    <aside
+      className={open ? 'shell-sidebar shell-sidebar--open' : 'shell-sidebar'}
+      aria-label="Main navigation"
+    >
       {/* Brand lockup */}
       <div className="shell-sidebar__brand">
         <button
           type="button"
           className="shell-sidebar__brand-btn"
-          onClick={() => navigate('/app')}
+          onClick={() => go('/app')}
           aria-label="Go to dashboard"
         >
           <Logo size={18} />
@@ -60,7 +69,9 @@ export function Sidebar() {
               key={it.id}
               type="button"
               className="shell-nav-item"
-              onClick={() => it.route != null && navigate(it.route)}
+              onClick={() => {
+                if (it.route != null) go(it.route);
+              }}
               aria-current={isActive ? 'page' : undefined}
               aria-disabled={it.route == null || undefined}
             >
@@ -82,7 +93,7 @@ export function Sidebar() {
                   key={graph.id}
                   type="button"
                   className="shell-ws-item"
-                  onClick={() => navigate(wsPath)}
+                  onClick={() => go(wsPath)}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <span className="shell-ws-item__dot" aria-hidden="true" />
