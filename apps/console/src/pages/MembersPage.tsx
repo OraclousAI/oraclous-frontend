@@ -114,18 +114,6 @@ const styles = {
   itemMain: { display: 'grid', gap: 2, minWidth: 0 },
   itemEmail: { fontSize: 14, color: 'var(--ink, #0b1220)', overflowWrap: 'break-word' },
   itemMeta: { fontSize: 12, color: 'var(--ink, #0b1220)', opacity: 0.75 },
-  badge: {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--paper-soft, #eceae5)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 999,
-    padding: '2px 8px',
-    whiteSpace: 'nowrap',
-  },
 } satisfies Record<string, CSSProperties>;
 
 export default function MembersPage() {
@@ -144,6 +132,7 @@ export default function MembersPage() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
   const [error, setError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -173,6 +162,15 @@ export default function MembersPage() {
       setCopied(true);
     } catch {
       // Clipboard may be unavailable; the link stays selectable in the field.
+    }
+  }
+
+  async function onRevoke(invitationId: string) {
+    setListError(null);
+    try {
+      await revokeInvite.mutateAsync(invitationId);
+    } catch (cause) {
+      setListError(messageFor(cause));
     }
   }
 
@@ -219,7 +217,10 @@ export default function MembersPage() {
                 <select
                   id={roleId}
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) => {
+                    setRole(e.target.value);
+                    setCreatedToken(null);
+                  }}
                   style={styles.select}
                 >
                   <option value="member">Member</option>
@@ -268,37 +269,48 @@ export default function MembersPage() {
         <h2 style={styles.h2}>Pending invitations</h2>
         {orgId === '' ? (
           <p style={styles.muted}>No organisation selected.</p>
+        ) : meLoading || orgLoading ? (
+          <p style={styles.muted} role="status">
+            Loading…
+          </p>
+        ) : !isOwner ? (
+          <p style={styles.note}>Only the organisation owner can manage invitations.</p>
         ) : invLoading ? (
           <p style={styles.muted} role="status">
             Loading…
           </p>
-        ) : pending.length === 0 ? (
-          <p style={styles.muted}>No pending invitations.</p>
         ) : (
-          <ul style={styles.list} aria-label="Pending invitations">
-            {pending.map((invite) => (
-              <li key={invite.id} style={styles.item}>
-                <div style={styles.itemMain}>
-                  <span style={styles.itemEmail}>{invite.email}</span>
-                  <span style={styles.itemMeta}>
-                    {invite.role} · {invite.status}
-                  </span>
-                </div>
-                {isOwner ? (
-                  <button
-                    type="button"
-                    onClick={() => revokeInvite.mutate(invite.id)}
-                    disabled={revokeInvite.isPending}
-                    style={styles.secondary}
-                  >
-                    Revoke
-                  </button>
-                ) : (
-                  <span style={styles.badge}>{invite.role}</span>
-                )}
-              </li>
-            ))}
-          </ul>
+          <>
+            {listError !== null && (
+              <p role="alert" style={styles.error}>
+                {listError}
+              </p>
+            )}
+            {pending.length === 0 ? (
+              <p style={styles.muted}>No pending invitations.</p>
+            ) : (
+              <ul style={styles.list} aria-label="Pending invitations">
+                {pending.map((invite) => (
+                  <li key={invite.id} style={styles.item}>
+                    <div style={styles.itemMain}>
+                      <span style={styles.itemEmail}>{invite.email}</span>
+                      <span style={styles.itemMeta}>
+                        {invite.role} · {invite.status}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onRevoke(invite.id)}
+                      disabled={revokeInvite.isPending}
+                      style={styles.secondary}
+                    >
+                      Revoke
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </section>
     </div>

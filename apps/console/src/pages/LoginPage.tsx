@@ -8,8 +8,16 @@ import { useApi } from '../lib/api.jsx';
 import { useTokenStore } from '../lib/token-store.jsx';
 
 // Only ever navigate to an in-app path (guards against open-redirect via ?redirect=).
+// Reject protocol-relative (//) and backslash forms so the guard holds even if a future caller
+// feeds the value into window.location rather than react-router's same-origin navigate().
 function safeRedirect(target: string | null): string {
-  if (target !== null && target.startsWith('/') && !target.startsWith('//')) return target;
+  if (
+    target !== null &&
+    target.startsWith('/') &&
+    !target.startsWith('//') &&
+    !target.includes('\\')
+  )
+    return target;
   return '/app';
 }
 
