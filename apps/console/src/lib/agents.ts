@@ -10,7 +10,6 @@ import type {
   ValidationReport,
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
-import { useMe } from './session.js';
 import { useTokenStore } from './token-store.jsx';
 
 export interface InstancesState {
@@ -101,44 +100,12 @@ export function useExecuteInstance(instanceId: string) {
   });
 }
 
-export interface CredentialsState {
-  readonly credentials: readonly Credential[];
-  readonly isLoading: boolean;
-}
-
-export function useToolCredentials(toolId: string): CredentialsState {
-  const { credentials: client } = useApi();
-  const { isAuthenticated } = useTokenStore();
-  const { principal } = useMe();
-  const userId = principal?.id ?? '';
-
-  const query = useQuery({
-    queryKey: ['credentials', userId, toolId],
-    queryFn: () => client.list(userId, toolId),
-    enabled: isAuthenticated && userId !== '' && toolId !== '',
-  });
-
-  return { credentials: query.data ?? [], isLoading: query.isLoading };
-}
-
 export function useCreateCredential() {
   const { credentials: client } = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: CreateCredentialInput): Promise<Credential> => client.create(input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
-    },
-  });
-}
-
-export function useDeleteCredential() {
-  const { credentials: client } = useApi();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (credentialId: string): Promise<void> => client.remove(credentialId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['credentials'] });
     },

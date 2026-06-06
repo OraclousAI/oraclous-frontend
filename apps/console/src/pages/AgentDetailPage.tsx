@@ -277,7 +277,7 @@ export default function AgentDetailPage() {
   const { instance, isLoading, isError } = useInstance(instanceId);
   const { report, isError: reportError } = useValidation(instanceId, instance !== null);
   const execute = useExecuteInstance(instanceId);
-  const { tools } = useTools();
+  const { tools, isLoading: toolsLoading } = useTools();
   const { principal } = useMe();
   const createCredential = useCreateCredential();
   const configure = useConfigureCredentials(instanceId);
@@ -396,19 +396,25 @@ export default function AgentDetailPage() {
                 This tool needs credentials to run. Connect one per requirement; the agent becomes
                 ready once they&rsquo;re configured.
               </p>
-              {instance.requiredCredentials.map((type) => {
-                const provider =
-                  tool?.credentialRequirements.find((r) => r.type === type)?.provider ?? type;
-                return (
-                  <RequirementRow
-                    key={type}
-                    type={type}
-                    provider={provider}
-                    mapped={Boolean(instance.credentialMappings[type])}
-                    onConnect={(secret) => connectRequirement(type, provider, secret)}
-                  />
-                );
-              })}
+              {toolsLoading ? (
+                <p style={styles.muted} role="status">
+                  Loading…
+                </p>
+              ) : (
+                instance.requiredCredentials.map((type) => {
+                  const provider =
+                    tool?.credentialRequirements.find((r) => r.type === type)?.provider ?? type;
+                  return (
+                    <RequirementRow
+                      key={type}
+                      type={type}
+                      provider={provider}
+                      mapped={Boolean(instance.credentialMappings[type])}
+                      onConnect={(secret) => connectRequirement(type, provider, secret)}
+                    />
+                  );
+                })
+              )}
             </section>
           )}
 
