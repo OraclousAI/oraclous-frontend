@@ -140,7 +140,11 @@ export type { SearchClient, SearchMode, SearchInput, SearchResult } from './sear
 
 // Capability-registry tools sub-client
 export { createToolsClient } from './tools';
-export type { ToolsClient, Tool } from './tools';
+export type { ToolsClient, Tool, CredentialRequirement } from './tools';
+
+// Credential-broker sub-client
+export { createCredentialsClient } from './credentials';
+export type { CredentialsClient, Credential, CreateCredentialInput, CredType } from './credentials';
 
 // Capability-registry instances/executions sub-client (the "use a tool" loop)
 export { createInstancesClient } from './instances';
