@@ -50,7 +50,7 @@ const Agents = lazyPlaceholder('Agents');
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Members = lazyPlaceholder('Members');
 const Billing = lazyPlaceholder('Billing');
-const Settings = lazyPlaceholder('Settings');
+const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
 const Explorer = lazyPlaceholder('Explorer');
 
