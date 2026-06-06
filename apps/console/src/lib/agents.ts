@@ -1,6 +1,9 @@
-// Agent (capability instance) hooks: list/create/read instances, read readiness, run executions.
+// Agent (capability instance) hooks: list/create/read instances, read readiness, run executions,
+// and the credential configure flow (create a credential + map it so the instance becomes READY).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  CreateCredentialInput,
+  Credential,
   CreateInstanceInput,
   Execution,
   Instance,
@@ -93,6 +96,33 @@ export function useExecuteInstance(instanceId: string) {
       void queryClient.invalidateQueries({ queryKey: ['instance', instanceId] });
       void queryClient.invalidateQueries({ queryKey: ['instances'] });
       void queryClient.invalidateQueries({ queryKey: ['instance-validation', instanceId] });
+    },
+  });
+}
+
+export function useCreateCredential() {
+  const { credentials: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateCredentialInput): Promise<Credential> => client.create(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
+    },
+  });
+}
+
+export function useConfigureCredentials(instanceId: string) {
+  const { instances: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (mappings: Record<string, string>): Promise<Instance> =>
+      client.configureCredentials(instanceId, mappings),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['instance', instanceId] });
+      void queryClient.invalidateQueries({ queryKey: ['instance-validation', instanceId] });
+      void queryClient.invalidateQueries({ queryKey: ['instances'] });
     },
   });
 }

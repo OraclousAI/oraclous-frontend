@@ -94,6 +94,11 @@ export interface InstancesClient {
   list(): Promise<Instance[]>;
   create(input: CreateInstanceInput): Promise<Instance>;
   get(instanceId: string): Promise<Instance>;
+  // Map each required credential type to a stored credential id (status flips to READY when satisfied).
+  configureCredentials(
+    instanceId: string,
+    mappings: Readonly<Record<string, string>>
+  ): Promise<Instance>;
   validate(instanceId: string): Promise<ValidationReport>;
   execute(instanceId: string, inputData: Record<string, unknown>): Promise<Execution>;
   getExecution(executionId: string): Promise<Execution>;
@@ -155,6 +160,17 @@ export function createInstancesClient(transport: ApiTransport): InstancesClient 
       const { data } = await transport.execute<InstanceWire>({
         method: 'GET',
         path: `/api/v1/instances/${encodeURIComponent(instanceId)}`,
+      });
+      return toInstance(data);
+    },
+    async configureCredentials(
+      instanceId: string,
+      mappings: Readonly<Record<string, string>>
+    ): Promise<Instance> {
+      const { data } = await transport.execute<InstanceWire>({
+        method: 'POST',
+        path: `/api/v1/instances/${encodeURIComponent(instanceId)}/configure-credentials`,
+        body: { credential_mappings: mappings },
       });
       return toInstance(data);
     },
