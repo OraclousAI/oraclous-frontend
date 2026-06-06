@@ -1,6 +1,6 @@
 // Session hooks. useMe resolves the authenticated principal from the gateway
 // (GET /v1/auth/me); useLogout ends the session (clears the in-memory token + cache).
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -140,9 +140,12 @@ export function useSilentRefresh(): void {
   const { tokenPayload, setToken } = useTokenStore();
   const refreshToken = tokenPayload?.refreshToken ?? null;
   const expiresAt = tokenPayload?.expiresAt ?? null;
+  // Bumped to re-arm a refresh after a transient failure (does not change the tokens).
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     if (refreshToken === null || refreshToken === '' || expiresAt === null) return;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     const delay = Math.max(0, expiresAt - Date.now() - 60_000);
     const timer = setTimeout(() => {
       auth
@@ -155,10 +158,20 @@ export function useSilentRefresh(): void {
             expiresAt: Date.now() + session.expiresIn * 1000,
           });
         })
-        .catch(() => {
-          setToken(null);
+        .catch((cause) => {
+          // Only end the session if the refresh token itself is rejected. A transient error
+          // (network/5xx) shouldn't log the user out — the access token is still valid for ~60s,
+          // so re-arm a retry; a persistent outage self-terminates via the natural-401 logout.
+          if (isAuthFailure(cause)) {
+            setToken(null);
+          } else {
+            retryTimer = setTimeout(() => setRetryTick((n) => n + 1), 15_000);
+          }
         });
     }, delay);
-    return () => clearTimeout(timer);
-  }, [auth, refreshToken, expiresAt, setToken]);
+    return () => {
+      clearTimeout(timer);
+      if (retryTimer !== undefined) clearTimeout(retryTimer);
+    };
+  }, [auth, refreshToken, expiresAt, setToken, retryTick]);
 }
