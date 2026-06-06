@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/sora": "^5.2.8",
     "@oraclous/api-client": "workspace:*",
     "@oraclous/design-system": "workspace:*",
     "@oraclous/ui-utils": "workspace:*",

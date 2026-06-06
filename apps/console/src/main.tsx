@@ -5,6 +5,14 @@ import { TokenStoreProvider } from './lib/token-store.jsx';
 import { ApiProvider } from './lib/api.jsx';
 import { ToastProvider } from './lib/toast.jsx';
 import { App } from './App.js';
+// Self-hosted brand fonts (no external CDN). The tokens declare 'Sora' / 'JetBrains Mono'
+// as --font-sans / --font-mono; these @font-face imports are what actually load them.
+import '@fontsource/sora/400.css';
+import '@fontsource/sora/500.css';
+import '@fontsource/sora/600.css';
+import '@fontsource/sora/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
 import '@oraclous/design-system/tokens.css';
 
 const queryClient = new QueryClient({
