@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
 import { useGraphs } from '../../lib/graphs.js';
 import { NAV_BY_PERSONA, activeNavId } from '../../nav/index.js';
-import { Logo } from '../../icons/index.js';
+import { Logo, Wordmark } from '../../icons/index.js';
 
 export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNavigate?: () => void }) {
   const { persona } = useDash();
@@ -38,17 +38,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
           aria-label="Go to dashboard"
         >
           <Logo size={18} />
-          <span
-            style={{
-              fontWeight: 700,
-              fontSize: 13,
-              letterSpacing: '-0.01em',
-              color: 'var(--ink)',
-              fontFamily: 'var(--font-sans)',
-            }}
-          >
-            Oraclous
-          </span>
+          <Wordmark height={15} />
         </button>
       </div>
 

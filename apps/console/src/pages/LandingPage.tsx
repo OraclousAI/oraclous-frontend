@@ -5,6 +5,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useTokenStore } from '../lib/token-store.jsx';
 import {
   Logo,
+  Wordmark,
   IconLayers,
   IconSparkle,
   IconBot,
@@ -47,8 +48,8 @@ export default function LandingPage() {
     <div style={styles.page}>
       <header style={styles.nav}>
         <div style={styles.brand}>
-          <Logo size={24} />
-          <span style={styles.wordmark}>Oraclous</span>
+          <Logo size={22} />
+          <Wordmark height={18} />
         </div>
         <Link to="/login" style={styles.navLink}>
           Sign in
@@ -116,12 +117,6 @@ const styles = {
     boxSizing: 'border-box',
   },
   brand: { display: 'flex', alignItems: 'center', gap: 9 },
-  wordmark: {
-    fontSize: 17,
-    fontWeight: 700,
-    letterSpacing: '-0.01em',
-    color: 'var(--ink, #0b1220)',
-  },
   navLink: {
     fontSize: 14,
     fontWeight: 500,

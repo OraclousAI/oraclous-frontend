@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
-import oraclousMark from '../assets/oraclous-mark.svg';
+import oraclousSymbol from '../assets/oraclous-symbol.png';
+import oraclousWordmark from '../assets/oraclous-wordmark.png';
 
 export interface IconProps {
   size?: number;
@@ -125,15 +126,18 @@ export const IconSearch = (p: IconProps) => (
   </Icon>
 );
 
-// The real Oraclous brand mark (ported from the legacy brand assets). Decorative — every place that
-// renders it also shows the "Oraclous" wordmark text or a button label, so it's hidden from AT.
+// The Oraclous brand symbol (the ">|" mark). `size` is the height; width follows the aspect ratio.
+// Decorative — it always sits beside the Wordmark or a button label, so it's hidden from AT.
 export const Logo = ({ size = 22 }: { size?: number }) => (
   <img
-    src={oraclousMark}
-    width={size}
-    height={size}
+    src={oraclousSymbol}
     alt=""
     aria-hidden="true"
-    style={{ display: 'block' }}
+    style={{ height: size, width: 'auto', display: 'block' }}
   />
+);
+
+// The Oraclous wordmark image — carries the brand name. `height` sizes it; width follows the aspect.
+export const Wordmark = ({ height = 16 }: { height?: number }) => (
+  <img src={oraclousWordmark} alt="Oraclous" style={{ height, width: 'auto', display: 'block' }} />
 );
