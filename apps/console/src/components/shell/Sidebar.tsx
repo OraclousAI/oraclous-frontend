@@ -12,7 +12,10 @@ export function Sidebar() {
   const nav = NAV_BY_PERSONA[persona];
   const activeId = activeNavId(pathname);
 
-  // Workspace shortcuts — up to 6 of the current org's knowledge graphs.
+  // Workspace shortcuts — up to 6 of the session's knowledge graphs. These are token-scoped: the
+  // org switcher is cosmetic until token re-exchange lands (multi-org re-scoping follow-up), so for a
+  // multi-org user they track the token's org, not a switched selection. Correct for the common
+  // single-org case; a strict improvement over the prior (dead org-id) links.
   const workspaces = graphs.slice(0, 6);
 
   return (
