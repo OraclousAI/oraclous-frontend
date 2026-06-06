@@ -1,9 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DashProvider } from '../../context/dash.js';
 import { useLogout, useMe, useOrgs } from '../../lib/session.js';
 import { TopBar } from './TopBar.js';
 import { Sidebar } from './Sidebar.js';
+import { useDrawerA11y } from './useDrawerA11y.js';
 import './shell.css';
 
 export function Page({
@@ -29,6 +30,9 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
   const { orgs, isLoading: orgsLoading } = useOrgs();
   const logout = useLogout();
   const [navOpen, setNavOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeNav = useCallback(() => setNavOpen(false), []);
   const { pathname } = useLocation();
 
   // If the server rejects the token (expired/invalid), end the session and return to /login.
@@ -36,15 +40,17 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
     if (isAuthError) logout();
   }, [isAuthError, logout]);
 
-  // Close the mobile drawer on navigation and on Escape.
-  useEffect(() => setNavOpen(false), [pathname]);
+  // Close the mobile drawer on navigation. Escape, focus-trap, focus-restore, and body
+  // scroll-lock while the drawer is open are handled by useDrawerA11y.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setNavOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+    closeNav();
+  }, [pathname, closeNav]);
+  useDrawerA11y({
+    open: navOpen,
+    drawerRef: sidebarRef,
+    triggerRef: menuButtonRef,
+    onClose: closeNav,
+  });
 
   const dashOrgs = orgs.map((o) => ({
     id: o.id,
@@ -61,17 +67,21 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
       orgsLoading={orgsLoading}
     >
       <div className="shell-root">
-        <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
+        <Sidebar containerRef={sidebarRef} open={navOpen} onNavigate={closeNav} />
         {navOpen && (
           <button
             type="button"
             className="shell-backdrop"
             aria-label="Close navigation menu"
-            onClick={() => setNavOpen(false)}
+            onClick={closeNav}
           />
         )}
         <div className="shell-maincol">
-          <TopBar onMenuClick={() => setNavOpen((v) => !v)} menuOpen={navOpen} />
+          <TopBar
+            onMenuClick={() => setNavOpen((v) => !v)}
+            menuOpen={navOpen}
+            menuButtonRef={menuButtonRef}
+          />
           <Page padded={padded}>{children}</Page>
         </div>
       </div>

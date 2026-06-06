@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type CSSProperties, type FormEvent } from '
 import { ApiClientError } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import { useChangePassword, useMe, useOrg, useUpdateOrg } from '../lib/session.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -172,9 +173,7 @@ export default function SettingsPage() {
         {orgId === '' ? (
           <p style={styles.muted}>No organisation selected.</p>
         ) : isLoading || meLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={3} />
         ) : isError || org === null ? (
           <p style={styles.error} role="alert">
             Could not load the organisation.

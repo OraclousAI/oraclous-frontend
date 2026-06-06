@@ -1,10 +1,19 @@
+import type { RefObject } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
 import { useGraphs } from '../../lib/graphs.js';
 import { NAV_BY_PERSONA, activeNavId } from '../../nav/index.js';
 import { Logo, Wordmark } from '../../icons/index.js';
 
-export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNavigate?: () => void }) {
+export function Sidebar({
+  open = false,
+  onNavigate,
+  containerRef,
+}: {
+  open?: boolean;
+  onNavigate?: () => void;
+  containerRef?: RefObject<HTMLElement>;
+}) {
   const { persona } = useDash();
   const { graphs } = useGraphs();
   const navigate = useNavigate();
@@ -26,6 +35,8 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
 
   return (
     <aside
+      ref={containerRef}
+      tabIndex={-1}
       className={open ? 'shell-sidebar shell-sidebar--open' : 'shell-sidebar'}
       aria-label="Main navigation"
     >

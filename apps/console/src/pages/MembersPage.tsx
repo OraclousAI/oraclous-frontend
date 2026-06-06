@@ -6,6 +6,7 @@ import { useDash } from '../context/dash.js';
 import { useChangeMemberRole, useMe, useMembers, useOrg, useRemoveMember } from '../lib/session.js';
 import { useCreateInvitation, useInvitations, useRevokeInvitation } from '../lib/invitations.js';
 import { useToast } from '../lib/toast.jsx';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -237,9 +238,7 @@ export default function MembersPage() {
         {orgId === '' ? (
           <p style={styles.muted}>No organisation selected.</p>
         ) : membersLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={3} />
         ) : members.length === 0 ? (
           <p style={styles.muted}>No members yet.</p>
         ) : (
@@ -298,9 +297,7 @@ export default function MembersPage() {
         {orgId === '' ? (
           <p style={styles.muted}>No organisation selected.</p>
         ) : meLoading || orgLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={1} />
         ) : !isOwner ? (
           <p style={styles.note}>Only the organisation owner can invite members.</p>
         ) : (
@@ -383,15 +380,11 @@ export default function MembersPage() {
         {orgId === '' ? (
           <p style={styles.muted}>No organisation selected.</p>
         ) : meLoading || orgLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={1} />
         ) : !isOwner ? (
           <p style={styles.note}>Only the organisation owner can manage invitations.</p>
         ) : invLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={2} />
         ) : (
           <>
             {listError !== null && (

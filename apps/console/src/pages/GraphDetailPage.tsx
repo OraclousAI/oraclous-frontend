@@ -16,6 +16,7 @@ import {
 import { resultScore, resultText, useSearch } from '../lib/search.js';
 import { useToast } from '../lib/toast.jsx';
 import { OntologyEditor } from '../components/graph/OntologyEditor.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
 const SEARCH_MODES = ['semantic', 'fulltext', 'hybrid'] as const;
@@ -385,9 +386,7 @@ export default function GraphDetailPage() {
       </Link>
 
       {isLoading ? (
-        <p style={styles.muted} role="status">
-          Loading…
-        </p>
+        <SkeletonList rows={3} />
       ) : isError || graph === null ? (
         <p style={styles.error} role="alert">
           This workspace could not be found.

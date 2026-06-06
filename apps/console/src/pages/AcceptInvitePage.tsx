@@ -4,6 +4,7 @@ import { useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useAcceptInvitation, usePeekInvitation } from '../lib/invitations.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -85,9 +86,7 @@ export default function AcceptInvitePage() {
             This invite link is missing its token.
           </p>
         ) : isLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={2} />
         ) : isError || peek === null ? (
           <p style={styles.error} role="alert">
             This invitation is invalid or has expired.

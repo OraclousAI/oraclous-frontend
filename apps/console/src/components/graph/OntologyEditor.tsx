@@ -5,6 +5,7 @@ import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
 import type { OntologyMode } from '@oraclous/api-client';
 import { useOntology, useSetOntology } from '../../lib/graphs.js';
 import { useToast } from '../../lib/toast.jsx';
+import { SkeletonList } from '../ui/Skeleton.js';
 
 const MODES: readonly OntologyMode[] = ['open', 'strict', 'coerce'];
 const MODE_HELP: Record<OntologyMode, string> = {
@@ -75,9 +76,7 @@ export function OntologyEditor({ graphId }: { graphId: string }) {
           Could not load the ontology.
         </p>
       ) : isLoading || !hydrated ? (
-        <p style={styles.muted} role="status">
-          Loading…
-        </p>
+        <SkeletonList rows={2} />
       ) : (
         <>
           <div style={styles.field}>

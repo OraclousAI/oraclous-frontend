@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
 import { useLogout, useSwitchOrg } from '../../lib/session.js';
@@ -96,7 +96,15 @@ function handleMenuKeyDown(
   items[next]?.focus();
 }
 
-export function TopBar({ onMenuClick, menuOpen }: { onMenuClick: () => void; menuOpen: boolean }) {
+export function TopBar({
+  onMenuClick,
+  menuOpen,
+  menuButtonRef,
+}: {
+  onMenuClick: () => void;
+  menuOpen: boolean;
+  menuButtonRef?: RefObject<HTMLButtonElement>;
+}) {
   const { tenant, user, userId, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
   const navigate = useNavigate();
   const logout = useLogout();
@@ -140,6 +148,7 @@ export function TopBar({ onMenuClick, menuOpen }: { onMenuClick: () => void; men
       {/* Tenant switcher + breadcrumb */}
       <div className="shell-topbar__left">
         <button
+          ref={menuButtonRef}
           type="button"
           className="shell-menu-btn"
           onClick={() => {
