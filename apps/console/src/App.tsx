@@ -12,6 +12,7 @@ import { useSilentRefresh } from './lib/session.js';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.js'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallbackPage.js'));
+const Landing = lazy(() => import('./pages/LandingPage.js'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.js'));
 const CreateOrgPage = lazy(() => import('./pages/CreateOrgPage.js'));
 const GraphDetailPage = lazy(() => import('./pages/GraphDetailPage.js'));
@@ -209,17 +210,15 @@ export function App() {
             />
           </Route>
 
-          {/* Redirect root to /app */}
-          <Route path="/" element={<AppShell />}>
-            <Route
-              index
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <Dashboard />
-                </Suspense>
-              }
-            />
-          </Route>
+          {/* Public landing — the first screen; authenticated visitors are sent to /app. */}
+          <Route
+            path="/"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <Landing />
+              </Suspense>
+            }
+          />
 
           {/* 404 */}
           <Route
