@@ -26,6 +26,8 @@ export interface AuthClient {
   login(input: LoginInput): Promise<AuthSession>;
   // GET /v1/auth/me — the authenticated principal (requires a bearer token).
   me(): Promise<AuthPrincipal>;
+  // POST /v1/auth/refresh — exchange a (rotating) refresh token for a fresh session.
+  refresh(refreshToken: string): Promise<AuthSession>;
   // POST /v1/auth/change-password — set a new password for the authenticated user.
   changePassword(newPassword: string): Promise<void>;
 }
@@ -62,6 +64,14 @@ export function createAuthClient(transport: ApiTransport): AuthClient {
         organisationId: data.organisation_id,
         email: data.email,
       };
+    },
+    async refresh(refreshToken: string): Promise<AuthSession> {
+      const { data } = await transport.execute<TokenResponseWire>({
+        method: 'POST',
+        path: '/v1/auth/refresh',
+        body: { refresh_token: refreshToken },
+      });
+      return toSession(data);
     },
     async changePassword(newPassword: string): Promise<void> {
       await transport.execute<void>({
