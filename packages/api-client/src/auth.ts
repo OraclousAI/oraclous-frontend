@@ -24,6 +24,14 @@ interface MeResponseWire {
 export interface AuthClient {
   // POST /v1/auth/login — public gateway path; exchanges credentials for a session.
   login(input: LoginInput): Promise<AuthSession>;
+  // POST /v1/auth/register — public; creates an account (email + password) and returns a session.
+  register(input: LoginInput): Promise<AuthSession>;
+  // GET /oauth/providers — the OAuth providers with credentials configured (names only).
+  oauthProviders(): Promise<string[]>;
+  // GET /oauth/{provider}/login — the provider authorize URL to redirect the browser to (PKCE).
+  oauthLoginUrl(provider: string, redirectUri: string): Promise<string>;
+  // GET /oauth/{provider}/callback — exchange the returned code+state for a session.
+  oauthCallback(provider: string, code: string, state: string): Promise<AuthSession>;
   // GET /v1/auth/me — the authenticated principal (requires a bearer token).
   me(): Promise<AuthPrincipal>;
   // POST /v1/auth/refresh — exchange a (rotating) refresh token for a fresh session.
@@ -52,6 +60,39 @@ export function createAuthClient(transport: ApiTransport): AuthClient {
         method: 'POST',
         path: '/v1/auth/login',
         body: { email: input.email, password: input.password },
+      });
+      return toSession(data);
+    },
+    async register(input: LoginInput): Promise<AuthSession> {
+      const { data } = await transport.execute<TokenResponseWire>({
+        method: 'POST',
+        path: '/v1/auth/register',
+        body: { email: input.email, password: input.password },
+      });
+      return toSession(data);
+    },
+    async oauthProviders(): Promise<string[]> {
+      const { data } = await transport.execute<{ providers: string[] }>({
+        method: 'GET',
+        path: '/oauth/providers',
+      });
+      return data.providers ?? [];
+    },
+    async oauthLoginUrl(provider: string, redirectUri: string): Promise<string> {
+      const { data } = await transport.execute<{ authorize_url: string }>({
+        method: 'GET',
+        path: `/oauth/${encodeURIComponent(provider)}/login?redirect_uri=${encodeURIComponent(
+          redirectUri
+        )}`,
+      });
+      return data.authorize_url;
+    },
+    async oauthCallback(provider: string, code: string, state: string): Promise<AuthSession> {
+      const { data } = await transport.execute<TokenResponseWire>({
+        method: 'GET',
+        path: `/oauth/${encodeURIComponent(provider)}/callback?code=${encodeURIComponent(
+          code
+        )}&state=${encodeURIComponent(state)}`,
       });
       return toSession(data);
     },
