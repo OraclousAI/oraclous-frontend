@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import oraclousMark from '../assets/oraclous-mark.svg';
 
 export interface IconProps {
   size?: number;
@@ -124,16 +125,15 @@ export const IconSearch = (p: IconProps) => (
   </Icon>
 );
 
+// The real Oraclous brand mark (ported from the legacy brand assets). Decorative — every place that
+// renders it also shows the "Oraclous" wordmark text or a button label, so it's hidden from AT.
 export const Logo = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Oraclous">
-    <circle cx="14" cy="14" r="13" stroke="currentColor" strokeWidth="1.5" />
-    <circle cx="14" cy="14" r="7" stroke="currentColor" strokeWidth="1.5" />
-    <circle cx="14" cy="14" r="2.2" fill="currentColor" />
-    <path
-      d="M14 1.2v3.5M14 23.3v3.5M1.2 14h3.5M23.3 14h3.5"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-  </svg>
+  <img
+    src={oraclousMark}
+    width={size}
+    height={size}
+    alt=""
+    aria-hidden="true"
+    style={{ display: 'block' }}
+  />
 );
