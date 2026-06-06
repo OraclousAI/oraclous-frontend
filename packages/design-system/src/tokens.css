@@ -11,7 +11,9 @@
     --paper: #f4f4f2;
     --paper-soft: #eceae5;
     --rule: #d7d6d2;
-    --mute: #73767d;
+    /* Muted text. Darkened from #73767d so it meets WCAG AA (≥4.5:1) for body text on paper and
+       paper-soft — it is used for sub-18px captions/helper text across the shell. */
+    --mute: #65686f;
 
     /* The signal. One color, one job. Live state only. */
     --accent: #10d88a;

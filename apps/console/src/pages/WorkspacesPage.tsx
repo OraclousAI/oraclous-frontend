@@ -19,7 +19,7 @@ const styles = {
   page: { display: 'grid', gap: 20, maxWidth: 920 },
   header: { display: 'grid', gap: 4 },
   h1: { margin: 0, fontSize: 22, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  sub: { margin: 0, fontSize: 13.5, color: 'var(--mute, #73767d)' },
+  sub: { margin: 0, fontSize: 13.5, color: 'var(--mute, #65686f)' },
   createCard: {
     display: 'grid',
     gap: 12,
@@ -32,7 +32,7 @@ const styles = {
   createRow: { display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
   field: { display: 'grid', gap: 6, minWidth: 160 },
   label: { fontSize: 13, fontWeight: 500, color: 'var(--ink, #0b1220)' },
-  optional: { fontWeight: 400, color: 'var(--mute, #73767d)' },
+  optional: { fontWeight: 400, color: 'var(--mute, #65686f)' },
   input: {
     width: '100%',
     boxSizing: 'border-box',
@@ -67,7 +67,7 @@ const styles = {
     borderRadius: 8,
   },
   listWrap: { display: 'grid', gap: 8 },
-  muted: { margin: 0, fontSize: 13.5, color: 'var(--mute, #73767d)' },
+  muted: { margin: 0, fontSize: 13.5, color: 'var(--mute, #65686f)' },
   grid: {
     listStyle: 'none',
     margin: 0,
@@ -101,7 +101,7 @@ const styles = {
   cardMeta: {
     margin: 0,
     fontSize: 12,
-    color: 'var(--mute, #73767d)',
+    color: 'var(--mute, #65686f)',
     fontFamily: 'var(--font-mono, monospace)',
   },
 } satisfies Record<string, CSSProperties>;
