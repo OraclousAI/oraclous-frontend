@@ -25,6 +25,7 @@ const OWNER: NavItem[] = [
   { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
   { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
+  { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
   { id: 'members', label: 'Members', icon: IconUsers, route: '/app/members' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
@@ -44,6 +45,7 @@ const STANDALONE: NavItem[] = [
   { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
   { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
+  { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
 ];
@@ -59,6 +61,7 @@ export function activeNavId(pathname: string): string {
   if (pathname.startsWith('/app/workspaces')) return 'workspaces';
   if (pathname.startsWith('/app/agents')) return 'agents';
   if (pathname.startsWith('/app/tools')) return 'tools';
+  if (pathname.startsWith('/app/recipes')) return 'recipes';
   if (pathname.startsWith('/app/members')) return 'members';
   if (pathname.startsWith('/app/billing')) return 'billing';
   if (pathname.startsWith('/app/settings')) return 'settings';

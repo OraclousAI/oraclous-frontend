@@ -69,6 +69,23 @@ interface JobResponseWire {
   readonly updated_at: string;
 }
 
+export type OntologyMode = 'open' | 'strict' | 'coerce';
+
+export interface Ontology {
+  readonly allowedLabels: readonly string[];
+  readonly mode: string;
+}
+
+export interface OntologyInput {
+  readonly allowedLabels: readonly string[];
+  readonly mode: OntologyMode;
+}
+
+interface OntologyWire {
+  readonly allowed_labels: string[];
+  readonly mode: string;
+}
+
 export interface GraphsClient {
   // The knowledge graphs visible to the authenticated principal's organisation.
   list(): Promise<Graph[]>;
@@ -88,6 +105,14 @@ export interface GraphsClient {
   remove(graphId: string): Promise<void>;
   // Ingest an uploaded file (multipart) — returns the async job to poll.
   ingestFile(graphId: string, file: File, recipeId?: string): Promise<IngestJob>;
+  // The graph's entity ontology (allowed labels + enforcement mode).
+  getOntology(graphId: string): Promise<Ontology>;
+  // Replace the graph's ontology.
+  setOntology(graphId: string, input: OntologyInput): Promise<Ontology>;
+}
+
+function toOntology(wire: OntologyWire): Ontology {
+  return { allowedLabels: wire.allowed_labels, mode: wire.mode };
 }
 
 function toGraph(wire: GraphResponseWire): Graph {
@@ -194,6 +219,21 @@ export function createGraphsClient(transport: ApiTransport): GraphsClient {
         body: form,
       });
       return toJob(data);
+    },
+    async getOntology(graphId: string): Promise<Ontology> {
+      const { data } = await transport.execute<OntologyWire>({
+        method: 'GET',
+        path: `/api/v1/graphs/${encodeURIComponent(graphId)}/ontology`,
+      });
+      return toOntology(data);
+    },
+    async setOntology(graphId: string, input: OntologyInput): Promise<Ontology> {
+      const { data } = await transport.execute<OntologyWire>({
+        method: 'PUT',
+        path: `/api/v1/graphs/${encodeURIComponent(graphId)}/ontology`,
+        body: { allowed_labels: [...input.allowedLabels], mode: input.mode },
+      });
+      return toOntology(data);
     },
   };
 }

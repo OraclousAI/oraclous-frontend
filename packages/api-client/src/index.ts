@@ -132,6 +132,9 @@ export type {
   UpdateGraphInput,
   IngestTextInput,
   IngestJob,
+  Ontology,
+  OntologyInput,
+  OntologyMode,
 } from './graphs';
 
 // Retrieval/search sub-client
@@ -141,6 +144,10 @@ export type { SearchClient, SearchMode, SearchInput, SearchResult } from './sear
 // Explorer graph-read sub-client (subgraph for the sphere visualisation)
 export { createExplorerClient } from './explorer';
 export type { ExplorerClient, Subgraph, GraphNode, GraphEdge } from './explorer';
+
+// Recipe library sub-client
+export { createRecipesClient } from './recipes';
+export type { RecipesClient, Recipe, RecipeDetail } from './recipes';
 
 // Capability-registry tools sub-client
 export { createToolsClient } from './tools';
