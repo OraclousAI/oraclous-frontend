@@ -78,16 +78,17 @@ const styles = {
     margin: 0,
     padding: '10px 12px',
     fontSize: 13,
+    // Terminal confirmation uses the dedicated --success token, NOT mint (mint = live signal only).
     color: 'var(--ink, #0b1220)',
-    background: 'rgba(16,216,138,0.12)',
-    border: '1px solid var(--accent, #10d88a)',
+    background: 'var(--success-bg, #e7f3ec)',
+    border: '1px solid var(--success, #2e8b57)',
     borderRadius: 8,
   },
 } satisfies Record<string, CSSProperties>;
 
 export default function SettingsPage() {
   const { currentOrg, user } = useDash();
-  const { principal } = useMe();
+  const { principal, isLoading: meLoading } = useMe();
   const orgId = currentOrg?.id ?? '';
   const { org, isLoading, isError } = useOrg(orgId);
   const updateOrg = useUpdateOrg(orgId);
@@ -107,8 +108,11 @@ export default function SettingsPage() {
   const [orgError, setOrgError] = useState<string | null>(null);
   const [orgSaved, setOrgSaved] = useState(false);
 
-  // Sync the form from the loaded org once per org (not on every refetch, to avoid clobbering edits).
+  // Sync the form from the loaded org once per org (not on every refetch, to avoid clobbering edits),
+  // and clear any save banner so it isn't attributed to the newly-selected org.
   useEffect(() => {
+    setOrgSaved(false);
+    setOrgError(null);
     if (org !== null) {
       setName(org.name);
       setDescription(org.description ?? '');
@@ -167,7 +171,7 @@ export default function SettingsPage() {
         <h2 style={styles.h2}>Organisation</h2>
         {orgId === '' ? (
           <p style={styles.muted}>No organisation selected.</p>
-        ) : isLoading ? (
+        ) : isLoading || meLoading ? (
           <p style={styles.muted} role="status">
             Loading…
           </p>
