@@ -1,10 +1,18 @@
 // Workspace (knowledge-graph) detail: live node/relationship counts, an inline ingest form
 // (text/structured content -> async job) with live job status, and retrieval/search over the graph.
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiClientError, type IngestJob, type SearchMode } from '@oraclous/api-client';
-import { isJobActive, useDocuments, useGraph, useIngest } from '../lib/graphs.js';
+import {
+  isJobActive,
+  useDeleteGraph,
+  useDocuments,
+  useGraph,
+  useIngest,
+  useIngestFile,
+  useUpdateGraph,
+} from '../lib/graphs.js';
 import { resultScore, resultText, useSearch } from '../lib/search.js';
 
 const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
@@ -185,6 +193,48 @@ const styles = {
     overflowWrap: 'break-word',
     wordBreak: 'break-word',
   },
+  renameRow: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
+  headerActions: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  confirmText: { fontSize: 13, color: 'var(--ink, #0b1220)' },
+  secondary: {
+    padding: '7px 12px',
+    fontSize: 13,
+    fontWeight: 500,
+    color: 'var(--ink, #0b1220)',
+    background: 'transparent',
+    border: '1px solid var(--rule, #d7d6d2)',
+    borderRadius: 8,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  danger: {
+    padding: '7px 12px',
+    fontSize: 13,
+    fontWeight: 600,
+    color: 'var(--paper, #f4f4f2)',
+    background: 'var(--error, #c8412c)',
+    border: 'none',
+    borderRadius: 8,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  dangerGhost: {
+    padding: '7px 12px',
+    fontSize: 13,
+    fontWeight: 500,
+    color: 'var(--error, #c8412c)',
+    background: 'transparent',
+    border: '1px solid var(--error, #c8412c)',
+    borderRadius: 8,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  fileRow: {
+    display: 'grid',
+    gap: 6,
+    borderTop: '1px solid var(--rule, #d7d6d2)',
+    paddingTop: 12,
+  },
 } satisfies Record<string, CSSProperties>;
 
 function JobRow({ job }: { job: IngestJob }) {
@@ -225,6 +275,16 @@ export default function GraphDetailPage() {
   const [mode, setMode] = useState<SearchMode>('semantic');
   const search = useSearch(graphId);
 
+  const navigate = useNavigate();
+  const ingestFile = useIngestFile(graphId);
+  const updateGraph = useUpdateGraph(graphId);
+  const deleteGraph = useDeleteGraph();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
   // When the last active job finishes, refetch the graph so node/relationship counts update.
   // The latch is scoped to graphId (the route doesn't remount per :graphId), so navigating between
   // graphs resets it cleanly rather than firing a spurious cross-graph invalidation.
@@ -243,11 +303,14 @@ export default function GraphDetailPage() {
     wasActive.current = anyActive;
   }, [anyActive, graphId, queryClient]);
 
-  // Clear stale search results when navigating to a different graph — the route reuses this
-  // component instance, so the mutation's data would otherwise leak across graphs.
+  // Clear stale search results + transient management UI when navigating to a different graph —
+  // the route reuses this component instance, so they would otherwise leak across graphs.
   const { reset: resetSearch } = search;
   useEffect(() => {
     resetSearch();
+    setRenaming(false);
+    setConfirmingDelete(false);
+    setFileName(null);
   }, [graphId, resetSearch]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -264,6 +327,43 @@ export default function GraphDetailPage() {
   function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     search.mutate({ query: query.trim(), mode });
+  }
+
+  async function onUploadFile() {
+    const f = fileRef.current?.files?.[0];
+    if (f === undefined) return;
+    setError(null);
+    try {
+      await ingestFile.mutateAsync({ file: f });
+      if (fileRef.current !== null) fileRef.current.value = '';
+      setFileName(null);
+    } catch (cause) {
+      setError(messageFor(cause));
+    }
+  }
+
+  async function onRename(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = nameInput.trim();
+    if (trimmed === '') return;
+    setError(null);
+    try {
+      await updateGraph.mutateAsync({ name: trimmed });
+      setRenaming(false);
+    } catch (cause) {
+      setError(messageFor(cause));
+    }
+  }
+
+  async function onDelete() {
+    setError(null);
+    try {
+      await deleteGraph.mutateAsync(graphId);
+      navigate('/app/workspaces', { replace: true });
+    } catch (cause) {
+      setError(messageFor(cause));
+      setConfirmingDelete(false);
+    }
   }
 
   const busy = ingest.isPending;
@@ -286,15 +386,36 @@ export default function GraphDetailPage() {
       ) : (
         <>
           <header style={styles.header}>
-            <div style={styles.titleRow}>
-              <h1 style={styles.h1}>{graph.name}</h1>
-              <span
-                style={{ ...styles.badge, ...badgeStyle(graph.status) }}
-                aria-label={`status: ${graph.status}`}
-              >
-                {graph.status}
-              </span>
-            </div>
+            {renaming ? (
+              <form style={styles.renameRow} onSubmit={onRename} aria-label="Rename workspace">
+                <input
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  aria-label="Workspace name"
+                  style={styles.input}
+                />
+                <button
+                  type="submit"
+                  disabled={updateGraph.isPending || nameInput.trim() === ''}
+                  style={styles.primary}
+                >
+                  {updateGraph.isPending ? 'Saving…' : 'Save'}
+                </button>
+                <button type="button" onClick={() => setRenaming(false)} style={styles.secondary}>
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <div style={styles.titleRow}>
+                <h1 style={styles.h1}>{graph.name}</h1>
+                <span
+                  style={{ ...styles.badge, ...badgeStyle(graph.status) }}
+                  aria-label={`status: ${graph.status}`}
+                >
+                  {graph.status}
+                </span>
+              </div>
+            )}
             {graph.description !== null && graph.description !== '' && (
               <p style={styles.desc}>{graph.description}</p>
             )}
@@ -309,6 +430,48 @@ export default function GraphDetailPage() {
             <p style={styles.meta}>
               created {formatDate(graph.createdAt)} · updated {formatDate(graph.updatedAt)}
             </p>
+            {!renaming && (
+              <div style={styles.headerActions}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNameInput(graph.name);
+                    setRenaming(true);
+                  }}
+                  style={styles.secondary}
+                >
+                  Rename
+                </button>
+                {confirmingDelete ? (
+                  <>
+                    <span style={styles.confirmText}>Delete this workspace and its data?</span>
+                    <button
+                      type="button"
+                      onClick={onDelete}
+                      disabled={deleteGraph.isPending}
+                      style={styles.danger}
+                    >
+                      {deleteGraph.isPending ? 'Deleting…' : 'Delete'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(false)}
+                      style={styles.secondary}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDelete(true)}
+                    style={styles.dangerGhost}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            )}
           </header>
 
           <form style={styles.card} onSubmit={onSearch} aria-label="Search this workspace">
@@ -430,6 +593,31 @@ export default function GraphDetailPage() {
               >
                 {busy ? 'Starting…' : 'Ingest'}
               </button>
+            </div>
+            <div style={styles.fileRow}>
+              <label htmlFor="ingest-file" style={styles.label}>
+                Or upload a file
+              </label>
+              <div style={styles.controlRow}>
+                <input
+                  ref={fileRef}
+                  id="ingest-file"
+                  type="file"
+                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+                  style={{ ...styles.input, flex: 1, minWidth: 200 }}
+                />
+                <button
+                  type="button"
+                  onClick={onUploadFile}
+                  disabled={fileName === null || ingestFile.isPending}
+                  aria-busy={ingestFile.isPending}
+                  style={
+                    ingestFile.isPending ? { ...styles.primary, ...styles.busy } : styles.primary
+                  }
+                >
+                  {ingestFile.isPending ? 'Uploading…' : 'Upload'}
+                </button>
+              </div>
             </div>
           </form>
 
