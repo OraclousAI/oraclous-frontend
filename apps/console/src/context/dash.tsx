@@ -9,7 +9,8 @@ export interface Organization {
   id: string;
   name: string;
   slug: string;
-  org_role?: 'owner' | 'admin' | 'member';
+  // The org's owner — persona is derived by comparing this to the signed-in user's id.
+  ownerUserId?: string;
 }
 
 export interface DashTenant {
@@ -29,6 +30,8 @@ export interface DashContextValue {
   persona: Persona;
   tenant: DashTenant;
   user: DashUser;
+  // The signed-in user's id (for per-org owner derivation in the switcher).
+  userId: string;
   orgs: Organization[];
   currentOrg: Organization | null;
   orgsLoading: boolean;
@@ -53,6 +56,7 @@ const FALLBACK: DashContextValue = {
   persona: 'standalone',
   tenant: { type: 'personal', name: 'Personal', plan: 'personal' },
   user: { name: 'Oraclous User', email: '', role: 'Member' },
+  userId: '',
   orgs: [],
   currentOrg: null,
   orgsLoading: false,
@@ -68,8 +72,10 @@ export const useDash = () => useContext(DashCtx);
 
 export interface DashProviderProps {
   children: ReactNode;
-  /** Injected at the app layer once the API client is wired. */
+  /** Injected at the app layer from the authenticated session. */
   email?: string;
+  /** The signed-in user's id — used to derive the owner persona for the current org. */
+  userId?: string;
   orgs?: Organization[];
   orgsLoading?: boolean;
 }
@@ -77,6 +83,7 @@ export interface DashProviderProps {
 export function DashProvider({
   children,
   email = '',
+  userId = '',
   orgs = [],
   orgsLoading = false,
 }: DashProviderProps) {
@@ -94,26 +101,22 @@ export function DashProvider({
   const refetchOrgs = useCallback(() => {}, []);
 
   const value = useMemo<DashContextValue>(() => {
-    const role: string = currentOrg?.org_role
-      ? currentOrg.org_role.charAt(0).toUpperCase() + currentOrg.org_role.slice(1)
-      : 'Member';
-    const persona: Persona = currentOrg
-      ? currentOrg.org_role === 'owner'
-        ? 'owner'
-        : 'member'
-      : 'standalone';
+    const isOwner = currentOrg !== null && userId !== '' && currentOrg.ownerUserId === userId;
+    const persona: Persona = currentOrg ? (isOwner ? 'owner' : 'member') : 'standalone';
+    const role: string = isOwner ? 'Owner' : 'Member';
     return {
       persona,
       tenant: {
         type: currentOrg ? 'company' : 'personal',
         name: currentOrg?.name ?? 'Personal',
-        plan: currentOrg?.org_role ?? 'personal',
+        plan: currentOrg ? 'team' : 'personal',
       },
       user: {
         name: email ? nameFromEmail(email) : 'Oraclous User',
         email,
         role,
       },
+      userId,
       orgs,
       currentOrg,
       orgsLoading,
@@ -122,7 +125,7 @@ export function DashProvider({
       canCreateOrg: true,
       needsOnboarding: !orgsLoading && orgs.length === 0,
     };
-  }, [email, currentOrg, orgs, orgsLoading, setCurrentOrg, refetchOrgs]);
+  }, [email, userId, currentOrg, orgs, orgsLoading, setCurrentOrg, refetchOrgs]);
 
   return <DashCtx.Provider value={value}>{children}</DashCtx.Provider>;
 }

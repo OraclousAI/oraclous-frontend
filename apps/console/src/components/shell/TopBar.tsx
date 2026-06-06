@@ -96,7 +96,7 @@ function handleMenuKeyDown(
 }
 
 export function TopBar() {
-  const { tenant, user, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
+  const { tenant, user, userId, orgs, currentOrg, setCurrentOrg, canCreateOrg } = useDash();
   const navigate = useNavigate();
   const logout = useLogout();
   const { pathname } = useLocation();
@@ -227,7 +227,7 @@ export function TopBar() {
                             fontFamily: 'var(--font-mono)',
                           }}
                         >
-                          {o.org_role ?? 'member'}
+                          {o.ownerUserId === userId ? 'owner' : 'member'}
                         </span>
                       </span>
                       {isActive && (

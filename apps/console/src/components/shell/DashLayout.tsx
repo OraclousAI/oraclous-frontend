@@ -33,10 +33,20 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
     if (isAuthError) logout();
   }, [isAuthError, logout]);
 
-  const dashOrgs = orgs.map((o) => ({ id: o.id, name: o.name, slug: o.slug }));
+  const dashOrgs = orgs.map((o) => ({
+    id: o.id,
+    name: o.name,
+    slug: o.slug,
+    ownerUserId: o.ownerUserId,
+  }));
 
   return (
-    <DashProvider email={principal?.email ?? ''} orgs={dashOrgs} orgsLoading={orgsLoading}>
+    <DashProvider
+      email={principal?.email ?? ''}
+      userId={principal?.id ?? ''}
+      orgs={dashOrgs}
+      orgsLoading={orgsLoading}
+    >
       <div className="shell-root">
         <Sidebar />
         <div className="shell-maincol">
