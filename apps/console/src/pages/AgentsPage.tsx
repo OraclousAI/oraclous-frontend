@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useTools } from '../lib/tools.js';
 import { useCreateInstance, useInstances } from '../lib/agents.js';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -211,9 +212,7 @@ export default function AgentsPage() {
       <section style={styles.card} aria-label="Your agents">
         <h2 style={styles.h2}>Your agents</h2>
         {isLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={3} />
         ) : isError ? (
           <p style={styles.error} role="alert">
             Couldn&rsquo;t load your agents. Please try again.

@@ -4,6 +4,8 @@ import { useId, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useCreateGraph, useGraphs } from '../lib/graphs.js';
+import { useToast } from '../lib/toast.jsx';
+import { SkeletonList } from '../components/ui/Skeleton.js';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -109,6 +111,7 @@ const styles = {
 export default function WorkspacesPage() {
   const { graphs, isLoading, isError } = useGraphs();
   const createGraph = useCreateGraph();
+  const toast = useToast();
 
   const errorId = useId();
   const [name, setName] = useState('');
@@ -127,6 +130,7 @@ export default function WorkspacesPage() {
       });
       setName('');
       setDescription('');
+      toast.success(`Workspace “${trimmedName}” created.`);
     } catch (cause) {
       setError(messageFor(cause));
     }
@@ -190,9 +194,7 @@ export default function WorkspacesPage() {
 
       <section aria-label="Workspaces list" style={styles.listWrap}>
         {isLoading ? (
-          <p style={styles.muted} role="status">
-            Loading…
-          </p>
+          <SkeletonList rows={3} />
         ) : isError ? (
           <p style={styles.error} role="alert">
             Could not load your workspaces.

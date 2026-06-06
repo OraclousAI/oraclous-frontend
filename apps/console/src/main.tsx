@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TokenStoreProvider } from './lib/token-store.jsx';
 import { ApiProvider } from './lib/api.jsx';
+import { ToastProvider } from './lib/toast.jsx';
 import { App } from './App.js';
 import '@oraclous/design-system/tokens.css';
 
@@ -22,7 +23,9 @@ createRoot(rootEl).render(
     <TokenStoreProvider>
       <QueryClientProvider client={queryClient}>
         <ApiProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </ApiProvider>
       </QueryClientProvider>
     </TokenStoreProvider>

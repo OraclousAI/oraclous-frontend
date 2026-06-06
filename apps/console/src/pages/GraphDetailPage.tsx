@@ -14,6 +14,7 @@ import {
   useUpdateGraph,
 } from '../lib/graphs.js';
 import { resultScore, resultText, useSearch } from '../lib/search.js';
+import { useToast } from '../lib/toast.jsx';
 
 const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
 const SEARCH_MODES = ['semantic', 'fulltext', 'hybrid'] as const;
@@ -262,6 +263,7 @@ export default function GraphDetailPage() {
   const { graphId = '' } = useParams<{ graphId: string }>();
   const queryClient = useQueryClient();
 
+  const toast = useToast();
   const { graph, isLoading, isError } = useGraph(graphId);
   const { documents } = useDocuments(graphId);
   const ingest = useIngest(graphId);
@@ -321,6 +323,7 @@ export default function GraphDetailPage() {
     try {
       await ingest.mutateAsync({ content: content.trim(), sourceType });
       setContent('');
+      toast.info('Ingestion started — this runs in the background.');
     } catch (cause) {
       setError(messageFor(cause));
     }
@@ -339,6 +342,7 @@ export default function GraphDetailPage() {
       await ingestFile.mutateAsync({ file: f });
       if (fileRef.current !== null) fileRef.current.value = '';
       setFileName(null);
+      toast.info('Upload received — ingestion is running.');
     } catch (cause) {
       setError(messageFor(cause));
     }
@@ -352,6 +356,7 @@ export default function GraphDetailPage() {
     try {
       await updateGraph.mutateAsync({ name: trimmed });
       setRenaming(false);
+      toast.success('Workspace renamed.');
     } catch (cause) {
       setMgmtError(messageFor(cause));
     }
@@ -361,6 +366,7 @@ export default function GraphDetailPage() {
     setMgmtError(null);
     try {
       await deleteGraph.mutateAsync(graphId);
+      toast.success('Workspace deleted.');
       navigate('/app/workspaces', { replace: true });
     } catch (cause) {
       // keep the confirm row open so the error + retry stay co-located with the action

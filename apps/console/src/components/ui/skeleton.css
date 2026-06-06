@@ -1,0 +1,23 @@
+@keyframes oa-skeleton-pulse {
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+.oa-skeleton {
+  display: block;
+  background: var(--paper-soft, #eceae5);
+  animation: oa-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oa-skeleton {
+    animation: none;
+  }
+}
