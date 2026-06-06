@@ -1,10 +1,15 @@
-// Members — org invitations. Owner/admin can invite by email + role, see pending invitations, and
-// revoke them. On invite the raw token is shown once as a shareable accept-invite link.
+// Members — the org roster + invitations. Owner sees + manages members (change role, remove), invites
+// by email, and revokes pending invitations. On invite the raw token is shown once as a share link.
 import { useId, useState, type CSSProperties, type FormEvent } from 'react';
-import { ApiClientError } from '@oraclous/api-client';
+import { ApiClientError, type MemberRole } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
-import { useMe, useOrg } from '../lib/session.js';
+import { useChangeMemberRole, useMe, useMembers, useOrg, useRemoveMember } from '../lib/session.js';
 import { useCreateInvitation, useInvitations, useRevokeInvitation } from '../lib/invitations.js';
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString();
+}
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -113,7 +118,25 @@ const styles = {
   },
   itemMain: { display: 'grid', gap: 2, minWidth: 0 },
   itemEmail: { fontSize: 14, color: 'var(--ink, #0b1220)', overflowWrap: 'break-word' },
-  itemMeta: { fontSize: 12, color: 'var(--ink, #0b1220)', opacity: 0.75 },
+  itemMeta: {
+    fontSize: 12,
+    color: 'var(--ink, #0b1220)',
+    opacity: 0.75,
+    textTransform: 'capitalize',
+  },
+  memberActions: { display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 },
+  badge: {
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    color: 'var(--ink, #0b1220)',
+    background: 'var(--paper-soft, #eceae5)',
+    border: '1px solid var(--rule, #d7d6d2)',
+    borderRadius: 999,
+    padding: '2px 8px',
+    whiteSpace: 'nowrap',
+  },
 } satisfies Record<string, CSSProperties>;
 
 export default function MembersPage() {
@@ -121,9 +144,12 @@ export default function MembersPage() {
   const { principal, isLoading: meLoading } = useMe();
   const orgId = currentOrg?.id ?? '';
   const { org, isLoading: orgLoading } = useOrg(orgId);
+  const { members, isLoading: membersLoading } = useMembers(orgId);
   const { invitations, isLoading: invLoading } = useInvitations(orgId);
   const createInvite = useCreateInvitation(orgId);
   const revokeInvite = useRevokeInvitation(orgId);
+  const changeRole = useChangeMemberRole(orgId);
+  const removeMember = useRemoveMember(orgId);
 
   const isOwner = principal !== null && org !== null && principal.id === org.ownerUserId;
 
@@ -133,6 +159,7 @@ export default function MembersPage() {
   const [role, setRole] = useState('member');
   const [error, setError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -174,11 +201,91 @@ export default function MembersPage() {
     }
   }
 
+  async function onChangeRole(userId: string, nextRole: MemberRole) {
+    setMemberError(null);
+    try {
+      await changeRole.mutateAsync({ userId, role: nextRole });
+    } catch (cause) {
+      setMemberError(messageFor(cause));
+    }
+  }
+
+  async function onRemoveMember(userId: string) {
+    setMemberError(null);
+    try {
+      await removeMember.mutateAsync(userId);
+    } catch (cause) {
+      setMemberError(messageFor(cause));
+    }
+  }
+
   const pending = invitations.filter((i) => i.status === 'pending');
+  const managing = changeRole.isPending || removeMember.isPending;
 
   return (
     <div style={styles.page}>
       <h1 style={styles.h1}>Members</h1>
+
+      <section style={styles.card} aria-label="Member roster">
+        <h2 style={styles.h2}>People</h2>
+        {orgId === '' ? (
+          <p style={styles.muted}>No organisation selected.</p>
+        ) : membersLoading ? (
+          <p style={styles.muted} role="status">
+            Loading…
+          </p>
+        ) : members.length === 0 ? (
+          <p style={styles.muted}>No members yet.</p>
+        ) : (
+          <>
+            {memberError !== null && (
+              <p role="alert" style={styles.error}>
+                {memberError}
+              </p>
+            )}
+            <ul style={styles.list} aria-label="Members">
+              {members.map((m) => {
+                const canManage = isOwner && m.role !== 'owner';
+                return (
+                  <li key={m.userId} style={styles.item}>
+                    <div style={styles.itemMain}>
+                      <span style={styles.itemEmail}>{m.email ?? m.userId}</span>
+                      <span style={styles.itemMeta}>
+                        {m.role}
+                        {formatDate(m.since) !== '' ? ` · since ${formatDate(m.since)}` : ''}
+                      </span>
+                    </div>
+                    {canManage ? (
+                      <div style={styles.memberActions}>
+                        <select
+                          aria-label={`Role for ${m.email ?? m.userId}`}
+                          value={m.role === 'admin' ? 'admin' : 'member'}
+                          onChange={(e) => onChangeRole(m.userId, e.target.value as MemberRole)}
+                          disabled={managing}
+                          style={styles.select}
+                        >
+                          <option value="member">Member</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveMember(m.userId)}
+                          disabled={managing}
+                          style={styles.secondary}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={styles.badge}>{m.role}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </section>
 
       <section style={styles.card} aria-label="Invite a member">
         <h2 style={styles.h2}>Invite a member</h2>
