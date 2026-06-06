@@ -52,7 +52,7 @@ const AgentDetail = lazy(() => import('./pages/AgentDetailPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
-const Billing = lazyPlaceholder('Billing');
+const Billing = lazy(() => import('./pages/BillingPage.js'));
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
 const Explorer = lazy(() => import('./pages/ExplorerPage.js'));
