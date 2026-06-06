@@ -50,20 +50,23 @@ export function useInstance(instanceId: string): InstanceState {
 export interface ValidationState {
   readonly report: ValidationReport | null;
   readonly isLoading: boolean;
+  readonly isError: boolean;
 }
 
-export function useValidation(instanceId: string): ValidationState {
+// `enabled` lets the caller defer the readiness check until the instance is known to exist, so a
+// missing/foreign id doesn't fire a second (invisible) 404 alongside the instance fetch.
+export function useValidation(instanceId: string, enabled: boolean): ValidationState {
   const { instances: client } = useApi();
   const { isAuthenticated } = useTokenStore();
 
   const query = useQuery({
     queryKey: ['instance-validation', instanceId],
     queryFn: () => client.validate(instanceId),
-    enabled: isAuthenticated && instanceId !== '',
+    enabled: isAuthenticated && instanceId !== '' && enabled,
     retry: false,
   });
 
-  return { report: query.data ?? null, isLoading: query.isLoading };
+  return { report: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
 }
 
 export function useCreateInstance() {

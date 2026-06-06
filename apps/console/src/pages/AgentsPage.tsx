@@ -26,6 +26,7 @@ const styles = {
   row: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' },
   field: { display: 'grid', gap: 6 },
   label: { fontSize: 13, fontWeight: 500, color: 'var(--ink, #0b1220)' },
+  fieldError: { fontSize: 12, color: 'var(--ink, #0b1220)' },
   input: {
     flex: 1,
     minWidth: 180,
@@ -110,8 +111,8 @@ const styles = {
 } satisfies Record<string, CSSProperties>;
 
 export default function AgentsPage() {
-  const { tools } = useTools();
-  const { instances, isLoading } = useInstances();
+  const { tools, isLoading: toolsLoading, isError: toolsError } = useTools();
+  const { instances, isLoading, isError } = useInstances();
   const createInstance = useCreateInstance();
   const navigate = useNavigate();
 
@@ -156,13 +157,24 @@ export default function AgentsPage() {
               required
               style={styles.select}
             >
-              <option value="">Select a tool…</option>
+              <option value="">
+                {toolsLoading
+                  ? 'Loading tools…'
+                  : toolsError
+                    ? 'Tools unavailable'
+                    : 'Select a tool…'}
+              </option>
               {tools.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
                 </option>
               ))}
             </select>
+            {toolsError && (
+              <span role="alert" style={styles.fieldError}>
+                Couldn&rsquo;t load the tool catalogue.
+              </span>
+            )}
           </div>
           <div style={{ ...styles.field, flex: 1, minWidth: 180 }}>
             <label htmlFor={nameId} style={styles.label}>
@@ -201,6 +213,10 @@ export default function AgentsPage() {
         {isLoading ? (
           <p style={styles.muted} role="status">
             Loading…
+          </p>
+        ) : isError ? (
+          <p style={styles.error} role="alert">
+            Couldn&rsquo;t load your agents. Please try again.
           </p>
         ) : instances.length === 0 ? (
           <p style={styles.muted}>No agents yet — create one above to run a tool.</p>

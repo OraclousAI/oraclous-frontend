@@ -124,7 +124,7 @@ const DEFAULT_INPUT = '{\n  "operation": "list_tables"\n}';
 export default function AgentDetailPage() {
   const { instanceId = '' } = useParams<{ instanceId: string }>();
   const { instance, isLoading, isError } = useInstance(instanceId);
-  const { report } = useValidation(instanceId);
+  const { report, isError: reportError } = useValidation(instanceId, instance !== null);
   const execute = useExecuteInstance(instanceId);
 
   const [input, setInput] = useState(DEFAULT_INPUT);
@@ -133,6 +133,7 @@ export default function AgentDetailPage() {
   function onRun(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setInputError(null);
+    execute.reset(); // clear any prior result so it doesn't linger during the new run
     let parsed: Record<string, unknown>;
     try {
       const trimmed = input.trim();
@@ -180,7 +181,11 @@ export default function AgentDetailPage() {
 
           <section style={styles.card} aria-label="Readiness">
             <h2 style={styles.h2}>Readiness</h2>
-            {report === null ? (
+            {reportError ? (
+              <p style={styles.muted} role="alert">
+                Couldn&rsquo;t check readiness.
+              </p>
+            ) : report === null ? (
               <p style={styles.muted} role="status">
                 Checking…
               </p>
