@@ -17,6 +17,11 @@ export interface CreateGraphInput {
   readonly description?: string;
 }
 
+export interface UpdateGraphInput {
+  readonly name?: string;
+  readonly description?: string;
+}
+
 export interface IngestTextInput {
   readonly content: string;
   // 'text' | 'csv' | 'json' | 'md' | 'code' | ... — structured types route to the recipe engine.
@@ -77,6 +82,12 @@ export interface GraphsClient {
   getJob(graphId: string, jobId: string): Promise<IngestJob>;
   // The graph's ingestion jobs / documents (history + live status).
   listDocuments(graphId: string): Promise<IngestJob[]>;
+  // Rename / re-describe a graph.
+  update(graphId: string, input: UpdateGraphInput): Promise<Graph>;
+  // Delete a graph and its data.
+  remove(graphId: string): Promise<void>;
+  // Ingest an uploaded file (multipart) — returns the async job to poll.
+  ingestFile(graphId: string, file: File, recipeId?: string): Promise<IngestJob>;
 }
 
 function toGraph(wire: GraphResponseWire): Graph {
@@ -155,6 +166,34 @@ export function createGraphsClient(transport: ApiTransport): GraphsClient {
         path: `/api/v1/graphs/${encodeURIComponent(graphId)}/documents`,
       });
       return data.map(toJob);
+    },
+    async update(graphId: string, input: UpdateGraphInput): Promise<Graph> {
+      const body: { name?: string; description?: string } = {};
+      if (input.name !== undefined) body.name = input.name;
+      if (input.description !== undefined) body.description = input.description;
+      const { data } = await transport.execute<GraphResponseWire>({
+        method: 'PATCH',
+        path: `/api/v1/graphs/${encodeURIComponent(graphId)}`,
+        body,
+      });
+      return toGraph(data);
+    },
+    async remove(graphId: string): Promise<void> {
+      await transport.execute<void>({
+        method: 'DELETE',
+        path: `/api/v1/graphs/${encodeURIComponent(graphId)}`,
+      });
+    },
+    async ingestFile(graphId: string, file: File, recipeId?: string): Promise<IngestJob> {
+      const form = new FormData();
+      form.append('file', file);
+      if (recipeId !== undefined) form.append('recipe_id', recipeId);
+      const { data } = await transport.execute<JobResponseWire>({
+        method: 'POST',
+        path: `/api/v1/graphs/${encodeURIComponent(graphId)}/upload`,
+        body: form,
+      });
+      return toJob(data);
     },
   };
 }

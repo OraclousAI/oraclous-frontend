@@ -51,14 +51,20 @@ export function createFetchTransport(options: FetchTransportOptions): ApiTranspo
       const token = options.getToken?.() ?? null;
       if (token !== null && token !== '') headers['Authorization'] = `Bearer ${token}`;
       const hasBody = request.body !== undefined && request.method !== 'GET';
-      if (hasBody) headers['Content-Type'] = 'application/json';
+      // Multipart (file upload): pass the FormData through untouched — the browser sets
+      // Content-Type with the correct boundary, so we must NOT set it or JSON-stringify.
+      const isMultipart =
+        hasBody && typeof FormData !== 'undefined' && request.body instanceof FormData;
+      if (hasBody && !isMultipart) headers['Content-Type'] = 'application/json';
 
       let response: Response;
       try {
         response = await fetchImpl(root + request.path, {
           method: request.method,
           headers,
-          ...(hasBody ? { body: JSON.stringify(request.body) } : {}),
+          ...(hasBody
+            ? { body: isMultipart ? (request.body as FormData) : JSON.stringify(request.body) }
+            : {}),
           ...(request.signal ? { signal: request.signal } : {}),
         });
       } catch {

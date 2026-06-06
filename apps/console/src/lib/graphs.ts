@@ -1,6 +1,12 @@
 // Knowledge-graph hooks: list/create graphs, read one graph, ingest content, and track jobs.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateGraphInput, Graph, IngestJob, IngestTextInput } from '@oraclous/api-client';
+import type {
+  CreateGraphInput,
+  Graph,
+  IngestJob,
+  IngestTextInput,
+  UpdateGraphInput,
+} from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -90,6 +96,44 @@ export function useIngest(graphId: string) {
     onSuccess: () => {
       // The new job appears in the documents list; its poll then drives the live status.
       void queryClient.invalidateQueries({ queryKey: ['graph-documents', graphId] });
+    },
+  });
+}
+
+export function useIngestFile(graphId: string) {
+  const { graphs: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (vars: { file: File; recipeId?: string }): Promise<IngestJob> =>
+      client.ingestFile(graphId, vars.file, vars.recipeId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['graph-documents', graphId] });
+    },
+  });
+}
+
+export function useUpdateGraph(graphId: string) {
+  const { graphs: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateGraphInput): Promise<Graph> => client.update(graphId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['graph', graphId] });
+      void queryClient.invalidateQueries({ queryKey: ['graphs'] });
+    },
+  });
+}
+
+export function useDeleteGraph() {
+  const { graphs: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (graphId: string): Promise<void> => client.remove(graphId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['graphs'] });
     },
   });
 }
