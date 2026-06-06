@@ -28,6 +28,8 @@ export interface AuthClient {
   me(): Promise<AuthPrincipal>;
   // POST /v1/auth/refresh — exchange a (rotating) refresh token for a fresh session.
   refresh(refreshToken: string): Promise<AuthSession>;
+  // POST /v1/auth/switch-org — re-issue the session scoped to another org the user belongs to.
+  switchOrg(organisationId: string): Promise<AuthSession>;
   // POST /v1/auth/change-password — set a new password for the authenticated user.
   changePassword(newPassword: string): Promise<void>;
 }
@@ -70,6 +72,16 @@ export function createAuthClient(transport: ApiTransport): AuthClient {
         method: 'POST',
         path: '/v1/auth/refresh',
         body: { refresh_token: refreshToken },
+      });
+      return toSession(data);
+    },
+    async switchOrg(organisationId: string): Promise<AuthSession> {
+      // The target org rides the X-Organisation-Id header (never the body); the gateway/auth-service
+      // validates it against the caller's membership and re-issues a session scoped to it.
+      const { data } = await transport.execute<TokenResponseWire>({
+        method: 'POST',
+        path: '/v1/auth/switch-org',
+        headers: { 'X-Organisation-Id': organisationId },
       });
       return toSession(data);
     },
