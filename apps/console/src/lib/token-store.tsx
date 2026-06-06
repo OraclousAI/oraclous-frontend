@@ -6,6 +6,8 @@ import { createContext, useContext, useMemo, useState, useCallback, type ReactNo
 
 export interface TokenPayload {
   token: string;
+  // The rotating refresh token — held in memory only, used for silent re-issue before expiry.
+  refreshToken: string;
   email: string;
   expiresAt: number;
 }

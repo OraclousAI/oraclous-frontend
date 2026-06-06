@@ -1,6 +1,6 @@
 // Session hooks. useMe resolves the authenticated principal from the gateway
 // (GET /v1/auth/me); useLogout ends the session (clears the in-memory token + cache).
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -130,4 +130,35 @@ export function useLogout(): () => void {
     queryClient.clear();
     navigate('/login', { replace: true });
   }, [setToken, queryClient, navigate]);
+}
+
+// Silently re-issue the session ~60s before the access token expires, using the in-memory refresh
+// token (both tokens rotate). On success it reschedules (the new expiry re-runs the effect); on
+// failure (expired/invalid refresh token) it clears the session so ProtectedRoute returns to /login.
+export function useSilentRefresh(): void {
+  const { auth } = useApi();
+  const { tokenPayload, setToken } = useTokenStore();
+  const refreshToken = tokenPayload?.refreshToken ?? null;
+  const expiresAt = tokenPayload?.expiresAt ?? null;
+
+  useEffect(() => {
+    if (refreshToken === null || refreshToken === '' || expiresAt === null) return;
+    const delay = Math.max(0, expiresAt - Date.now() - 60_000);
+    const timer = setTimeout(() => {
+      auth
+        .refresh(refreshToken)
+        .then((session) => {
+          setToken({
+            token: session.accessToken,
+            refreshToken: session.refreshToken,
+            email: session.email,
+            expiresAt: Date.now() + session.expiresIn * 1000,
+          });
+        })
+        .catch(() => {
+          setToken(null);
+        });
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [auth, refreshToken, expiresAt, setToken]);
 }

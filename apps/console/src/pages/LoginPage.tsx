@@ -116,6 +116,7 @@ export default function LoginPage() {
       const session = await auth.login({ email, password });
       setToken({
         token: session.accessToken,
+        refreshToken: session.refreshToken,
         email: session.email,
         expiresAt: Date.now() + session.expiresIn * 1000,
       });
