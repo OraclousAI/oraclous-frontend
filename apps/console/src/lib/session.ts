@@ -7,6 +7,7 @@ import {
   ApiClientError,
   ErrorCode,
   type AuthPrincipal,
+  type AuthSession,
   type CreateOrgInput,
   type Member,
   type MemberRole,
@@ -163,6 +164,27 @@ export function useChangePassword() {
 
   return useMutation({
     mutationFn: (newPassword: string): Promise<void> => auth.changePassword(newPassword),
+  });
+}
+
+// Switch the active organisation: re-issue the session for the selected org, swap the in-memory
+// token, and invalidate every query so all org-scoped data refetches under the new org.
+export function useSwitchOrg() {
+  const { auth } = useApi();
+  const { setToken } = useTokenStore();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (organisationId: string): Promise<AuthSession> => auth.switchOrg(organisationId),
+    onSuccess: (session) => {
+      setToken({
+        token: session.accessToken,
+        refreshToken: session.refreshToken,
+        email: session.email,
+        expiresAt: Date.now() + session.expiresIn * 1000,
+      });
+      void queryClient.invalidateQueries();
+    },
   });
 }
 

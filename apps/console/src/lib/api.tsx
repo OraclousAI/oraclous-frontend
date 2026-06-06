@@ -2,7 +2,7 @@
 // exposes typed clients via context. All gateway calls go through @oraclous/api-client
 // (Gate 1: api-client-boundary); the bearer token is read live from the token store.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
   createAuthClient,
@@ -41,16 +41,9 @@ export function useApi(): ApiContextValue {
 }
 
 export function ApiProvider({ children }: { children: ReactNode }) {
-  const { tokenPayload } = useTokenStore();
-
-  // The token changes across the session; the transport reads the latest value via a
-  // ref so the client keeps a stable identity (created once) regardless of token churn.
-  const tokenRef = useRef<string | null>(tokenPayload?.token ?? null);
-  useEffect(() => {
-    tokenRef.current = tokenPayload?.token ?? null;
-  }, [tokenPayload]);
-
-  const getToken = useCallback(() => tokenRef.current, []);
+  // getToken reads the token store's synchronously-updated ref, so the transport always sees the
+  // current token — including the refetches an org switch fires immediately after swapping it.
+  const { getToken } = useTokenStore();
 
   const value = useMemo<ApiContextValue>(() => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';

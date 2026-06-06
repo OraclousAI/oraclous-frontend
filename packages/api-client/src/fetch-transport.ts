@@ -56,6 +56,7 @@ export function createFetchTransport(options: FetchTransportOptions): ApiTranspo
       const isMultipart =
         hasBody && typeof FormData !== 'undefined' && request.body instanceof FormData;
       if (hasBody && !isMultipart) headers['Content-Type'] = 'application/json';
+      if (request.headers) Object.assign(headers, request.headers);
 
       let response: Response;
       try {

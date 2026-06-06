@@ -7,6 +7,9 @@ export interface TransportRequest {
   readonly path: string;
   readonly body?: unknown;
   readonly signal?: AbortSignal;
+  // Extra request headers (e.g. X-Organisation-Id for active-org switch). Merged after the managed
+  // Accept/Authorization/Content-Type headers.
+  readonly headers?: Readonly<Record<string, string>>;
 }
 
 export interface TransportResponse<T> {
