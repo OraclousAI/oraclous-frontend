@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiClientError, ErrorCode } from '@oraclous/api-client';
 import { useApi } from '../lib/api.jsx';
 import { useTokenStore } from '../lib/token-store.jsx';
-import { Logo } from '../icons/index.js';
+import { Logo, Wordmark } from '../icons/index.js';
 
 type Mode = 'login' | 'signup';
 
@@ -124,8 +124,8 @@ export default function LoginPage() {
     <main style={styles.main}>
       <div style={styles.card}>
         <div style={styles.brand}>
-          <Logo size={26} />
-          <span style={styles.wordmark}>Oraclous</span>
+          <Logo size={22} />
+          <Wordmark height={20} />
         </div>
 
         <div style={styles.head}>
@@ -247,12 +247,6 @@ const styles = {
     boxShadow: 'var(--shadow-2, 0 2px 6px -2px rgba(11, 18, 32, 0.12))',
   },
   brand: { display: 'flex', alignItems: 'center', gap: 9 },
-  wordmark: {
-    fontSize: 17,
-    fontWeight: 700,
-    letterSpacing: '-0.01em',
-    color: 'var(--ink, #0b1220)',
-  },
   head: { display: 'grid', gap: 4 },
   heading: {
     margin: 0,
