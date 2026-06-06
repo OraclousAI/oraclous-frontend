@@ -13,6 +13,7 @@ import {
   createInstancesClient,
   createInvitationsClient,
   createOrgsClient,
+  createRecipesClient,
   createSearchClient,
   createToolsClient,
   type AuthClient,
@@ -22,6 +23,7 @@ import {
   type InstancesClient,
   type InvitationsClient,
   type OrgsClient,
+  type RecipesClient,
   type SearchClient,
   type ToolsClient,
 } from '@oraclous/api-client';
@@ -37,6 +39,7 @@ interface ApiContextValue {
   readonly instances: InstancesClient;
   readonly credentials: CredentialsClient;
   readonly explorer: ExplorerClient;
+  readonly recipes: RecipesClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -67,6 +70,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       instances: createInstancesClient(transport),
       credentials: createCredentialsClient(transport),
       explorer: createExplorerClient(transport),
+      recipes: createRecipesClient(transport),
     };
   }, [getToken]);
 

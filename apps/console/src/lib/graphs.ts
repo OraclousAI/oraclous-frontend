@@ -5,6 +5,8 @@ import type {
   Graph,
   IngestJob,
   IngestTextInput,
+  Ontology,
+  OntologyInput,
   UpdateGraphInput,
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
@@ -64,6 +66,37 @@ export function useGraph(graphId: string): GraphState {
   });
 
   return { graph: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
+}
+
+export interface OntologyState {
+  readonly ontology: Ontology | null;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+export function useOntology(graphId: string): OntologyState {
+  const { graphs: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['ontology', graphId],
+    queryFn: () => client.getOntology(graphId),
+    enabled: isAuthenticated && graphId !== '',
+  });
+
+  return { ontology: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
+}
+
+export function useSetOntology(graphId: string) {
+  const { graphs: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: OntologyInput): Promise<Ontology> => client.setOntology(graphId, input),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['ontology', graphId], data);
+    },
+  });
 }
 
 export interface DocumentsState {

@@ -15,6 +15,7 @@ import {
 } from '../lib/graphs.js';
 import { resultScore, resultText, useSearch } from '../lib/search.js';
 import { useToast } from '../lib/toast.jsx';
+import { OntologyEditor } from '../components/graph/OntologyEditor.js';
 
 const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
 const SEARCH_MODES = ['semantic', 'fulltext', 'hybrid'] as const;
@@ -673,6 +674,8 @@ export default function GraphDetailPage() {
               </ul>
             )}
           </section>
+
+          <OntologyEditor graphId={graphId} />
         </>
       )}
     </div>

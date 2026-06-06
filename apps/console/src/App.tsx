@@ -50,6 +50,7 @@ const Workspaces = lazy(() => import('./pages/WorkspacesPage.js'));
 const Agents = lazy(() => import('./pages/AgentsPage.js'));
 const AgentDetail = lazy(() => import('./pages/AgentDetailPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
+const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
 const Billing = lazyPlaceholder('Billing');
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
@@ -130,6 +131,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Tools />
+                </Suspense>
+              }
+            />
+            <Route
+              path="recipes"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Recipes />
                 </Suspense>
               }
             />
