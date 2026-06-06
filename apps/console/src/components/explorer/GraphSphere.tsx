@@ -16,6 +16,30 @@ interface GraphSphereProps {
   readonly edges: readonly GraphEdge[];
   readonly selectedId: string | null;
   readonly onSelect: (node: GraphNode | null) => void;
+  // Node ids that fall outside the active temporal window — drawn dimmed (the temporal lens).
+  readonly dimmedIds?: ReadonlySet<string> | null;
+}
+
+// Glow halos are the per-frame hot spot; bake one radial-gradient sprite per colour (cached) and
+// blit it with drawImage instead of allocating ~2 gradients per node every frame.
+const glowSprites = new Map<string, HTMLCanvasElement>();
+function glowSprite(color: string): HTMLCanvasElement {
+  const cached = glowSprites.get(color);
+  if (cached) return cached;
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 64;
+  const g = c.getContext('2d');
+  if (g) {
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, hexToRgba(color, 0.34));
+    grad.addColorStop(0.5, hexToRgba(color, 0.1));
+    grad.addColorStop(1, hexToRgba(color, 0));
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+  }
+  glowSprites.set(color, c);
+  return c;
 }
 
 const SELECTION = '#10d88a'; // mint — reserved for the live/selection signal
@@ -63,30 +87,32 @@ export function nodeLabel(n: GraphNode): string {
   return n.type;
 }
 
-// Deterministic Fibonacci-sphere placement: sort by id-hash for a stable, well-spread layout, then
-// distribute over the sphere (golden-angle spiral) with a tiny per-node radial jitter.
+// Stable per-id sphere placement: each node's position is derived purely from its id (two hashes →
+// an even lat/long via the acos distribution), independent of the set size or order. So growing the
+// graph (click-to-expand) adds nodes without reshuffling the ones already on screen.
 function buildPositions(nodes: readonly GraphNode[]): Map<string, Vec3> {
   const m = new Map<string, Vec3>();
-  const n = nodes.length || 1;
-  const golden = Math.PI * (1 + Math.sqrt(5));
-  const indexed = nodes.map((node) => ({ node, h: hashStr(node.id) })).sort((a, b) => a.h - b.h);
-  for (let i = 0; i < indexed.length; i++) {
-    const item = indexed[i];
-    if (!item) continue;
-    const { node, h } = item;
-    const phi = Math.acos(1 - (2 * (i + 0.5)) / n);
-    const theta = golden * (i + 0.5);
-    const jr = 1 + (((h >> 8) % 1000) / 1000 - 0.5) * 0.05;
+  for (const node of nodes) {
+    const u = (hashStr(node.id) % 100003) / 100003;
+    const v = (hashStr(`${node.id}#z`) % 100003) / 100003;
+    const phi = Math.acos(1 - 2 * u);
+    const theta = 2 * Math.PI * v;
     m.set(node.id, {
-      x: Math.sin(phi) * Math.cos(theta) * jr,
-      y: -Math.cos(phi) * jr,
-      z: Math.sin(phi) * Math.sin(theta) * jr,
+      x: Math.sin(phi) * Math.cos(theta),
+      y: -Math.cos(phi),
+      z: Math.sin(phi) * Math.sin(theta),
     });
   }
   return m;
 }
 
-export function GraphSphere({ nodes, edges, selectedId, onSelect }: GraphSphereProps) {
+export function GraphSphere({
+  nodes,
+  edges,
+  selectedId,
+  onSelect,
+  dimmedIds = null,
+}: GraphSphereProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -108,6 +134,7 @@ export function GraphSphere({ nodes, edges, selectedId, onSelect }: GraphSphereP
     degree,
     selectedId,
     onSelect,
+    dimmedIds,
     rot: { yaw: 0.4, pitch: 0.32 },
     drag: { active: false, moved: false, x: 0, y: 0 },
     hoverId: null as string | null,
@@ -121,6 +148,7 @@ export function GraphSphere({ nodes, edges, selectedId, onSelect }: GraphSphereP
   live.current.degree = degree;
   live.current.selectedId = selectedId;
   live.current.onSelect = onSelect;
+  live.current.dimmedIds = dimmedIds;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -216,24 +244,22 @@ export function GraphSphere({ nodes, edges, selectedId, onSelect }: GraphSphereP
         const r = baseR * (0.65 + pr.nf * 0.7) * breath;
         const isSel = node.id === s.selectedId;
         const isHover = node.id === s.hoverId;
-        const color = isSel ? SELECTION : typeColor(node.type);
-        const alpha = (0.4 + pr.nf * 0.6) * (isSel || isHover ? 1 : 0.92);
+        const dimmed = s.dimmedIds ? s.dimmedIds.has(node.id) : false;
+        const color = isSel ? SELECTION : dimmed ? '#5b6275' : typeColor(node.type);
+        const alpha = (0.4 + pr.nf * 0.6) * (isSel || isHover ? 1 : 0.92) * (dimmed ? 0.32 : 1);
         screen.set(node.id, { x: pr.x, y: pr.y, r });
 
-        // glow
-        const glowR = r * (isSel || isHover ? 3.6 : 2.6);
-        const glow = ctx.createRadialGradient(pr.x, pr.y, 0, pr.x, pr.y, glowR);
-        glow.addColorStop(0, hexToRgba(color, 0.32 * alpha));
-        glow.addColorStop(0.5, hexToRgba(color, 0.09 * alpha));
-        glow.addColorStop(1, hexToRgba(color, 0));
-        ctx.fillStyle = glow;
-        ctx.fillRect(pr.x - glowR, pr.y - glowR, glowR * 2, glowR * 2);
+        // glow — a cached sprite blitted at the node's depth-scaled radius (no per-frame gradients)
+        if (!dimmed) {
+          const glowR = r * (isSel || isHover ? 3.6 : 2.6);
+          const prev = ctx.globalAlpha;
+          ctx.globalAlpha = prev * Math.min(1, alpha);
+          ctx.drawImage(glowSprite(color), pr.x - glowR, pr.y - glowR, glowR * 2, glowR * 2);
+          ctx.globalAlpha = prev;
+        }
 
-        // core
-        const core = ctx.createRadialGradient(pr.x - r * 0.35, pr.y - r * 0.35, 0, pr.x, pr.y, r);
-        core.addColorStop(0, hexToRgba(color, alpha));
-        core.addColorStop(1, hexToRgba(color, 0.82 * alpha));
-        ctx.fillStyle = core;
+        // core — a flat colour fill (the sprite supplies the halo) with a thin dark rim
+        ctx.fillStyle = hexToRgba(color, alpha);
         ctx.beginPath();
         ctx.arc(pr.x, pr.y, Math.max(0.6, r), 0, Math.PI * 2);
         ctx.fill();

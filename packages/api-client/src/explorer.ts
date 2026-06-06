@@ -28,7 +28,12 @@ interface SubgraphWire {
 export interface ExplorerClient {
   // A bounded graph slice for visualisation: up to `limit` nodes + the directed edges among them.
   subgraph(graphId: string, limit?: number): Promise<Subgraph>;
+  // The 1-hop neighbourhood of a node (for click-to-expand). Each neighbour carries the
+  // relationship type to the queried node in `properties.relationship`.
+  neighbors(graphId: string, nodeId: string, topK?: number): Promise<GraphNode[]>;
 }
+
+type NodeWire = { id: string; type: string; properties: Record<string, unknown> };
 
 export function createExplorerClient(transport: ApiTransport): ExplorerClient {
   return {
@@ -49,6 +54,15 @@ export function createExplorerClient(transport: ApiTransport): ExplorerClient {
           type: e.type,
         })),
       };
+    },
+    async neighbors(graphId: string, nodeId: string, topK = 25): Promise<GraphNode[]> {
+      const { data } = await transport.execute<NodeWire[]>({
+        method: 'GET',
+        path: `/v1/graph/${encodeURIComponent(graphId)}/neighbors/${encodeURIComponent(
+          nodeId
+        )}?top_k=${topK}`,
+      });
+      return (data ?? []).map((n) => ({ id: n.id, type: n.type, properties: n.properties }));
     },
   };
 }
