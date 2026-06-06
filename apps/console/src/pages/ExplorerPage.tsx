@@ -1,6 +1,6 @@
 // Explorer — an immersive sphere visualisation of a graph (GET /v1/graph/{id}/subgraph). Drag to
 // rotate, click a node to inspect it. The renderer (GraphSphere) is a Canvas2D 3D projection.
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { GraphNode } from '@oraclous/api-client';
 import { useGraph } from '../lib/graphs.js';
@@ -48,6 +48,10 @@ export default function ExplorerPage() {
   const { graph } = useGraph(graphId);
   const { subgraph, isLoading, isError } = useSubgraph(graphId, 250);
   const [selected, setSelected] = useState<GraphNode | null>(null);
+
+  // The page isn't remounted when :graphId changes (no route key), so clear any selection from the
+  // previous graph — otherwise the detail panel keeps showing a node that isn't in this graph.
+  useEffect(() => setSelected(null), [graphId]);
 
   const nodes = subgraph?.nodes ?? [];
   const edges = subgraph?.edges ?? [];

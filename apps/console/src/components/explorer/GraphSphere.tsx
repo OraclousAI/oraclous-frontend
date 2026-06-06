@@ -313,6 +313,8 @@ export function GraphSphere({ nodes, edges, selectedId, onSelect }: GraphSphereP
     };
     const onPointerUp = (e: PointerEvent) => {
       const s = live.current;
+      // Only treat this as a click/drag-end if a pointerdown started it on the canvas.
+      if (!s.drag.active) return;
       const rect = canvas.getBoundingClientRect();
       const wasDrag = s.drag.moved;
       s.drag.active = false;
@@ -322,17 +324,26 @@ export function GraphSphere({ nodes, edges, selectedId, onSelect }: GraphSphereP
         s.onSelect(hit);
       }
     };
+    const onPointerLeave = () => {
+      const s = live.current;
+      if (!s.drag.active) {
+        s.hoverId = null;
+        canvas.style.cursor = 'grab';
+      }
+    };
 
     canvas.style.cursor = 'grab';
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointerleave', onPointerLeave);
 
     return () => {
       cancelAnimationFrame(raf);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointerleave', onPointerLeave);
     };
   }, []);
 
