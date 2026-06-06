@@ -32,6 +32,23 @@ export interface UpdateOrgInput {
   readonly logoUrl?: string | null;
 }
 
+// Role changes are constrained to non-owner roles — ownership transfer is a separate concern.
+export type MemberRole = 'admin' | 'member';
+
+export interface Member {
+  readonly userId: string;
+  readonly email: string | null;
+  readonly role: string;
+  readonly since: string;
+}
+
+interface MemberWire {
+  readonly user_id: string;
+  readonly email: string | null;
+  readonly role: string;
+  readonly since: string;
+}
+
 export interface OrgsClient {
   // The organisations the authenticated user belongs to.
   list(): Promise<Org[]>;
@@ -41,6 +58,12 @@ export interface OrgsClient {
   get(orgId: string): Promise<Org>;
   // Update an organisation (owner/admin only — the server enforces it).
   update(orgId: string, input: UpdateOrgInput): Promise<Org>;
+  // The organisation's member roster (any member may view).
+  listMembers(orgId: string): Promise<Member[]>;
+  // Change a member's role (owner/admin only — the server enforces it).
+  changeMemberRole(orgId: string, userId: string, role: MemberRole): Promise<Member>;
+  // Remove a member (owner/admin only).
+  removeMember(orgId: string, userId: string): Promise<void>;
 }
 
 function toOrg(wire: OrgResponseWire): Org {
@@ -53,6 +76,10 @@ function toOrg(wire: OrgResponseWire): Org {
     logoUrl: wire.logo_url,
     ownerUserId: wire.owner_user_id,
   };
+}
+
+function toMember(wire: MemberWire): Member {
+  return { userId: wire.user_id, email: wire.email, role: wire.role, since: wire.since };
 }
 
 export function createOrgsClient(transport: ApiTransport): OrgsClient {
@@ -90,6 +117,27 @@ export function createOrgsClient(transport: ApiTransport): OrgsClient {
         body,
       });
       return toOrg(data);
+    },
+    async listMembers(orgId: string): Promise<Member[]> {
+      const { data } = await transport.execute<MemberWire[]>({
+        method: 'GET',
+        path: `/v1/orgs/${encodeURIComponent(orgId)}/members`,
+      });
+      return data.map(toMember);
+    },
+    async changeMemberRole(orgId: string, userId: string, role: MemberRole): Promise<Member> {
+      const { data } = await transport.execute<MemberWire>({
+        method: 'PATCH',
+        path: `/v1/orgs/${encodeURIComponent(orgId)}/members/${encodeURIComponent(userId)}`,
+        body: { role },
+      });
+      return toMember(data);
+    },
+    async removeMember(orgId: string, userId: string): Promise<void> {
+      await transport.execute<void>({
+        method: 'DELETE',
+        path: `/v1/orgs/${encodeURIComponent(orgId)}/members/${encodeURIComponent(userId)}`,
+      });
     },
   };
 }

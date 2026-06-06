@@ -110,7 +110,7 @@ export type { LoginInput, AuthSession, AuthPrincipal } from './types/auth';
 
 // Organisations sub-client
 export { createOrgsClient } from './orgs';
-export type { OrgsClient, Org, CreateOrgInput, UpdateOrgInput } from './orgs';
+export type { OrgsClient, Org, CreateOrgInput, UpdateOrgInput, Member, MemberRole } from './orgs';
 
 // Org invitations sub-client
 export { createInvitationsClient } from './invitations';
