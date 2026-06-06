@@ -675,7 +675,9 @@ export default function GraphDetailPage() {
             )}
           </section>
 
-          <OntologyEditor graphId={graphId} />
+          {/* key by graphId so the editor remounts (and re-hydrates) per graph — never carries one
+              graph's labels/mode into another's Save. */}
+          <OntologyEditor key={graphId} graphId={graphId} />
         </>
       )}
     </div>

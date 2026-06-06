@@ -57,12 +57,13 @@ export function OntologyEditor({ graphId }: { graphId: string }) {
     }
   }
 
+  // Order-insensitive: allowed_labels is a set, so a server reorder shouldn't read as "unsaved".
   const dirty =
     hydrated &&
     ontology !== null &&
     (mode !== ontology.mode ||
       labels.length !== ontology.allowedLabels.length ||
-      labels.some((l, i) => l !== ontology.allowedLabels[i]));
+      labels.some((l) => !ontology.allowedLabels.includes(l)));
 
   return (
     <section style={styles.card} aria-label="Ontology">
