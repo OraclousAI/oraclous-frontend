@@ -1,0 +1,25 @@
+{
+  "_usage": "Person template for a blog author (E-E-A-T signal). Emit on the author's bio page and reference it from every Article that author writes via the matching @id (article.template.json -> author.@id). The Author schema is one of the strongest E-E-A-T signals for AI platforms, so populate `sameAs` (LinkedIn, X, GitHub, Google Scholar/ORCID where applicable), `jobTitle`, `worksFor`, and `knowsAbout` for each real author. EVERY field marked TODO must be filled with a real, verifiable person — do NOT invent an author, credentials, or profiles (Oraclous is pre/early and the team/founder block is itself still TODO per about.md). If a post has no named human author yet, attribute it to the Organization instead of fabricating a Person. `worksFor` references the Organization via @id.",
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://oraclous.com/about#author-TODO-slug",
+  "name": "TODO — author full name",
+  "url": "https://oraclous.com/about",
+  "jobTitle": "TODO — author job title",
+  "description": "TODO — one-sentence bio establishing relevant expertise (agentic AI, access control, data sovereignty, platform engineering).",
+  "image": "https://oraclous.com/team/TODO-slug.jpg",
+  "worksFor": { "@id": "https://oraclous.com/#organization" },
+  "knowsAbout": [
+    "Agentic AI",
+    "Relationship-based access control (ReBAC)",
+    "Data sovereignty",
+    "Multi-agent orchestration",
+    "Open-source platform engineering"
+  ],
+  "sameAs": [
+    "https://www.linkedin.com/in/TODO-author-handle",
+    "https://github.com/TODO-author-handle",
+    "https://twitter.com/TODO-author-handle"
+  ],
+  "_sameAs_todo": "Replace every TODO with a real, verified profile URL before publishing. Remove any sameAs entry the author does not actually have rather than leaving a dead link. Add alumniOf / award / Google Scholar / ORCID where they genuinely apply."
+}

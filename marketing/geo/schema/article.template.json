@@ -1,0 +1,28 @@
+{
+  "_usage": "Article template for every blog post (/blog/{post-slug}). Emit one per article. Filled here from the seed article 'ReBAC vs RBAC for AI agents' (blog.md Part 2). Replace headline, description, url, dates, author, and articleSection per post. `dateModified` is critical for AI freshness signals — update it on every edit (the URL has no date segment, so evergreen posts are refreshed in place per url-taxonomy §4). `author` references a Person via @id (see person.template.json); the same Person @id is reused across that author's posts. `speakable` marks the lead citable-answer block and FAQ for voice/AI extraction — confirm the CSS selectors match the built article's markup. Pair with FAQPage (faqpage.template.json) and BreadcrumbList on the same page; comparison/listicle posts add ItemList for the ranked set. Keep exact terminology and no fabricated metrics.",
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "@id": "https://oraclous.com/blog/rebac-vs-rbac-for-ai-agents#article",
+  "headline": "ReBAC vs RBAC for AI agents: why relationship-based access wins",
+  "description": "ReBAC vs RBAC for AI agents explained: RBAC grants access by static role and hits role explosion; ReBAC grants access by relationship to the resource, which fits the 'this Agent, for that Operator, on this data' question agentic AI raises.",
+  "image": "https://oraclous.com/blog/rebac-vs-rbac-for-ai-agents/cover.png",
+  "datePublished": "2026-06-07",
+  "dateModified": "2026-06-07",
+  "inLanguage": "en",
+  "articleSection": "Governance & ReBAC",
+  "keywords": "ReBAC, RBAC, relationship-based access control, AI agents, agentic AI governance",
+  "author": { "@id": "https://oraclous.com/about#author-TODO-slug" },
+  "publisher": { "@id": "https://oraclous.com/#organization" },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://oraclous.com/blog/rebac-vs-rbac-for-ai-agents"
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".article-lead", ".article-faq"]
+  },
+  "about": [
+    { "@type": "Thing", "name": "Relationship-based access control", "sameAs": "https://en.wikipedia.org/wiki/Relationship-based_access_control" },
+    { "@type": "Thing", "name": "Role-based access control", "sameAs": "https://en.wikipedia.org/wiki/Role-based_access_control" }
+  ]
+}

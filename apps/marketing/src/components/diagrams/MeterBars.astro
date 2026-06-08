@@ -1,0 +1,132 @@
+---
+/**
+ * Meter bars — the substrate measures consumption neutrally as counts, never prices.
+ * Five bar gauges (tokens · tool calls · storage · time · traversals), each a mono label
+ * + a thin partial-fill bar; a separator and a "counts, not prices" note make the
+ * metering ≠ billing point. Schematic, zero-JS, reduced-motion-safe: bars draw their
+ * fill width in; at most one subtle mint tick. Fully legible without motion.
+ */
+const meters = [
+  { t: 'tokens', pct: 72 },
+  { t: 'tool calls', pct: 44 },
+  { t: 'storage', pct: 58 },
+  { t: 'time', pct: 31 },
+  { t: 'traversals', pct: 66 },
+];
+const { class: cls } = Astro.props;
+---
+
+<div
+  class:list={['meter-bars', cls]}
+  role="img"
+  aria-label="Five usage gauges measuring tokens, tool calls, storage, time and traversals as counts — metering, not billing"
+>
+  <ul class="rows">
+    {
+      meters.map((m, i) => (
+        <li class="row">
+          <span class="row__lbl">{m.t}</span>
+          <span class="track">
+            <span
+              class:list={['fill', i === 0 && 'fill--tick']}
+              style={`--pct:${m.pct}%`}
+            />
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <hr class="sep" />
+
+  <p class="note">counts, not prices — metering &ne; billing</p>
+</div>
+
+<style>
+  .meter-bars {
+    width: 100%;
+    max-width: 420px;
+    color: var(--fg);
+  }
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .row__lbl {
+    font-family: var(--font-mono);
+    font-size: var(--t-tiny-size);
+    letter-spacing: 0.04em;
+    color: var(--fg-mute);
+    text-align: right;
+  }
+  .track {
+    position: relative;
+    height: 10px;
+    border-radius: var(--r-pill);
+    border: 1.3px solid var(--border-hair);
+    background: color-mix(in oklab, var(--fg) 3%, transparent);
+    overflow: hidden;
+  }
+  .fill {
+    position: absolute;
+    inset: 0;
+    width: var(--pct);
+    border-radius: var(--r-pill);
+    background: color-mix(in oklab, var(--fg) 26%, transparent);
+  }
+  /* the one subtle mint accent: a non-text tick at the leading edge of a single bar */
+  .fill--tick::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    right: -1px;
+    width: 2.5px;
+    background: var(--accent);
+    border-radius: 1px;
+  }
+  .sep {
+    border: 0;
+    border-top: 1.3px solid var(--border-hair);
+    margin: var(--sp-4) 0 var(--sp-3);
+  }
+  .note {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-tiny-size);
+    letter-spacing: 0.04em;
+    color: var(--fg-mute);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .fill {
+      width: 0;
+      animation: meter-fill 1s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+    }
+    .row:nth-child(2) .fill {
+      animation-delay: 0.08s;
+    }
+    .row:nth-child(3) .fill {
+      animation-delay: 0.16s;
+    }
+    .row:nth-child(4) .fill {
+      animation-delay: 0.24s;
+    }
+    .row:nth-child(5) .fill {
+      animation-delay: 0.32s;
+    }
+  }
+  @keyframes meter-fill {
+    to {
+      width: var(--pct);
+    }
+  }
+</style>

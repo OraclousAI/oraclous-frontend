@@ -1,0 +1,169 @@
+---
+/**
+ * MCP bridge + embed — Oraclous speaks MCP both ways. As an MCP *server* it exposes
+ * capabilities to external clients (Claude Desktop, Cursor); as an MCP *client* it
+ * imports external tools into the registry. Both arrows are structural; the one live
+ * (mint) element is the inbound import arrow. A widget frame sits inside a host-page
+ * rect, connected to Oraclous — embeddable + host-safe. Schematic, zero-JS,
+ * reduced-motion-safe (arrows draw only when motion is allowed; legible without it).
+ */
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['mcp-bridge', cls]}
+  viewBox="0 0 520 280"
+  role="img"
+  aria-label="Oraclous speaks MCP both ways: as a server it exposes capabilities to external clients like Claude Desktop and Cursor, as a client it imports external tools, and it embeds host-safe widgets into a host page"
+  fill="none"
+>
+  <!-- center node: Oraclous -->
+  <g class="node node--hub">
+    <rect x="210" y="44" width="100" height="48" rx="9" />
+    <text x="260" y="73" text-anchor="middle">Oraclous</text>
+  </g>
+
+  <!-- LEFT: MCP server → exposes capabilities to external clients -->
+  <text class="dir-lbl" x="120" y="34" text-anchor="middle">MCP server →</text>
+  <path class="flow" d="M210 60 L138 60" marker-end="url(#mb-out)" />
+  <g class="chip">
+    <rect x="36" y="48" width="92" height="24" rx="5" />
+    <text x="82" y="64" text-anchor="middle">Claude Desktop</text>
+  </g>
+  <g class="chip">
+    <rect x="52" y="84" width="60" height="24" rx="5" />
+    <text x="82" y="100" text-anchor="middle">Cursor</text>
+  </g>
+  <path class="flow" d="M210 76 C 160 88, 130 96, 116 96" marker-end="url(#mb-out)" />
+
+  <!-- RIGHT: ← MCP client imports external tools into the registry (LIVE / mint) -->
+  <text class="dir-lbl" x="400" y="34" text-anchor="middle">← MCP client</text>
+  <path class="flow live" d="M382 60 L314 60" marker-end="url(#mb-in)" />
+  <g class="chip chip--in">
+    <rect x="392" y="48" width="92" height="24" rx="5" />
+    <text x="438" y="64" text-anchor="middle">external tools</text>
+  </g>
+
+  <!-- EMBED: a widget frame inside a host-page rect, connected to Oraclous -->
+  <path class="flow" d="M260 92 L260 150" marker-end="url(#mb-out)" />
+  <g class="host">
+    <rect x="176" y="158" width="168" height="92" rx="10" />
+    <line x1="176" y1="178" x2="344" y2="178" />
+    <circle class="dot" cx="188" cy="168" r="2.4" />
+    <circle class="dot" cx="197" cy="168" r="2.4" />
+    <circle class="dot" cx="206" cy="168" r="2.4" />
+    <text class="host-lbl" x="260" y="172" text-anchor="middle">HOST PAGE</text>
+    <!-- embedded widget window -->
+    <g class="widget">
+      <rect x="244" y="190" width="88" height="50" rx="6" />
+      <line x1="252" y1="204" x2="300" y2="204" />
+      <line x1="252" y1="214" x2="324" y2="214" />
+      <line x1="252" y1="224" x2="288" y2="224" />
+    </g>
+    <text class="widget-lbl" x="200" y="216" text-anchor="middle">WIDGET</text>
+  </g>
+
+  <defs>
+    <marker id="mb-out" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="currentColor" />
+    </marker>
+    <marker id="mb-in" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="var(--accent)" />
+    </marker>
+  </defs>
+</svg>
+
+<style>
+  .mcp-bridge {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .node rect {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .node--hub rect {
+    fill: color-mix(in oklab, var(--fg) 8%, transparent);
+  }
+  .node text {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--fg);
+  }
+  .chip rect {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .chip--in rect {
+    fill: color-mix(in oklab, var(--accent) 8%, transparent);
+    stroke: color-mix(in oklab, var(--accent) 50%, var(--border-hair));
+  }
+  .chip text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--fg-mute);
+  }
+  .host rect {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .host line {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    opacity: 0.45;
+  }
+  .host .dot {
+    fill: currentColor;
+    opacity: 0.5;
+    stroke: none;
+  }
+  .widget rect {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: var(--bg);
+  }
+  .widget line {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    opacity: 0.5;
+  }
+  .flow {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    opacity: 0.7;
+  }
+  .flow.live {
+    stroke: var(--accent);
+    opacity: 0.9;
+  }
+  .dir-lbl,
+  .host-lbl,
+  .widget-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    fill: var(--fg-mute);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .flow {
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      animation: m-draw 1.1s ease forwards;
+    }
+    .flow:nth-of-type(2) {
+      animation-delay: 0.12s;
+    }
+    .flow.live {
+      animation-delay: 0.3s;
+    }
+    .flow:nth-of-type(4) {
+      animation-delay: 0.45s;
+    }
+  }
+</style>

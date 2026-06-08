@@ -1,0 +1,78 @@
+---
+import { glossary } from '../../lib/glossary';
+import { SITE } from '../../lib/site';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+
+export async function getStaticPaths() {
+  const paths: { params: { slug: string }; props: { entry: (typeof glossary)[number] } }[] = [];
+  for (const entry of glossary) {
+    paths.push({ params: { slug: entry.slug }, props: { entry } });
+    for (const alias of entry.aliases) paths.push({ params: { slug: alias }, props: { entry } });
+  }
+  return paths;
+}
+
+const { entry } = Astro.props;
+const url = `/glossary/${entry.slug}`;
+const data = {
+  title: `${entry.term} — Oraclous glossary`,
+  meta_description: entry.definition.slice(0, 155),
+  url,
+  schema: ['BreadcrumbList'],
+};
+
+const definedTerm = {
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTerm',
+  name: entry.term,
+  description: entry.definition,
+  url: `${SITE.url}${url}`,
+  inDefinedTermSet: `${SITE.url}/glossary`,
+};
+const ser = (o: unknown) => JSON.stringify(o).replace(/</g, '\\u003c');
+---
+
+<BaseLayout data={data} url={url} kind="page">
+  <script type="application/ld+json" is:inline set:html={ser(definedTerm)} />
+  <PageHero eyebrow="Glossary" title={entry.term} lede={entry.definition} />
+  <section class="section">
+    <div class="container term-body">
+      {
+        entry.related.length > 0 && (
+          <>
+            <h2 class="h-2 term-related-h">Related terms</h2>
+            <div class="grid grid-3">
+              {entry.related.map((r) => (
+                <a class="card reveal" href={`/glossary/${r.slug}`}>
+                  <span class="card__title">{r.name}</span>
+                </a>
+              ))}
+            </div>
+          </>
+        )
+      }
+      <p class="term-back"><a href="/glossary">← All terms</a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .term-related-h {
+    margin-bottom: var(--sp-6);
+  }
+  .term-body .card__title {
+    margin: 0;
+  }
+  .term-back {
+    margin-top: var(--sp-10);
+  }
+  .term-back a {
+    color: var(--fg-mute);
+    text-decoration: none;
+    font-size: var(--t-body-size);
+  }
+  .term-back a:hover {
+    color: var(--accent);
+  }
+</style>

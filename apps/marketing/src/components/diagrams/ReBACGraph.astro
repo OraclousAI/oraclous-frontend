@@ -1,0 +1,115 @@
+---
+/**
+ * ReBAC relationship graph — access decided by relationships between entities
+ * (person · agent · workspace · data), not static roles. The relationship-derived
+ * grant is the live mint edge. Schematic, zero-JS, reduced-motion-safe.
+ */
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['rebac', cls]}
+  viewBox="0 0 480 320"
+  role="img"
+  aria-label="Access by relationship: a person and an agent reach data through their relationships to a workspace"
+  fill="none"
+>
+  <!-- edges -->
+  <g>
+    <path class="edge" d="M96 78 L210 150" />
+    <path class="edge" d="M384 78 L270 150" />
+    <path class="edge" d="M240 178 L240 238" />
+    <path class="edge grant" d="M384 90 C 430 180, 360 220, 286 246" marker-end="url(#rb-arrow)" />
+  </g>
+
+  <!-- relationship labels -->
+  <text class="elbl" x="135" y="112" text-anchor="middle">member</text>
+  <text class="elbl" x="345" y="112" text-anchor="middle">scoped to</text>
+  <text class="elbl" x="252" y="212" text-anchor="middle">governs</text>
+  <text class="elbl grant-lbl" x="392" y="178" text-anchor="middle">can read ✓</text>
+
+  <!-- nodes -->
+  <g class="node">
+    <rect x="40" y="56" width="112" height="44" rx="8" />
+    <text x="96" y="83" text-anchor="middle">Person</text>
+  </g>
+  <g class="node">
+    <rect x="328" y="56" width="112" height="44" rx="8" />
+    <text x="384" y="83" text-anchor="middle">Agent</text>
+  </g>
+  <g class="node node--hub">
+    <rect x="184" y="150" width="112" height="44" rx="8" />
+    <text x="240" y="177" text-anchor="middle">Workspace</text>
+  </g>
+  <g class="node node--data">
+    <rect x="184" y="244" width="112" height="44" rx="8" />
+    <text x="240" y="271" text-anchor="middle">Data</text>
+  </g>
+
+  <defs>
+    <marker id="rb-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="var(--accent)" />
+    </marker>
+  </defs>
+</svg>
+
+<style>
+  .rebac {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .node rect {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .node--hub rect {
+    fill: color-mix(in oklab, var(--fg) 8%, transparent);
+  }
+  .node--data rect {
+    fill: color-mix(in oklab, var(--accent) 8%, transparent);
+    stroke: color-mix(in oklab, var(--accent) 50%, var(--border-hair));
+  }
+  .node text {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--fg);
+  }
+  .edge {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.5;
+  }
+  .edge.grant {
+    stroke: var(--accent);
+    opacity: 0.9;
+  }
+  .elbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    fill: var(--fg-mute);
+  }
+  .grant-lbl {
+    fill: var(--fg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .edge {
+      stroke-dasharray: 320;
+      stroke-dashoffset: 320;
+      animation: m-draw 1.2s ease forwards;
+    }
+    .edge:nth-of-type(2) {
+      animation-delay: 0.15s;
+    }
+    .edge:nth-of-type(3) {
+      animation-delay: 0.3s;
+    }
+    .edge.grant {
+      animation-delay: 0.6s;
+    }
+  }
+</style>

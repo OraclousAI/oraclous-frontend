@@ -1,0 +1,41 @@
+{
+  "_usage": "Organization entity for Oraclous. Emit site-wide in the document <head> on the Home page (/) and the About page (/about), and reference it via @id from WebSite, SoftwareApplication, and any page that needs a publisher. The `description` MUST be byte-identical everywhere it appears — this schema, Home's and About's 'What is Oraclous?' citable blocks, and the one-line description on LinkedIn, Crunchbase, GitHub, Wikidata, G2, and Product Hunt (entity-consistency rule, keyword-entity-map §4 / brand-mention-plan §5). NOTE ON 'is' vs 'builds': the About page body opens 'Oraclous builds an open-source agentic operations platform…' (company voice) while this schema and brand-mention-plan §5's approved one-liner use 'Oraclous is an open-source agentic operations platform…' (entity voice). Pick ONE form for the entity description and use it byte-for-byte across the schema and every off-site profile — recommend the 'is' form below (entity-resolution reads the description as a definition of the entity, not a description of the company's activity). Reconcile the About page's Organization.description to match this string, even where the page's visible prose says 'builds'. `sameAs` lists the off-site entity profiles; replace every TODO with the confirmed canonical URL before publishing — an unverified or 404 sameAs weakens entity resolution. Do not add fabricated foundingDate, founder, address, or numberOfEmployees — leave them out until accurate.",
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://oraclous.com/#organization",
+  "name": "Oraclous",
+  "legalName": "Oraclous",
+  "url": "https://oraclous.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://oraclous.com/logo.png",
+    "caption": "Oraclous"
+  },
+  "description": "Oraclous is an open-source agentic operations platform — a \"second mind\" where human members and AI Agents work as one governed fabric under an organisation's own access rules. Operators describe goals in plain language; the platform compiles, governs with ReBAC, and runs them. It is data-sovereign by design, model-agnostic via BYOM, and portable through the open OHM manifest.",
+  "slogan": "Form your organisation's second mind.",
+  "knowsAbout": [
+    "Agentic AI",
+    "Multi-agent orchestration",
+    "AI agent platform",
+    "Relationship-based access control (ReBAC)",
+    "Model Context Protocol (MCP)",
+    "Bring Your Own Model (BYOM)",
+    "Data sovereignty",
+    "Open-source AI",
+    "Self-hosted AI agents",
+    "AI governance and audit"
+  ],
+  "sameAs": [
+    "https://github.com/OraclousAI",
+    "https://www.linkedin.com/company/oraclous",
+    "https://www.crunchbase.com/organization/oraclous",
+    "https://twitter.com/oraclous",
+    "https://www.wikidata.org/wiki/TODO_WIKIDATA_QID"
+  ],
+  "_sameAs_todo": "Confirm each URL resolves before publishing. LinkedIn slug, Crunchbase slug, X/Twitter handle, and the Wikidata QID are placeholders pending the brand-mention-plan §5 reservation (canonical handle: 'oraclous' / org handle 'OraclousAI'). Add YouTube, Product Hunt, and G2 sameAs entries once those profiles exist. Wikipedia is P2 (earn over time) — add only when an article exists.",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "technical support",
+    "url": "https://github.com/OraclousAI"
+  }
+}

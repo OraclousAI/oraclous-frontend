@@ -1,0 +1,58 @@
+---
+/**
+ * Layered architecture — by function, never by ports/internals. Substrate is the trust
+ * root at the base (mint accent). Schematic, zero-JS, reduced-motion-safe.
+ */
+const layers = [
+  { t: 'Application gateway', d: 'APIs · chat · MCP · embeddable widgets' },
+  { t: 'Harness runtime + execution', d: 'run goals to completion — durable, scheduled' },
+  { t: 'Capability registry', d: 'tools · skills · agents · harnesses · human roles' },
+  { t: 'Substrate — the trust root', d: 'identity · ReBAC · knowledge · credentials · audit · metering', root: true },
+];
+const { class: cls } = Astro.props;
+---
+
+<div class:list={['layerstack', cls]} role="img" aria-label="Oraclous architecture: four layers on a substrate trust root">
+  {
+    layers.map((l) => (
+      <div class:list={['layer reveal', l.root && 'layer--root']}>
+        <span class="layer__t">{l.t}</span>
+        <span class="layer__d">{l.d}</span>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .layerstack {
+    display: grid;
+    gap: var(--sp-2);
+    width: 100%;
+    max-width: 420px;
+  }
+  .layer {
+    border: 1.4px solid var(--border-hair);
+    border-radius: var(--r-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: color-mix(in oklab, var(--fg) 3%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .layer--root {
+    border-color: color-mix(in oklab, var(--accent) 55%, var(--border-hair));
+    border-left: 3px solid var(--accent);
+    background: color-mix(in oklab, var(--accent) 7%, transparent);
+  }
+  .layer__t {
+    font-size: var(--t-dense-size);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .layer__d {
+    font-family: var(--font-mono);
+    font-size: var(--t-tiny-size);
+    letter-spacing: 0.04em;
+    color: var(--fg-mute);
+  }
+</style>

@@ -1,0 +1,124 @@
+---
+/**
+ * Harness assembly — one Harness · OHM manifest is a single container that composes
+ * every moving part as stacked, labeled rows. Form = box-containing-parts (NOT a node
+ * graph): the outer frame is the manifest; the inner chips are what it composes. A small
+ * mint "live" dot marks the running harness (the only mint, non-text). Token-only,
+ * zero-JS, reduced-motion-safe (rows reveal on motion; fully legible without it).
+ */
+const parts = [
+  { t: 'Goal', d: 'prose — what done means' },
+  { t: 'Actors', d: 'humans + Agents' },
+  { t: 'Orchestration', d: 'who does what, when' },
+  { t: 'Policy envelope', d: 'permissions · guardrails' },
+  { t: 'Task board', d: 'shared state of work' },
+  { t: 'Triggers', d: 'events · schedules' },
+  { t: 'Provenance', d: 'every step, attributable' },
+];
+const { class: cls } = Astro.props;
+---
+
+<div
+  class:list={['harness-assembly', cls]}
+  role="img"
+  aria-label="A Harness manifest composing goal, actors, orchestration, policy, task board, triggers, and provenance."
+>
+  <div class="frame">
+    <div class="frame__head">
+      <span class="frame__mono">Harness · OHM</span>
+      <span class="live"><span class="live__dot is-pulse"></span>live</span>
+    </div>
+    <div class="parts">
+      {
+        parts.map((p) => (
+          <div class="part reveal">
+            <span class="part__t">{p.t}</span>
+            <span class="part__d">{p.d}</span>
+          </div>
+        ))
+      }
+    </div>
+    <div class="frame__foot">one manifest composes all of it</div>
+  </div>
+</div>
+
+<style>
+  .harness-assembly {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    display: flex;
+    justify-content: center;
+  }
+  .frame {
+    width: 100%;
+    max-width: 360px;
+    border: 1.5px solid var(--border-hair);
+    border-radius: var(--r-3);
+    background: color-mix(in oklab, var(--fg) 4%, transparent);
+    padding: var(--sp-3);
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .frame__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .frame__mono {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--fg-mute);
+  }
+  .live__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .parts {
+    display: grid;
+    gap: 6px;
+  }
+  .part {
+    border: 1.3px solid var(--border-hair);
+    border-radius: var(--r-1);
+    background: var(--bg);
+    padding: 7px var(--sp-3);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-3);
+  }
+  .part__t {
+    font-size: var(--t-dense-size);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .part__d {
+    font-family: var(--font-mono);
+    font-size: var(--t-tiny-size);
+    letter-spacing: 0.02em;
+    color: var(--fg-mute);
+    text-align: right;
+  }
+  .frame__foot {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--fg-mute);
+    text-align: center;
+  }
+</style>

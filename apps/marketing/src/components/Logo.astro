@@ -1,0 +1,124 @@
+---
+/**
+ * Oraclous animated lockup — `>` prompt + "Oraclous" wordmark + a slim mint cursor.
+ * Implements brand-motion/"Oraclous Animated Logo.html" (the type-on): the chevron holds, the
+ * wordmark reveals left-to-right via one clip-path tween, the slim mint cursor rides the leading
+ * edge, then parks just past the final letter and blinks.
+ *
+ * Faithful to the design but ZERO-JS: the reveal plays once on load (CSS), and the cursor blink is
+ * sequenced after it via animation-delay. Reduced-motion / no-CSS-animation → the finished lockup,
+ * static. currentColor-adaptive (ink on light, paper on dark); cursor is always the mint live signal.
+ */
+interface Props {
+  variant?: 'lockup' | 'mark';
+  height?: number; // wordmark box height in px (caps ≈ 0.889 of this)
+  cursorAr?: number; // cursor thickness ratio (width / height); default 0.32. Bump on light surfaces.
+  class?: string;
+}
+const { height = 22, cursorAr, class: cls } = Astro.props;
+const rootStyle = `--h:${height}px${cursorAr ? `;--cur-ar:${cursorAr}` : ''}`;
+const CHEV =
+  'M 0,0 L 56,23 Q 62,25 62,30 L 62,36 Q 62,41 56,43 L 0,66 L 0,52 L 47,34 Q 48,33 47,32 L 0,13 Z';
+---
+
+<span class:list={['o-lockup', cls]} style={rootStyle} role="img" aria-label="Oraclous">
+  <svg class="chev" viewBox="0 0 62 67" aria-hidden="true" focusable="false">
+    <path d={CHEV} fill="currentColor"></path>
+  </svg>
+  <span class="wordmark" aria-hidden="true"></span>
+  <span class="cursor" aria-hidden="true"></span>
+</span>
+
+<style>
+  .o-lockup {
+    --dur: 1200ms;
+    --wm-ar: 7.0139; /* wordmark 505 x 72 */
+    --chev-ar: 0.9254; /* chevron 62 x 67 */
+    --cur-ar: 0.42; /* cursor thickness — matched to the wordmark stem weight */
+    --cap: calc(var(--h) * 0.8889); /* cap height (64/72) */
+    --base: calc(var(--h) * 0.0694); /* baseline offset (5/72) */
+    --chev-h: var(--cap);
+    --chev-w: calc(var(--cap) * var(--chev-ar));
+    --word-w: calc(var(--h) * var(--wm-ar));
+    --cur-h: var(--cap); /* match the cap height of the letters */
+    --cur-w: calc(var(--cur-h) * var(--cur-ar));
+    --gap: calc(var(--cap) * 0.42); /* prompt → word */
+    --cur-gap: calc(var(--cap) * 0.24); /* word → cursor */
+    --word-x: calc(var(--chev-w) + var(--gap));
+    --rest: 0.994; /* final reveal (just past the last letter) */
+    --reveal-inset: calc((1 - var(--rest)) * 100%);
+    --cur-end: calc(var(--word-w) * var(--rest) + var(--cur-gap));
+
+    position: relative;
+    display: inline-block;
+    height: var(--h);
+    width: calc(var(--word-x) + var(--word-w) * var(--rest) + var(--cur-gap) + var(--cur-w));
+    line-height: 0;
+    color: var(--fg);
+    user-select: none;
+    vertical-align: bottom;
+  }
+  .o-lockup .chev {
+    position: absolute;
+    left: 0;
+    bottom: var(--base);
+    height: var(--chev-h);
+    width: var(--chev-w);
+    display: block;
+  }
+  .o-lockup .wordmark {
+    position: absolute;
+    bottom: 0;
+    left: var(--word-x);
+    height: var(--h);
+    width: var(--word-w);
+    background-color: currentColor;
+    -webkit-mask: url('/brand/oraclous-wordmark.png') no-repeat left bottom / contain;
+    mask: url('/brand/oraclous-wordmark.png') no-repeat left bottom / contain;
+    /* base = fully revealed (static / no-JS / reduced-motion) */
+    -webkit-clip-path: inset(0 var(--reveal-inset) 0 0);
+    clip-path: inset(0 var(--reveal-inset) 0 0);
+  }
+  .o-lockup .cursor {
+    position: absolute;
+    bottom: var(--base);
+    left: var(--word-x);
+    height: var(--cur-h);
+    width: var(--cur-w);
+    background: var(--accent);
+    border-radius: 1px;
+    /* base = settled just past the final letter */
+    transform: translateX(var(--cur-end));
+  }
+
+  @keyframes ora-type-clip {
+    from {
+      -webkit-clip-path: inset(0 100% 0 0);
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      -webkit-clip-path: inset(0 var(--reveal-inset) 0 0);
+      clip-path: inset(0 var(--reveal-inset) 0 0);
+    }
+  }
+  @keyframes ora-type-cursor {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(var(--cur-end));
+    }
+  }
+
+  /* Zero-JS: reveal plays once on load; the blink is sequenced after it (delay = --dur). */
+  @media (prefers-reduced-motion: no-preference) {
+    .o-lockup .wordmark {
+      animation: ora-type-clip var(--dur) cubic-bezier(0.2, 0, 0.2, 1) both;
+    }
+    .o-lockup .cursor {
+      animation:
+        ora-type-cursor var(--dur) cubic-bezier(0.2, 0, 0.2, 1) both,
+        oraclous-blink 1.06s steps(1, end) var(--dur) infinite;
+    }
+  }
+</style>

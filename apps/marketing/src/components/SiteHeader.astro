@@ -1,0 +1,90 @@
+---
+import Logo from './Logo.astro';
+
+const nav = [
+  { label: 'Platform', href: '/platform' },
+  { label: 'Solutions', href: '/solutions' },
+  { label: 'Security', href: '/security' },
+  { label: 'Blog', href: '/blog' },
+];
+---
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="/" aria-label="Oraclous home">
+      <Logo variant="lockup" height={22} cursorAr={0.45} />
+    </a>
+
+    <nav class="primary-nav" aria-label="Primary">
+      {nav.map((n) => <a href={n.href}>{n.label}</a>)}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--border-hair);
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(1.6) blur(10px);
+  }
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    max-width: 1140px;
+    margin-inline: auto;
+    padding: var(--sp-3) var(--sp-5);
+  }
+  @media (min-width: 768px) {
+    .inner {
+      padding-inline: var(--sp-8);
+    }
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--ink);
+    flex: none;
+  }
+  .primary-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    margin-left: auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    font-size: var(--t-body-size);
+  }
+  .primary-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .primary-nav a {
+    position: relative;
+    white-space: nowrap;
+    color: var(--fg-mute);
+    text-decoration: none;
+    padding-block: var(--sp-2);
+    transition: color var(--motion-hover-dur);
+  }
+  .primary-nav a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 2px;
+    width: 0;
+    height: 1.5px;
+    background: var(--accent);
+    transition: width var(--motion-hover-dur) var(--motion-hover-ease);
+  }
+  .primary-nav a:hover {
+    color: var(--ink);
+  }
+  .primary-nav a:hover::after {
+    width: 100%;
+  }
+</style>

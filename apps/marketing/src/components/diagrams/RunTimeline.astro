@@ -1,0 +1,140 @@
+---
+/**
+ * Run timeline — durable execution as a horizontal axis: a scheduled trigger (clock) at
+ * the start, checkpoint ticks along it, a retry loop over one segment, a pause/resume
+ * marker, and an end cap. The current checkpoint is the one live (mint) dot. Schematic,
+ * zero-JS, reduced-motion-safe: the axis draws in; content is fully legible static.
+ */
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['run-timeline', cls]}
+  viewBox="0 0 540 180"
+  role="img"
+  aria-label="A durable run on a timeline: scheduled trigger, checkpoints, a retry loop, a pause and resume, then completion"
+  fill="none"
+>
+  <!-- the axis -->
+  <line class="axis" x1="56" y1="86" x2="500" y2="86" />
+
+  <!-- scheduled trigger: a small clock at the start -->
+  <g class="trigger">
+    <circle class="clock" cx="56" cy="86" r="11" />
+    <line class="hand" x1="56" y1="86" x2="56" y2="79" />
+    <line class="hand" x1="56" y1="86" x2="61" y2="86" />
+    <text class="lbl" x="56" y="120" text-anchor="middle">trigger</text>
+  </g>
+
+  <!-- checkpoint ticks along the axis -->
+  <g class="checks">
+    <line class="tick" x1="146" y1="76" x2="146" y2="96" />
+    <circle class="cp" cx="146" cy="86" r="3.4" />
+
+    <!-- current / live checkpoint (mint, pulsing dot — non-text) -->
+    <line class="tick" x1="236" y1="76" x2="236" y2="96" />
+    <circle class="cp live is-pulse" cx="236" cy="86" r="4.6" />
+
+    <line class="tick" x1="326" y1="76" x2="326" y2="96" />
+    <circle class="cp" cx="326" cy="86" r="3.4" />
+
+    <text class="lbl" x="146" y="120" text-anchor="middle">checkpoint</text>
+  </g>
+
+  <!-- retry loop: a circular arrow over the first segment -->
+  <g class="retry">
+    <path class="loop" d="M176 70 A22 22 0 1 1 116 70" marker-end="url(#rt-arrow)" />
+    <text class="lbl" x="146" y="38" text-anchor="middle">retry</text>
+  </g>
+
+  <!-- pause / resume marker -->
+  <g class="resume">
+    <rect class="pause" x="412" y="78" width="3.6" height="16" rx="1" />
+    <rect class="pause" x="419" y="78" width="3.6" height="16" rx="1" />
+    <path class="play" d="M428 78 L440 86 L428 94 Z" />
+    <text class="lbl" x="425" y="120" text-anchor="middle">resume</text>
+  </g>
+
+  <!-- end cap -->
+  <g class="end">
+    <line class="cap" x1="500" y1="74" x2="500" y2="98" />
+    <text class="lbl" x="500" y="120" text-anchor="middle">done</text>
+  </g>
+
+  <defs>
+    <marker id="rt-arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+      <path d="M0 0 L7 3.5 L0 7 Z" fill="currentColor" />
+    </marker>
+  </defs>
+</svg>
+
+<style>
+  .run-timeline {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .axis {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    opacity: 0.6;
+  }
+  .clock {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: color-mix(in oklab, var(--fg) 5%, transparent);
+  }
+  .hand {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+  }
+  .tick {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    opacity: 0.55;
+  }
+  .cp {
+    fill: currentColor;
+  }
+  .cp.live {
+    fill: var(--accent);
+  }
+  .loop {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: none;
+  }
+  .pause {
+    fill: currentColor;
+    opacity: 0.7;
+  }
+  .play {
+    fill: currentColor;
+    opacity: 0.7;
+  }
+  .cap {
+    stroke: currentColor;
+    stroke-width: 1.6;
+  }
+  .lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    fill: var(--fg-mute);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .axis {
+      stroke-dasharray: 444;
+      stroke-dashoffset: 444;
+      animation: m-draw 1.3s ease forwards;
+    }
+    .loop {
+      stroke-dasharray: 150;
+      stroke-dashoffset: 150;
+      animation: m-draw 1s ease forwards;
+      animation-delay: 0.8s;
+    }
+  }
+</style>

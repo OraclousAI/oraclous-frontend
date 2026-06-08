@@ -1,0 +1,23 @@
+{
+  "name": "@oraclous/marketing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/sora": "^5.2.8",
+    "@oraclous/design-system": "workspace:*"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^6.4.4",
+    "typescript": "^5.6.0"
+  }
+}

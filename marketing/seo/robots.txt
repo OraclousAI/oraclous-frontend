@@ -1,0 +1,187 @@
+# robots.txt — oraclous.com (marketing site)
+# ---------------------------------------------------------------------------
+# This file governs the PUBLIC, INDEXABLE marketing surface at oraclous.com.
+# The product console at app.oraclous.com is a SEPARATE origin with its OWN
+# robots.txt — it is auth-walled and excluded from indexing entirely
+# (see the "Cross-domain note" at the bottom of this file).
+#
+# Policy: maximise AI-search visibility. Oraclous's strategy is to be the
+# brand that AI answer engines cite for "governed / sovereign / open-source
+# agentic AI". AI crawlers are therefore EXPLICITLY ALLOWED here rather than
+# left to inherit the wildcard rule, because (a) explicit Allow blocks remove
+# any ambiguity and (b) it documents the intent for future maintainers.
+#
+# Rubric ties: geo-technical §1.1 (robots.txt validity), §1.2 (AI crawler
+# access — CRITICAL), §1.3 (sitemap reference); geo-crawlers Tier 1/2/3.
+# ---------------------------------------------------------------------------
+
+
+# ===========================================================================
+# GROUP 1 — AI SEARCH CRAWLERS (Tier 1): the answer engines users actively
+# ask. Blocking any of these removes Oraclous from live AI search results.
+# These are the single highest-impact crawlers for GEO. ALLOW ALL.
+# ===========================================================================
+
+# OpenAI — ChatGPT search, browsing, and training (300M+ weekly users).
+User-agent: GPTBot
+Allow: /
+
+# OpenAI — ChatGPT Search index (search-only, no training use).
+User-agent: OAI-SearchBot
+Allow: /
+
+# OpenAI — user-initiated page fetch ("ChatGPT, read this URL").
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic — Claude web search, citations, and analysis (live features).
+User-agent: ClaudeBot
+Allow: /
+
+# Anthropic — legacy/secondary Claude fetcher; allow for completeness.
+User-agent: Claude-Web
+Allow: /
+
+# Anthropic — training/research crawler (separate from ClaudeBot).
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity — AI search index. Best AI referral traffic; always cites sources.
+User-agent: PerplexityBot
+Allow: /
+
+# Perplexity — user-initiated page fetch on behalf of a Perplexity user.
+User-agent: Perplexity-User
+Allow: /
+
+
+# ===========================================================================
+# GROUP 2 — AI ECOSYSTEM / TRAINING + ASSISTANT CRAWLERS (Tier 2): the
+# broader AI surfaces (Gemini, Apple Intelligence, Alexa, Meta AI). Allowing
+# them grows reach with no search-ranking downside. ALLOW ALL.
+# NOTE: Google-Extended controls Gemini/AI-Overviews training ONLY — it does
+# NOT affect classic Google Search ranking (that is Googlebot, Group 3).
+# ===========================================================================
+
+# Google — Gemini training + AI Overviews improvement (NOT search ranking).
+User-agent: Google-Extended
+Allow: /
+
+# Google — non-search-ranking research / experimental crawls.
+User-agent: GoogleOther
+Allow: /
+
+# Apple — Apple Intelligence / Siri AI features (2B+ devices).
+User-agent: Applebot-Extended
+Allow: /
+
+# Amazon — Alexa answers + Amazon AI features (voice search).
+User-agent: Amazonbot
+Allow: /
+
+# Meta — Meta AI across Facebook / Instagram / WhatsApp (3B+ users).
+User-agent: FacebookBot
+Allow: /
+
+# Meta — newer Meta AI external fetcher.
+User-agent: meta-externalagent
+Allow: /
+
+
+# ===========================================================================
+# GROUP 3 — CLASSIC SEARCH ENGINE CRAWLERS: the foundation of organic
+# search AND of AI search that rides a classic index (ChatGPT/Copilot use
+# Bing's index; Google AI Overviews use Googlebot's index). ALLOW ALL.
+# ===========================================================================
+
+# Google Search + AI Overviews. Blocking this is fatal — never disallow.
+User-agent: Googlebot
+Allow: /
+
+# Google image search.
+User-agent: Googlebot-Image
+Allow: /
+
+# Microsoft Bing — powers Bing search + Copilot + ChatGPT (via Bing index).
+User-agent: Bingbot
+Allow: /
+
+# Apple — Siri / Spotlight Suggestions (classic Applebot, not -Extended).
+User-agent: Applebot
+Allow: /
+
+# DuckDuckGo.
+User-agent: DuckDuckBot
+Allow: /
+
+
+# ===========================================================================
+# GROUP 4 — TRAINING-DATASET CRAWLER (Tier 3, context-dependent): Common
+# Crawl feeds many downstream models. Oraclous WANTS maximum long-term AI
+# presence and has nothing to hide on a public marketing site, so ALLOW.
+# (Flip to Disallow only if a future data-licensing stance requires it.)
+# ===========================================================================
+
+# Common Crawl — public dataset used as training data by many AI models.
+User-agent: CCBot
+Allow: /
+
+
+# ===========================================================================
+# GROUP 5 — BLOCKED CRAWLERS: aggressive/low-value bots with no GEO upside
+# for a Western-market B2B platform. Bytespider has reported aggressive
+# crawl behaviour and minimal search-visibility benefit (geo-crawlers Tier 3:
+# BLOCK). Add abusive scrapers here as identified.
+# ===========================================================================
+
+User-agent: Bytespider
+Disallow: /
+
+
+# ===========================================================================
+# GROUP 6 — DEFAULT for every other crawler: allow the public marketing site,
+# but keep the technical/non-content paths out of the index. Anything not
+# named above inherits these rules.
+# ===========================================================================
+
+User-agent: *
+Allow: /
+# Tracking-only query strings never alter canonical content; keep param-noise
+# out of crawl budget. (Canonical tags are the primary defence — see
+# meta-model.md — this is belt-and-braces.)
+Disallow: /*?*utm_
+Disallow: /*?*ref=
+# Internal search results, if ever added, are thin/duplicate — never index.
+Disallow: /search
+# Build/preview and API-style paths must never be crawled on the marketing origin.
+Disallow: /api/
+Disallow: /_next/
+Disallow: /draft/
+Disallow: /preview/
+
+
+# ===========================================================================
+# SITEMAP — the discovery entry point for every crawler above. A single
+# generated sitemap.xml listing every indexable marketing URL with <lastmod>.
+# (See sitemap-plan.md. Add an llms.txt at the root as a separate GEO asset.)
+# ===========================================================================
+
+Sitemap: https://oraclous.com/sitemap.xml
+
+
+# ---------------------------------------------------------------------------
+# CROSS-DOMAIN NOTE — app.oraclous.com (the console) is handled SEPARATELY.
+# It is NOT covered by this file (robots.txt is per-origin). The console must
+# ship its OWN robots.txt that disallows all crawling AND serve a
+# `noindex` directive (meta robots + `X-Robots-Tag: noindex, nofollow`
+# HTTP header) on every authenticated route — robots.txt alone does not
+# de-index, so noindex is mandatory there. Reference console robots.txt:
+#
+#     # app.oraclous.com/robots.txt
+#     User-agent: *
+#     Disallow: /
+#
+# The marketing site links OUT to app.oraclous.com (Start free / Sign in)
+# but those targets live on the auth-walled origin and stay out of the index.
+# (geo-technical §1.5 noindex management; url-taxonomy §7 cross-domain split.)
+# ---------------------------------------------------------------------------

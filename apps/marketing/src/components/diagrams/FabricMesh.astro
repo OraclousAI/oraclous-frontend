@@ -1,0 +1,126 @@
+---
+/**
+ * One-fabric mesh — the hero schematic. Human + Agent actors connected to one shared
+ * task board (the "fabric"). Schematic style: thin strokes, currentColor structure,
+ * mint = the one live agent. Zero-JS, CSS-animated, reduced-motion-safe (edges + pulse
+ * only animate when motion is allowed; the diagram is fully legible without animation).
+ */
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['fabric-mesh', cls]}
+  viewBox="0 0 480 400"
+  role="img"
+  aria-label="Human and AI Agent actors connected to one shared task board"
+  fill="none"
+>
+  <!-- edges (drawn first, behind) -->
+  <g class="edges">
+    <path class="edge" d="M86 96 L210 175" />
+    <path class="edge" d="M66 200 L185 200" />
+    <path class="edge" d="M96 312 L210 232" />
+    <path class="edge" d="M394 96 L295 175" />
+    <path class="edge" d="M414 200 L295 200" />
+    <path class="edge" d="M384 312 L295 232" />
+  </g>
+
+  <!-- the shared task board (the fabric) -->
+  <g class="board">
+    <rect x="185" y="160" width="110" height="80" rx="10" />
+    <line x1="185" y1="182" x2="295" y2="182" />
+    <line x1="199" y1="200" x2="281" y2="200" />
+    <line x1="199" y1="215" x2="265" y2="215" />
+  </g>
+
+  <!-- human actors (filled) -->
+  <g class="humans">
+    <circle cx="86" cy="96" r="7" />
+    <circle cx="66" cy="200" r="7" />
+    <circle cx="96" cy="312" r="7" />
+  </g>
+
+  <!-- agent actors (ring); one is live (mint + pulse) -->
+  <g class="agents">
+    <circle class="agent" cx="394" cy="96" r="7" />
+    <circle class="agent live-halo is-pulse" cx="414" cy="200" r="13" />
+    <circle class="agent live" cx="414" cy="200" r="7" />
+    <circle class="agent" cx="384" cy="312" r="7" />
+  </g>
+
+  <!-- legend -->
+  <text class="lbl" x="66" y="350" text-anchor="middle">HUMANS</text>
+  <text class="lbl" x="408" y="350" text-anchor="middle">AGENTS</text>
+  <text class="lbl board-lbl" x="240" y="262" text-anchor="middle">ONE TASK BOARD</text>
+</svg>
+
+<style>
+  .fabric-mesh {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .board rect {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .board line {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.45;
+  }
+  .humans circle {
+    fill: currentColor;
+  }
+  .agent {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+  }
+  .agent.live {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .live-halo {
+    fill: color-mix(in oklab, var(--accent) 30%, transparent);
+    stroke: none;
+  }
+  .lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    fill: var(--fg-mute);
+  }
+  .board-lbl {
+    fill: var(--fg-mute);
+  }
+  .edge {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.5;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .edge {
+      stroke-dasharray: 260;
+      stroke-dashoffset: 260;
+      animation: m-draw 1.3s ease forwards;
+    }
+    .edge:nth-of-type(2) {
+      animation-delay: 0.12s;
+    }
+    .edge:nth-of-type(3) {
+      animation-delay: 0.24s;
+    }
+    .edge:nth-of-type(4) {
+      animation-delay: 0.36s;
+    }
+    .edge:nth-of-type(5) {
+      animation-delay: 0.48s;
+    }
+    .edge:nth-of-type(6) {
+      animation-delay: 0.6s;
+    }
+  }
+</style>

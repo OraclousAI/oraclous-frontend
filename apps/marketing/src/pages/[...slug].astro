@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Prose from '../components/Prose.astro';
+import PageHero from '../components/PageHero.astro';
+import Diagram from '../components/diagrams/Diagram.astro';
+import { segLabel } from '../lib/labels';
+import { stripInlineMarkdown } from '../lib/text';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  const routable = pages.filter((e) => e.data.url && e.data.url !== '/');
+  // Fail the build on duplicate canonical URLs rather than silently last-writer-wins (spec §3.3).
+  const seen = new Set<string>();
+  for (const e of routable) {
+    if (seen.has(e.data.url)) throw new Error(`Duplicate page url: ${e.data.url}`);
+    seen.add(e.data.url);
+  }
+  return routable.map((entry) => ({
+    params: { slug: entry.data.url.replace(/^\//, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const url = entry.data.url;
+const segs = url.split('/').filter(Boolean);
+// Nested pages get their section as the eyebrow (e.g. /platform/byom → "Platform").
+const eyebrow = segs.length > 1 ? segLabel(segs[0]) : undefined;
+// The visible H1 is the page's own headline (the markdown H1, stripped from the body by remark).
+const heroTitle = stripInlineMarkdown(entry.body?.match(/^#\s+(.+)$/m)?.[1] ?? entry.data.title);
+---
+
+<BaseLayout data={entry.data} body={entry.body ?? ''} url={url} kind="page">
+  <PageHero eyebrow={eyebrow} title={heroTitle} lede={entry.data.meta_description} />
+  {
+    entry.data.diagram && (
+      <section class="section--tight diagram-band">
+        <div class="container">
+          <div class="diagram-band__art">
+            <Diagram name={entry.data.diagram} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+  <Prose>
+    <Content />
+  </Prose>
+</BaseLayout>
+
+<style>
+  .diagram-band {
+    border-bottom: 1px solid var(--border-hair);
+  }
+  .diagram-band__art {
+    max-width: 540px;
+    margin-inline: auto;
+  }
+</style>
+

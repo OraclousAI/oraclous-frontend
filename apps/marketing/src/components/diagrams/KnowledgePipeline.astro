@@ -1,0 +1,182 @@
+---
+/**
+ * Knowledge pipeline — a converge → store → diverge bowtie. Multi-modal sources on the
+ * left fan IN to one knowledge graph; governed retrieval modes fan OUT on the right
+ * (ReBAC-bounded on the read side). Schematic, zero-JS, reduced-motion-safe: the funnel
+ * lines draw in, the graph store is the one live (mint) element. Fully legible static.
+ */
+const ingest = ['text', 'documents', 'code', 'structured', 'temporal'];
+const query = ['semantic', 'full-text', 'hybrid', 'traversal', 'temporal'];
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['knowledge-pipeline', cls]}
+  viewBox="0 0 540 300"
+  role="img"
+  aria-label="Multi-modal sources converge into one knowledge graph, then diverge into governed, ReBAC-bounded retrieval modes"
+  fill="none"
+>
+  <!-- converging edges (sources → store) -->
+  <g class="edges">
+    <path class="edge" d="M118 40 L226 130" />
+    <path class="edge" d="M118 90 L226 142" />
+    <path class="edge" d="M118 140 L226 150" />
+    <path class="edge" d="M118 190 L226 158" />
+    <path class="edge" d="M118 240 L226 170" />
+  </g>
+
+  <!-- diverging edges (store → queries) -->
+  <g class="edges">
+    <path class="edge out" d="M314 130 L422 40" />
+    <path class="edge out" d="M314 142 L422 90" />
+    <path class="edge out" d="M314 150 L422 140" />
+    <path class="edge out" d="M314 158 L422 190" />
+    <path class="edge out" d="M314 170 L422 240" />
+  </g>
+
+  <!-- ingest source chips (left) -->
+  <g class="chips">
+    {
+      ingest.map((t, i) => (
+        <g transform={`translate(20, ${28 + i * 50})`}>
+          <rect class="chip" x="0" y="0" width="98" height="24" rx="6" />
+          <text class="lbl" x="49" y="16" text-anchor="middle">
+            {t}
+          </text>
+        </g>
+      ))
+    }
+  </g>
+
+  <!-- the store: a few nodes in a rounded box = the knowledge graph (live / mint) -->
+  <g class="store">
+    <rect class="store-box" x="226" y="118" width="88" height="64" rx="11" />
+    <line class="store-edge" x1="248" y1="138" x2="270" y2="150" />
+    <line class="store-edge" x1="270" y1="150" x2="292" y2="138" />
+    <line class="store-edge" x1="270" y1="150" x2="262" y2="170" />
+    <line class="store-edge" x1="270" y1="150" x2="284" y2="168" />
+    <circle class="node" cx="248" cy="138" r="3.4" />
+    <circle class="node" cx="292" cy="138" r="3.4" />
+    <circle class="node" cx="262" cy="170" r="3.4" />
+    <circle class="node" cx="284" cy="168" r="3.4" />
+    <circle class="node live is-pulse" cx="270" cy="150" r="4.4" />
+    <text class="lbl store-lbl" x="270" y="200" text-anchor="middle">knowledge graph</text>
+  </g>
+
+  <!-- query mode chips (right) -->
+  <g class="chips">
+    {
+      query.map((t, i) => (
+        <g transform={`translate(422, ${28 + i * 50})`}>
+          <rect class="chip" x="0" y="0" width="98" height="24" rx="6" />
+          <text class="lbl" x="49" y="16" text-anchor="middle">
+            {t}
+          </text>
+        </g>
+      ))
+    }
+  </g>
+
+  <!-- section captions -->
+  <text class="lbl cap" x="69" y="288" text-anchor="middle">INGEST</text>
+  <text class="lbl cap" x="471" y="288" text-anchor="middle">RETRIEVE</text>
+
+  <!-- ReBAC-bounded note on the read side (a label, never mint text) -->
+  <g class="note">
+    <rect class="note-box" x="408" y="256" width="126" height="22" rx="5" />
+    <text class="lbl note-lbl" x="471" y="271" text-anchor="middle">ReBAC-bounded</text>
+  </g>
+</svg>
+
+<style>
+  .knowledge-pipeline {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .chip {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    fill: color-mix(in oklab, var(--fg) 5%, transparent);
+  }
+  .store-box {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: color-mix(in oklab, var(--fg) 6%, transparent);
+  }
+  .store-edge {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    opacity: 0.5;
+  }
+  .node {
+    fill: currentColor;
+  }
+  .node.live {
+    fill: var(--accent);
+  }
+  .edge {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.45;
+  }
+  .lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    fill: var(--fg-mute);
+  }
+  .cap {
+    letter-spacing: 0.16em;
+  }
+  .store-lbl {
+    fill: var(--fg);
+    letter-spacing: 0.06em;
+  }
+  .note-box {
+    stroke: color-mix(in oklab, var(--fg) 30%, transparent);
+    stroke-width: 1.2;
+    stroke-dasharray: 3 3;
+    fill: none;
+  }
+  .note-lbl {
+    fill: var(--fg-mute);
+    letter-spacing: 0.08em;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .edge {
+      stroke-dasharray: 180;
+      stroke-dashoffset: 180;
+      animation: m-draw 1.1s ease forwards;
+    }
+    .edge:nth-of-type(2) {
+      animation-delay: 0.08s;
+    }
+    .edge:nth-of-type(3) {
+      animation-delay: 0.16s;
+    }
+    .edge:nth-of-type(4) {
+      animation-delay: 0.24s;
+    }
+    .edge:nth-of-type(5) {
+      animation-delay: 0.32s;
+    }
+    .edge.out {
+      animation-delay: 0.5s;
+    }
+    .edge.out:nth-of-type(2) {
+      animation-delay: 0.58s;
+    }
+    .edge.out:nth-of-type(3) {
+      animation-delay: 0.66s;
+    }
+    .edge.out:nth-of-type(4) {
+      animation-delay: 0.74s;
+    }
+    .edge.out:nth-of-type(5) {
+      animation-delay: 0.82s;
+    }
+  }
+</style>

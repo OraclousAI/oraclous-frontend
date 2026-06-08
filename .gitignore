@@ -34,6 +34,15 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Astro generated types/cache
+.astro/
+Oraclous AI - Design System/
+
+# Playwright / Lighthouse CI output
+test-results/
+playwright-report/
+.lighthouseci/
+
 # git worktrees (agent workspace isolation)
 .worktrees/
 

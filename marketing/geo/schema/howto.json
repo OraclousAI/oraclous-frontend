@@ -1,0 +1,54 @@
+{
+  "_usage": "HowTo entity for the /how-it-works page — the canonical goal-to-governed-work lifecycle. Emit on /how-it-works only. The five HowToStep entries map to the page's five 'Step N' sections (Describe, Compile, Govern, Run, Learn) in order; Step 2's six sub-points are modelled as itemListElement HowToDirection entries under the Compile step. HowTo rich results were deprecated in Aug 2023 — do NOT promise rich results — but AI engines still parse HowTo for procedural extraction, so keep it. Each step.url is the on-page anchor; confirm the anchors match the built page's section IDs. Keep the lifecycle order intact — this is the site's canonical procedural narrative.",
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "@id": "https://oraclous.com/how-it-works#howto",
+  "name": "How Oraclous works — from a goal in plain language to governed work",
+  "description": "How Oraclous turns a plain-language goal into governed work running across human and AI Agent Actors, in five steps: Describe, Compile, Govern, Run, and Learn — every step audited.",
+  "totalTime": "PT0S",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Describe",
+      "url": "https://oraclous.com/how-it-works#step-1",
+      "text": "An Operator — the person who states the goal — writes what needs doing in plain language. There is no pipeline to wire and no code to write at this stage; the prose is the input. Oraclous separates what work needs doing (prose, written by Operators) from how the runtime enforces it (code, written once by the platform)."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Compile",
+      "url": "https://oraclous.com/how-it-works#step-2",
+      "text": "The Compile flow turns the goal into a reviewable Harness through a defined sequence — no black box. You review the Harness before it runs, and a prose instruction never overrides a structured policy: code wins.",
+      "itemListElement": [
+        { "@type": "HowToDirection", "position": 1, "text": "Workspace survey — the compiler reads the Capabilities, Actors, data, and policies already in the workspace." },
+        { "@type": "HowToDirection", "position": 2, "text": "Clarifying questions — where the goal is ambiguous, it asks before committing to a plan." },
+        { "@type": "HowToDirection", "position": 3, "text": "Topology planning — it plans which Actors do what, in what order, and how they hand off." },
+        { "@type": "HowToDirection", "position": 4, "text": "Manifest emission — it emits an OHM manifest with a machine-validated structured zone and a model-interpreted prose zone." },
+        { "@type": "HowToDirection", "position": 5, "text": "Review dialogue — you read the proposed Harness and discuss changes." },
+        { "@type": "HowToDirection", "position": 6, "text": "Commit — only when you commit does it become a runnable Harness." }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Govern",
+      "url": "https://oraclous.com/how-it-works#step-3",
+      "text": "Every Harness runs inside a ReBAC governance envelope enforced platform-wide at the Harness level. Each Harness runs under one of five named, versioned policy sets — from development to production-strict to production-federated — each declaring trust tier, budget ceilings, signature requirements, BYOM constraints, capability allow/deny, and audit level and retention. Coded enforcement applies them; prose never overrides them."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Run",
+      "url": "https://oraclous.com/how-it-works#step-4",
+      "text": "One runtime runs everything. The Harness Runtime dispatches Agents into a tool-use loop and humans into task-board assignments through the same runtime, with no privileged code path for either. Human review is built in — the runtime treats waiting on a human like waiting on a tool return. Execution is durable and checkpointed: work survives restarts, schedules fire from the Harness's triggers, runs can pause, resume, or cancel, and timeouts plus a declared retry count prevent runaway loops. Every step writes provenance and meters consumption."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Learn",
+      "url": "https://oraclous.com/how-it-works#step-5",
+      "text": "As Actors do work, the Learn flow writes to Consciousness — a per-Actor record of accumulated learning the platform consults on later work (the platform's term for persistent memory, not literal sentience). Organisational memory lives in the knowledge graph: a queryable, provenance-tracked store of nodes and relationships scoped by organization_id, with ReBAC-bounded retrieval traceable to source."
+    }
+  ]
+}

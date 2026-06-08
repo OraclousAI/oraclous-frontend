@@ -1,0 +1,26 @@
+---
+import { buildSchemas } from '../lib/schema';
+
+interface Props {
+  url: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+}
+
+const { url, title, body, data } = Astro.props;
+const types = Array.isArray(data.schema) ? (data.schema as string[]) : undefined;
+const schemas = buildSchemas(types, { url, title, body, data });
+
+// Build-time data only (front-matter/body/site constants). Escape `<` to prevent any
+// `</script>` break-out — the approved, controlled set:html injection (spec §4.2).
+function serialize(obj: unknown): string {
+  return JSON.stringify(obj).replace(/</g, '\\u003c');
+}
+---
+
+{
+  schemas.map((schema) => (
+    <script type="application/ld+json" is:inline set:html={serialize(schema)} />
+  ))
+}
