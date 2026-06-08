@@ -1,0 +1,42 @@
+---
+import { SITE } from '../lib/site';
+
+interface Props {
+  title: string;
+  description: string;
+  url: string;
+  ogType?: 'website' | 'article';
+  image?: string;
+  noindex?: boolean;
+}
+
+const { title, description, url, ogType = 'website', image, noindex = false } = Astro.props;
+const canonical = SITE.url + (url === '/' ? '/' : url.replace(/\/$/, ''));
+const ogImage = image || SITE.defaultOgImage;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow'} />
+<meta name="theme-color" content="#f4f4f2" />
+
+<!-- Open Graph -->
+<meta property="og:type" content={ogType} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:site_name" content="Oraclous" />
+<meta property="og:locale" content="en_US" />
+{ogImage && <meta property="og:image" content={ogImage} />}
+
+<!-- Twitter -->
+<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{ogImage && <meta name="twitter:image" content={ogImage} />}
+
+<link rel="icon" href="/favicon.png" type="image/png" />
+<link rel="sitemap" href="/sitemap-index.xml" />

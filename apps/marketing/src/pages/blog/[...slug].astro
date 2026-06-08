@@ -1,0 +1,33 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Prose from '../../components/Prose.astro';
+import PageHero from '../../components/PageHero.astro';
+import { stripInlineMarkdown } from '../../lib/text';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((entry) => {
+    const url = entry.data.url ?? `/blog/${entry.id}`;
+    return {
+      params: { slug: url.replace(/^\/blog\//, '') },
+      props: { entry },
+    };
+  });
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const url = entry.data.url ?? `/blog/${entry.id}`;
+const d = entry.data;
+const heroTitle = stripInlineMarkdown(entry.body?.match(/^#\s+(.+)$/m)?.[1] ?? d.title);
+const reading = d.reading_time ? `${d.reading_time} min read` : null;
+const eyebrow = [d.category ?? 'Blog', reading].filter(Boolean).join('  ·  ');
+---
+
+<BaseLayout data={d} body={entry.body ?? ''} url={url} kind="blog">
+  <PageHero eyebrow={eyebrow} title={heroTitle} lede={d.meta_description} />
+  <Prose>
+    <Content />
+  </Prose>
+</BaseLayout>

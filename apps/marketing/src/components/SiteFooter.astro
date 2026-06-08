@@ -1,0 +1,142 @@
+---
+import Logo from './Logo.astro';
+
+const cols: { title: string; links: [string, string][] }[] = [
+  {
+    title: 'Product',
+    links: [
+      ['Platform', '/platform'],
+      ['How it works', '/how-it-works'],
+    ],
+  },
+  {
+    title: 'Solutions',
+    links: [
+      ['Operations', '/solutions/operations'],
+      ['Developers', '/solutions/developers'],
+      ['Regulated', '/solutions/regulated'],
+      ['Multi-model', '/solutions/multi-model'],
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      ['Blog', '/blog'],
+      ['Glossary', '/glossary'],
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      ['About', '/about'],
+      ['Open source', '/open-source'],
+      ['Security', '/security'],
+      ['Honest roadmap', '/honest-roadmap'],
+    ],
+  },
+];
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer surface-dark">
+  <div class="container inner">
+    <div class="brandcol">
+      <Logo variant="lockup" height={22} />
+      <p class="tagline">
+        The open-source second mind — humans and AI Agents on one governed fabric. Your rules, your
+        keys.
+      </p>
+    </div>
+
+    <nav class="cols" aria-label="Footer">
+      {
+        cols.map((col) => (
+          <div class="col">
+            <p class="col-title">{col.title}</p>
+            <ul>
+              {col.links.map(([label, href]) => (
+                <li>
+                  <a href={href}>{label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </nav>
+  </div>
+
+  <div class="container bottom">
+    <p class="legal">© {year} Oraclous — open-source agentic AI platform.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--sp-24);
+    border-top: 1px solid var(--border-hair);
+  }
+  .inner {
+    display: grid;
+    gap: clamp(var(--sp-12), 5vw, var(--sp-16));
+    padding-block: clamp(var(--sp-12), 6vw, var(--sp-16));
+  }
+  .brandcol {
+    max-width: 40ch;
+  }
+  .tagline {
+    margin: var(--sp-4) 0 0;
+    color: var(--fg-mute);
+    font-size: var(--t-body-size);
+    line-height: 1.55;
+  }
+  /* the 4-column footer */
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-8);
+  }
+  .col-title {
+    font-family: var(--font-mono);
+    font-size: var(--t-tiny-size);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fg-mute);
+    margin: 0 0 var(--sp-3);
+  }
+  .col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .col a {
+    color: var(--fg);
+    text-decoration: none;
+    font-size: var(--t-body-size);
+    transition: color var(--motion-hover-dur);
+  }
+  .col a:hover {
+    color: var(--accent);
+  }
+  .bottom {
+    padding-block: var(--sp-6);
+    border-top: 1px solid var(--border-hair);
+  }
+  .legal {
+    margin: 0;
+    color: var(--fg-mute);
+    font-size: var(--t-caption-size);
+  }
+  @media (max-width: 860px) {
+    .cols {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 480px) {
+    .cols {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

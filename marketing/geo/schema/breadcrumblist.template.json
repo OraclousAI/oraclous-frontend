@@ -1,0 +1,25 @@
+{
+  "_usage": "BreadcrumbList template — MANDATORY on every page below depth 1 (and recommended on depth-1 pages too) per the IA brief. The trail mirrors the URL hierarchy exactly and uses the page's display title (exact terminology, not the slug) for each item.name. The filled example below is for /platform/byom (Home › Platform › BYOM). To apply to another page, replace the itemListElement entries with that page's trail. Single-crumb depth-1 pages (e.g. /security, /pricing) emit two items: Home and the page itself. Always use absolute URLs in `item`. See internal-linking.md §5 for the per-page trails.",
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://oraclous.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Platform",
+      "item": "https://oraclous.com/platform"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "BYOM",
+      "item": "https://oraclous.com/platform/byom"
+    }
+  ]
+}

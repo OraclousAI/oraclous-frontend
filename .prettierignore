@@ -3,3 +3,19 @@ dist/
 pnpm-lock.yaml
 *.tsbuildinfo
 CLAUDE.md
+
+# Astro generated types/cache (apps/marketing)
+.astro/
+
+# Marketing content corpus is hand-authored prose (like docs); not Prettier-managed
+marketing/
+
+# External brand reference — do not reformat
+Oraclous AI - Design System/
+
+# Lighthouse CI output
+.lighthouseci/
+
+# Playwright test output
+test-results/
+playwright-report/

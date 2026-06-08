@@ -1,0 +1,19 @@
+{
+  "_usage": "WebSite entity with SearchAction. Emit once, in the document <head> on the Home page (/). The SearchAction enables the sitelinks search box and signals the on-site search endpoint to crawlers and AI engines. Confirm the search URL template (`/search?q={search_term_string}`) matches the marketing site's actual search route before publishing — if the marketing site has no search yet, omit `potentialAction` rather than point it at a 404. `publisher` references the Organization via @id.",
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://oraclous.com/#website",
+  "name": "Oraclous",
+  "url": "https://oraclous.com",
+  "description": "The open-source agentic AI operations platform — form your organisation's second mind, governed by ReBAC, model-agnostic via BYOM, portable through OHM.",
+  "publisher": { "@id": "https://oraclous.com/#organization" },
+  "inLanguage": "en",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://oraclous.com/search?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}

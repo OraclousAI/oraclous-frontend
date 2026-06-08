@@ -1,0 +1,46 @@
+{
+  "_usage": "SoftwareApplication entity for the Oraclous product. Emit on the Home page (/) and the Platform overview (/platform). `featureList` is a strong AI-citation signal — it mirrors the eleven platform capabilities. `offers` models only what is real: a free self-host offer (price 0) and a usage-based cloud offer with no fabricated price (see product-offer.template.json for the canonical Offer shapes). Do NOT add `aggregateRating` or `review` — Oraclous is pre/early with no published reviews; an invented rating is a process violation. `applicationCategory` is BusinessApplication; `operatingSystem` reflects self-hostable + cloud. References the Organization via @id.",
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": "https://oraclous.com/#software",
+  "name": "Oraclous",
+  "applicationCategory": "BusinessApplication",
+  "applicationSubCategory": "Agentic AI orchestration platform",
+  "operatingSystem": "Self-hostable (Linux / Docker / Kubernetes); cloud-hosted",
+  "url": "https://oraclous.com/platform",
+  "description": "Oraclous is an open-source agentic AI orchestration platform that forms an organisation's \"second mind\": human members and AI Agents work as symmetric Actors on one governed fabric. Operators describe goals in plain language and the platform compiles them into governed Harnesses, enforces ReBAC access control, runs any model via BYOM, and keeps work portable through the open OHM manifest.",
+  "publisher": { "@id": "https://oraclous.com/#organization" },
+  "isAccessibleForFree": true,
+  "license": "https://github.com/OraclousAI",
+  "featureList": [
+    "Harness model — every executable thing is a goal-driven Harness of human and Agent Actors under one policy envelope",
+    "OHM (Oraclous Harness Manifest) — portable, human-readable serialisation of each Harness",
+    "Symmetric Actors — humans and AI Agents on one task board under one governance model",
+    "Compile flow — turn a plain-language goal into a reviewable, governed Harness",
+    "ReBAC governance — access by relationship, not role, enforced platform-wide under five versioned policy sets",
+    "Human-in-the-loop — review as a first-class runtime primitive",
+    "BYOM — Anthropic-native, OpenAI-compatible, and Gemini-compatible model providers, switchable by config",
+    "MCP server and client — interoperate both ways with the Model Context Protocol",
+    "Knowledge graph and retrieval — queryable, provenance-tracked, ReBAC-bounded organisational memory",
+    "Durable execution and scheduling — checkpointed runs, triggers, timeouts, and retry caps",
+    "Portability — leave without a rewrite via OHM and an open reference runtime",
+    "Metering — neutral substrate measurement of tokens, tool calls, storage, time, and traversals"
+  ],
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Open source — self-host",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Open source and free to self-host on your own infrastructure, including air-gapped environments. No vendor in the loop; identical data-sovereignty guarantees to the cloud mode. You pay your model provider directly under BYOM.",
+      "availability": "https://schema.org/InStock"
+    },
+    {
+      "@type": "Offer",
+      "name": "Cloud — Oraclous-hosted",
+      "description": "Usage-based managed hosting with identical data-sovereignty guarantees, customer-held keys, and your choice of isolation tier. Pricing is sized per isolation tier and volume; contact Oraclous for a quote.",
+      "availability": "https://schema.org/InStock",
+      "url": "https://app.oraclous.com"
+    }
+  ]
+}

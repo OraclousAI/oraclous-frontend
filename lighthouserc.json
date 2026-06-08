@@ -1,0 +1,33 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "pnpm --filter @oraclous/marketing preview --port 4321",
+      "startServerReadyPattern": "localhost",
+      "url": [
+        "http://localhost:4321/",
+        "http://localhost:4321/platform",
+        "http://localhost:4321/platform/byom",
+        "http://localhost:4321/how-it-works",
+        "http://localhost:4321/solutions/operations",
+        "http://localhost:4321/security",
+        "http://localhost:4321/glossary",
+        "http://localhost:4321/honest-roadmap",
+        "http://localhost:4321/blog"
+      ],
+      "numberOfRuns": 1
+    },
+    "assert": {
+      "//": "Advisory to start (perf/seo/best-practices = warn); tighten + promote to a required check once baselines are observed (build-spec §7).",
+      "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.9 }],
+        "categories:accessibility": ["warn", { "minScore": 0.95 }],
+        "categories:seo": ["warn", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.9 }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}

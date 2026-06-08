@@ -1,0 +1,37 @@
+---
+import FabricMesh from './FabricMesh.astro';
+import Handoff from './Handoff.astro';
+import LayerStack from './LayerStack.astro';
+import ReBACGraph from './ReBACGraph.astro';
+import HarnessAssembly from './HarnessAssembly.astro';
+import ModelSwap from './ModelSwap.astro';
+import CompileFlow from './CompileFlow.astro';
+import KnowledgePipeline from './KnowledgePipeline.astro';
+import RunTimeline from './RunTimeline.astro';
+import MeterBars from './MeterBars.astro';
+import McpBridge from './McpBridge.astro';
+import PortabilityHub from './PortabilityHub.astro';
+
+/** Render a named schematic diagram (driven by a page's `diagram` front-matter). */
+interface Props {
+  name?: string;
+}
+const { name } = Astro.props;
+const map = {
+  'fabric-mesh': FabricMesh,
+  handoff: Handoff,
+  'layer-stack': LayerStack,
+  'rebac-graph': ReBACGraph,
+  'harness-assembly': HarnessAssembly,
+  'model-swap': ModelSwap,
+  'compile-flow': CompileFlow,
+  'knowledge-pipeline': KnowledgePipeline,
+  'run-timeline': RunTimeline,
+  'meter-bars': MeterBars,
+  'mcp-bridge': McpBridge,
+  'portability-hub': PortabilityHub,
+} as const;
+const Cmp = name && name in map ? map[name as keyof typeof map] : null;
+---
+
+{Cmp && <Cmp />}

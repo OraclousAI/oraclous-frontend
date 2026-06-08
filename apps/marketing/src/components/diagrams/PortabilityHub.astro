@@ -1,0 +1,183 @@
+---
+/**
+ * Portability hub — the OHM (Oraclous Handoff Manifest) carries your work *out*:
+ * export arrows fan from a center box to portable targets (Claude Desktop, MCP,
+ * OpenAPI, Claude Code). The export fan is the one live (mint) element. Set apart —
+ * dashed, muted, clearly NOT exported — is the "stays behind" cluster (ReBAC graph,
+ * credentials, Consciousness): the honest limit of what travels. Schematic, zero-JS,
+ * reduced-motion-safe (arrows draw only when motion is allowed; legible without it).
+ */
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['portability-hub', cls]}
+  viewBox="0 0 520 300"
+  role="img"
+  aria-label="The OHM exports your work to Claude Desktop, MCP, OpenAPI and Claude Code, while the ReBAC graph, credentials and Consciousness stay behind and do not travel"
+  fill="none"
+>
+  <!-- center: OHM -->
+  <g class="node node--hub">
+    <rect x="36" y="116" width="92" height="48" rx="9" />
+    <text x="82" y="145" text-anchor="middle">OHM</text>
+  </g>
+
+  <!-- export fan (LIVE / mint) -->
+  <g class="exports">
+    <path class="flow live" d="M128 128 L226 56" marker-end="url(#ph-out)" />
+    <path class="flow live" d="M128 136 L226 112" marker-end="url(#ph-out)" />
+    <path class="flow live" d="M128 144 L226 168" marker-end="url(#ph-out)" />
+    <path class="flow live" d="M128 152 L226 224" marker-end="url(#ph-out)" />
+  </g>
+  <text class="dir-lbl" x="150" y="100" text-anchor="middle">EXPORTS →</text>
+
+  <!-- export target chips -->
+  <g class="chip">
+    <rect x="232" y="40" width="116" height="26" rx="5" />
+    <text x="290" y="57" text-anchor="middle">Claude Desktop</text>
+  </g>
+  <g class="chip">
+    <rect x="232" y="100" width="64" height="26" rx="5" />
+    <text x="264" y="117" text-anchor="middle">MCP</text>
+  </g>
+  <g class="chip">
+    <rect x="232" y="156" width="86" height="26" rx="5" />
+    <text x="275" y="173" text-anchor="middle">OpenAPI</text>
+  </g>
+  <g class="chip">
+    <rect x="232" y="212" width="104" height="26" rx="5" />
+    <text x="284" y="229" text-anchor="middle">Claude Code</text>
+  </g>
+
+  <!-- separator: where the boundary is -->
+  <line class="seam" x1="402" y1="28" x2="402" y2="272" />
+
+  <!-- EXCLUDED cluster — dashed, muted, NOT exported -->
+  <text class="stays-lbl" x="462" y="44" text-anchor="middle">STAYS BEHIND</text>
+  <g class="stays">
+    <g class="stay-chip">
+      <rect x="416" y="60" width="92" height="30" rx="6" />
+      <text x="462" y="79" text-anchor="middle">ReBAC graph</text>
+    </g>
+    <g class="stay-chip">
+      <rect x="416" y="108" width="92" height="30" rx="6" />
+      <text x="462" y="127" text-anchor="middle">credentials</text>
+    </g>
+    <g class="stay-chip">
+      <rect x="416" y="156" width="92" height="30" rx="6" />
+      <text x="462" y="175" text-anchor="middle">Consciousness</text>
+    </g>
+  </g>
+  <!-- explicit "does not cross" mark on the seam -->
+  <g class="no-cross">
+    <line x1="356" y1="120" x2="396" y2="120" />
+    <line x1="384" y1="110" x2="396" y2="120" />
+    <line x1="384" y1="130" x2="396" y2="120" />
+  </g>
+
+  <defs>
+    <marker id="ph-out" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="var(--accent)" />
+    </marker>
+  </defs>
+</svg>
+
+<style>
+  .portability-hub {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .node rect {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .node--hub rect {
+    fill: color-mix(in oklab, var(--fg) 8%, transparent);
+  }
+  .node text {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    fill: var(--fg);
+  }
+  .chip rect {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    fill: color-mix(in oklab, var(--accent) 8%, transparent);
+  }
+  .chip text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--fg);
+  }
+  .flow {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    opacity: 0.7;
+  }
+  .flow.live {
+    stroke: var(--accent);
+    opacity: 0.9;
+  }
+  .dir-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    fill: var(--fg-mute);
+  }
+  /* the boundary */
+  .seam {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    stroke-dasharray: 3 4;
+    opacity: 0.4;
+  }
+  .no-cross line {
+    stroke: var(--fg-mute);
+    stroke-width: 1.4;
+    opacity: 0.55;
+  }
+  /* excluded cluster — dashed + muted, visibly NOT exported */
+  .stay-chip rect {
+    stroke: var(--fg-mute);
+    stroke-width: 1.3;
+    stroke-dasharray: 4 4;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+    opacity: 0.85;
+  }
+  .stay-chip text {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--fg-mute);
+  }
+  .stays-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    fill: var(--fg-mute);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .flow {
+      stroke-dasharray: 160;
+      stroke-dashoffset: 160;
+      animation: m-draw 1s ease forwards;
+    }
+    .exports .flow:nth-of-type(1) {
+      animation-delay: 0.05s;
+    }
+    .exports .flow:nth-of-type(2) {
+      animation-delay: 0.17s;
+    }
+    .exports .flow:nth-of-type(3) {
+      animation-delay: 0.29s;
+    }
+    .exports .flow:nth-of-type(4) {
+      animation-delay: 0.41s;
+    }
+  }
+</style>

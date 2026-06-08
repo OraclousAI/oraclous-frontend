@@ -12,6 +12,8 @@ concurrency:
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   # quality: lint, type-check, format — base hygiene for every PR
+  # (ESLint + Prettier now cover *.astro via eslint-plugin-astro / prettier-plugin-astro;
+  #  typecheck runs each package's checker — apps/marketing uses `astro check`.)
   # ─────────────────────────────────────────────────────────────────────────────
   quality:
     name: Lint / Type-check / Format
@@ -46,7 +48,7 @@ jobs:
   # Raw fetch() / axios calls in feature code (apps/, or packages/ outside
   # packages/api-client) bypass the typed contract and are rejected.
   #
-  # Scope: *.ts, *.tsx in apps/ and packages/ (excluding packages/api-client
+  # Scope: *.ts, *.tsx, *.astro in apps/ and packages/ (excluding packages/api-client
   # itself, node_modules, and test files).
   # ─────────────────────────────────────────────────────────────────────────────
   gate-api-client-boundary:
@@ -57,7 +59,7 @@ jobs:
 
       - name: Reject bare fetch/axios outside packages/api-client
         run: |
-          violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+          violations=$(grep -rn --include="*.ts" --include="*.tsx" --include="*.astro" \
             -E "(^|[^a-zA-Z_])(fetch\s*\(|axios\b)" \
             apps/ packages/ \
             --exclude-dir=packages/api-client \
@@ -68,7 +70,7 @@ jobs:
             --exclude="*.spec.tsx" \
             2>/dev/null || true)
           # Also catch "import ... from 'axios'" or "import('axios')"
-          import_violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+          import_violations=$(grep -rn --include="*.ts" --include="*.tsx" --include="*.astro" \
             -E "from ['\"]axios['\"]|require\(['\"]axios['\"]\)" \
             apps/ packages/ \
             --exclude-dir=packages/api-client \
@@ -90,8 +92,8 @@ jobs:
   # be placed in localStorage or sessionStorage directly. Feature code must call
   # the platform's storage primitives; direct Web Storage writes are rejected.
   #
-  # Scope: *.ts, *.tsx everywhere in apps/ and packages/ (excluding node_modules
-  # and test files so that test fixtures can exercise storage primitives).
+  # Scope: *.ts, *.tsx, *.astro everywhere in apps/ and packages/ (excluding
+  # node_modules and test files so that test fixtures can exercise storage primitives).
   # ─────────────────────────────────────────────────────────────────────────────
   gate-no-token-in-storage:
     name: 'Gate 2: no-token-in-storage'
@@ -103,7 +105,7 @@ jobs:
         run: |
           # Filter out comment lines (grep -n output: "file:line:content") to avoid
           # false positives from doc-strings or comments that mention the banned APIs.
-          violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+          violations=$(grep -rn --include="*.ts" --include="*.tsx" --include="*.astro" \
             -E "(localStorage|sessionStorage)\s*\." \
             apps/ packages/ \
             --exclude-dir=node_modules \
@@ -122,12 +124,9 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   # Gate 3 — axe-core AA
   #
-  # Every UI page must pass WCAG AA via axe-core automated scan.
-  # Tests live in tests/a11y/; the gate passes with zero tests on a greenfield
-  # scaffold (--pass-with-no-tests) and becomes a hard gate as pages ship.
-  #
-  # Test pattern: tests/a11y/**/*.spec.ts — each spec navigates to a page and
-  # calls checkA11y() from @axe-core/playwright against the AA ruleset.
+  # Every UI page must pass WCAG AA via axe-core automated scan. The marketing
+  # specs (tests/a11y/marketing/) run against the built static site, served by
+  # `astro preview` (Playwright webServer). Console specs land later.
   # ─────────────────────────────────────────────────────────────────────────────
   gate-axe-core-aa:
     name: 'Gate 3: axe-core AA'
@@ -145,6 +144,9 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Build marketing (a11y scans the static build)
+        run: pnpm --filter @oraclous/marketing build
 
       - name: Install Playwright browsers (Chromium only)
         run: pnpm exec playwright install --with-deps chromium
@@ -205,34 +207,98 @@ jobs:
           exit $failed
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Gate 5 — no-dangerouslySetInnerHTML
+  # Gate 5 — no-dangerouslySetInnerHTML (.ts/.tsx) + no uncontrolled set:html (.astro)
   #
   # dangerouslySetInnerHTML bypasses React's XSS protections and is statically
-  # banned. If user content must render as rich HTML, route it through a
-  # sanitiser with a strict allowlist (security-architect sign-off required).
-  #
-  # Scope: *.ts, *.tsx in apps/ and packages/ (including test files — test
-  # fixtures that exercise dangerouslySetInnerHTML are also prohibited).
+  # banned. In Astro, set:html is the equivalent sink; the ONLY allowed uses are the
+  # controlled JSON-LD emitters, which serialise build-time data (front-matter / site
+  # constants), never user input (build-spec §4.2). Any other set:html is rejected.
   # ─────────────────────────────────────────────────────────────────────────────
   gate-no-dangerous-html:
-    name: 'Gate 5: no-dangerouslySetInnerHTML'
+    name: 'Gate 5: no-dangerouslySetInnerHTML / set:html'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reject dangerouslySetInnerHTML
+      - name: Reject dangerouslySetInnerHTML (.ts/.tsx) and uncontrolled set:html (.astro)
         run: |
-          # Approved exception: packages/design-system/src/components/ui/chart.tsx
-          # ShadCN recharts primitive — injects only controlled CSS custom-property
-          # theme tokens into a <style> element; no user data ever reaches innerHTML.
-          violations=$(grep -rn --include="*.ts" --include="*.tsx" \
+          # Approved .tsx exception: packages/design-system/src/components/ui/chart.tsx
+          # (ShadCN recharts primitive — injects only controlled CSS theme tokens).
+          react_violations=$(grep -rn --include="*.ts" --include="*.tsx" \
             "dangerouslySetInnerHTML" \
             apps/ packages/ \
             --exclude-dir=node_modules \
             2>/dev/null | grep -v "packages/design-system/src/components/ui/chart.tsx" || true)
-          if [ -n "$violations" ]; then
-            echo "❌ no-dangerouslySetInnerHTML violated:"
-            echo "$violations"
+          # Approved .astro exceptions: controlled JSON-LD emitters only.
+          astro_violations=$(grep -rn --include="*.astro" \
+            "set:html" \
+            apps/ packages/ \
+            --exclude-dir=node_modules \
+            2>/dev/null | grep -vE "apps/marketing/src/components/SchemaJsonLd.astro|apps/marketing/src/pages/glossary/index.astro|apps/marketing/src/pages/glossary/\[slug\].astro" || true)
+          all="$react_violations"$'\n'"$astro_violations"
+          all=$(echo "$all" | sed '/^[[:space:]]*$/d')
+          if [ -n "$all" ]; then
+            echo "❌ no-dangerouslySetInnerHTML / uncontrolled set:html violated:"
+            echo "$all"
             exit 1
           fi
-          echo "✅ no-dangerouslySetInnerHTML clean"
+          echo "✅ no-dangerouslySetInnerHTML / set:html clean"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Gate 6 — internal-link-check (marketing)
+  #
+  # The marketing corpus is link-dense; a broken internal link is an SEO/UX
+  # regression. After building, assert every root-relative href resolves to a
+  # built page/asset (scripts/check-internal-links.mjs). 0 broken or the gate fails.
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate-link-check:
+    name: 'Gate 6: internal-link-check (marketing)'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build marketing
+        run: pnpm --filter @oraclous/marketing build
+
+      - name: Check internal links
+        run: pnpm link-check
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Lighthouse / Core Web Vitals (marketing) — the GEO-critical performance gate.
+  # Asserts a11y and surfaces perf/SEO/best-practices budgets on the static build.
+  # Starts mostly-advisory (perf/seo/best-practices = warn); tighten + promote to a
+  # required check once baselines are observed (build-spec §7).
+  # ─────────────────────────────────────────────────────────────────────────────
+  lighthouse-marketing:
+    name: 'Lighthouse / CWV (marketing)'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build marketing
+        run: pnpm --filter @oraclous/marketing build
+
+      - name: Lighthouse CI
+        run: pnpm exec lhci autorun --config=lighthouserc.json

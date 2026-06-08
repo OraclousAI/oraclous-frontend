@@ -7,6 +7,15 @@ export default defineConfig({
   reporter: 'list',
   use: {
     headless: true,
+    baseURL: 'http://localhost:4321',
+  },
+  // Serve the built marketing site for the a11y specs. Requires a prior
+  // `pnpm --filter @oraclous/marketing build` (CI Gate 3 builds before scanning).
+  webServer: {
+    command: 'pnpm --filter @oraclous/marketing preview --port 4321',
+    url: 'http://localhost:4321/',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
   },
   projects: [
     {

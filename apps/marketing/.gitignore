@@ -1,0 +1,11 @@
+# Astro
+dist/
+.astro/
+
+# deps / env
+node_modules/
+.env
+.env.production
+
+# os
+.DS_Store

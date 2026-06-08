@@ -1,0 +1,292 @@
+/*
+ * marketing.css — shared design vocabulary for the marketing site.
+ * Token-only (consumes @oraclous/design-system/tokens.css); no invented colours/spacing/type.
+ * Aesthetic: refined technical-editorial. Mint (--accent) is the live signal, used sparingly.
+ * All motion is CSS-only, reduced-motion-safe, and content is fully visible without it.
+ */
+
+/* ── Layout primitives ──────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: 1140px;
+  margin-inline: auto;
+  padding-inline: var(--sp-5);
+}
+@media (min-width: 768px) {
+  .container {
+    padding-inline: var(--sp-8);
+  }
+}
+
+.section {
+  padding-block: clamp(var(--sp-16), 8vw, var(--sp-24));
+  position: relative;
+}
+.section--tight {
+  padding-block: clamp(var(--sp-12), 6vw, var(--sp-20));
+}
+
+/* Dark sections: apply the design-system dark token set + bind bg/fg. */
+.surface-dark {
+  background: var(--bg);
+  color: var(--fg);
+}
+.surface-soft {
+  background: var(--bg-soft);
+}
+
+.section-head {
+  max-width: 64ch;
+  margin-bottom: clamp(var(--sp-8), 4vw, var(--sp-12));
+}
+.section-head--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* ── Type ───────────────────────────────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--t-caption-size);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+}
+.eyebrow::before {
+  content: '';
+  width: 12px;
+  height: 1px;
+  background: var(--accent);
+}
+.eyebrow--live::before {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+.section-head--center .eyebrow {
+  justify-content: center;
+}
+
+.h-display {
+  font-size: clamp(2.6rem, 6.4vw, 5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+.h-2 {
+  font-size: clamp(1.9rem, 3.4vw, var(--t-h2-size));
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.lede {
+  font-size: var(--t-body-lg-size);
+  color: var(--fg-mute);
+  line-height: 1.55;
+  max-width: 58ch;
+  margin: var(--sp-5) 0 0;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--t-body-size);
+  line-height: 1;
+  padding: 0.9em 1.4em;
+  border-radius: var(--r-pill);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    transform var(--motion-hover-dur) var(--motion-hover-ease),
+    box-shadow var(--motion-hover-dur) var(--motion-hover-ease),
+    border-color var(--motion-hover-dur);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--border-hair);
+}
+.btn-ghost:hover {
+  border-color: currentColor;
+}
+.btn .arrow {
+  transition: transform var(--motion-hover-dur) var(--motion-hover-ease);
+}
+.btn:hover .arrow {
+  transform: translateX(3px);
+}
+
+/* ── Cards + grids ──────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  gap: var(--sp-5);
+}
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(236px, 1fr));
+}
+
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border-hair);
+  border-radius: var(--r-4);
+  padding: var(--sp-6);
+  transition:
+    transform var(--motion-hover-dur) var(--motion-hover-ease),
+    border-color var(--motion-hover-dur),
+    box-shadow var(--motion-hover-dur);
+}
+a.card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--border-hair));
+  box-shadow: var(--shadow-3);
+}
+.card__kicker {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+.card__title {
+  font-size: var(--t-h4-size);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: var(--sp-3) 0 var(--sp-2);
+}
+a.card:hover .card__title {
+  color: var(--accent);
+}
+.card__body {
+  margin: 0;
+  color: var(--fg-mute);
+  font-size: var(--t-body-size);
+  line-height: 1.5;
+}
+.card__more {
+  display: inline-flex;
+  gap: var(--sp-1);
+  margin-top: var(--sp-4);
+  font-size: var(--t-dense-size);
+  font-weight: 600;
+  color: var(--fg);
+}
+a.card:hover .card__more {
+  color: var(--accent);
+}
+
+/* ── Atmosphere ─────────────────────────────────────────────────────────────── */
+.dotgrid {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--fg) 13%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* hairline divider */
+.rule {
+  height: 1px;
+  background: var(--border-hair);
+  border: 0;
+  margin: 0;
+}
+
+/* ── Motion (CSS-only, reduced-motion-safe; content visible without it) ──────── */
+@keyframes m-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* transform-only (no opacity) so scroll-reveal never leaves text faded/low-contrast */
+@keyframes m-slide {
+  from {
+    transform: translateY(18px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes m-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 9px color-mix(in oklab, var(--accent) 0%, transparent);
+  }
+}
+@keyframes m-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* on-load staggered entrance (above the fold) */
+  .stagger > * {
+    opacity: 0;
+    animation: m-rise 0.7s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+  }
+  .stagger > *:nth-child(1) {
+    animation-delay: 0.04s;
+  }
+  .stagger > *:nth-child(2) {
+    animation-delay: 0.12s;
+  }
+  .stagger > *:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .stagger > *:nth-child(4) {
+    animation-delay: 0.28s;
+  }
+  .stagger > *:nth-child(5) {
+    animation-delay: 0.36s;
+  }
+  .stagger > *:nth-child(6) {
+    animation-delay: 0.44s;
+  }
+
+  .live-dot {
+    animation: m-ring 1.6s ease-out infinite;
+  }
+
+  /* scroll-reveal — transform-only (content stays full-opacity → always visible & AA-safe) */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: m-slide 0.8s cubic-bezier(0.2, 0, 0.2, 1) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 22%;
+    }
+  }
+}

@@ -1,0 +1,64 @@
+# Oraclous
+
+> Oraclous is an open-source agentic AI operations platform — a "second mind" where human members and AI Agents work as one governed fabric under your organisation's own ReBAC access rules, with BYOM model choice and OHM portability.
+
+Oraclous reframes agentic AI from "orchestrate a bag of bots" to "form a second mind": the organisation's combined human and Agent capacity, governed as one fabric. An Operator describes a goal in plain language; the platform compiles it into a governed Harness, runs it across human and AI Agent Actors, and proves every step. It is data-sovereign by design (cross-organisation data flow is structurally impossible), model-agnostic via BYOM (Anthropic-native, OpenAI-compatible, Gemini-compatible), portable through the open OHM manifest, and open source. Terminology is exact and brand-owned: Harness, OHM, ReBAC (never RBAC), BYOM, Operator, Agent (never "bot"), Capability, Consciousness, Portability. The platform is pre/early — proof is the architecture, the open code, and honest docs, not customer logos or benchmarks; ISO 27001 and SOC 2 Type II are roadmap (target) certifications, not yet held.
+
+## Core
+
+- [Home](https://oraclous.com/): What Oraclous is, the "second mind" thesis, and the "three bad choices" (bespoke code, closed SaaS, framework wiring) Oraclous replaces as the fourth choice.
+- [Platform overview](https://oraclous.com/platform): The one governed fabric — Harnesses carry the work, ReBAC governs it, BYOM runs it, OHM keeps it portable. Index of all eleven capabilities.
+- [How it works](https://oraclous.com/how-it-works): The goal-to-governed-work lifecycle in five steps — Describe, Compile, Govern, Run, Learn — with every step audited.
+- [Glossary](https://oraclous.com/glossary): Canonical definitions of every Oraclous term (Harness, OHM, Operator, Capability, Consciousness, second mind) and category terms (ReBAC, MCP, BYOM, agentic AI, data sovereignty). The entity source of truth.
+
+## Platform capabilities
+
+- [Harness & OHM](https://oraclous.com/platform/harness-model): The unit of work — a goal-driven assembly of human and Agent Actors under one policy envelope; OHM is its portable serialised manifest.
+- [Actors](https://oraclous.com/platform/actors): Humans and AI Agents as symmetric Actors on one task board, each with identity, scope, and capability allocation.
+- [Compile](https://oraclous.com/platform/compile): How an Operator's plain-language goal becomes a reviewable, governed Harness — survey, clarify, plan, emit manifest, review, commit.
+- [ReBAC governance](https://oraclous.com/platform/rebac-governance): Access by relationship, not role, enforced platform-wide at the Harness level under five named, versioned policy sets; code overrides prose.
+- [BYOM](https://oraclous.com/platform/byom): Bring your own model provider in three protocol shapes (Anthropic-native, OpenAI-compatible, Gemini-compatible); switch by config without rewriting the Harness.
+- [Knowledge graph & retrieval](https://oraclous.com/platform/knowledge-graph): Queryable, provenance-tracked organisational memory; ReBAC-bounded semantic, full-text, hybrid, and graph-traversal queries.
+- [Human-in-the-loop](https://oraclous.com/platform/human-in-the-loop): Human review as a first-class runtime primitive — the runtime treats waiting on a human like waiting on a tool return.
+- [Execution & scheduling](https://oraclous.com/platform/execution-scheduling): Durable, checkpointed runs that survive restarts; schedules fire from Harness triggers; timeouts and retry caps prevent runaway loops.
+- [MCP & widgets](https://oraclous.com/platform/mcp-widgets): Oraclous as both MCP server (exposes ReBAC-scoped capabilities to clients like Claude Desktop) and MCP client (imports external tools as native OHM), plus embeddable widgets.
+- [Portability](https://oraclous.com/platform/portability): Leave without a rewrite via OHM and the open reference runtime — with the limits stated plainly (credentials, ReBAC graph, and Consciousness records do not travel).
+- [Metering](https://oraclous.com/platform/metering): Substrate-level neutral measurement of tokens, tool calls, storage, time, and traversals — counts and bytes, never prices; you set the rates.
+
+## Solutions
+
+- [For operations](https://oraclous.com/solutions/operations): Ship governed workflows without an engineering sprint per use case — automate the work, not the engineering backlog.
+- [For developers](https://oraclous.com/solutions/developers): Build on a substrate that already provides ReBAC, credentials, provenance, and metering — compose Capabilities, not plumbing.
+- [For regulated industries](https://oraclous.com/solutions/regulated): Prove control structurally — org isolation, your keys, ReBAC, provenance, self-host or air-gapped, identical guarantees.
+- [For multi-model teams](https://oraclous.com/solutions/multi-model): Change the model, keep the Harness — BYOM across three protocol shapes, providers side by side, keys under your own KMS.
+
+## Security & open source
+
+- [Security & data sovereignty](https://oraclous.com/security): The trust model a security reviewer reads before procurement — structural isolation, customer-held keys, ReBAC, provenance, policy-set budget caps. ISO/SOC stated as roadmap, not certified.
+- [Open source](https://oraclous.com/open-source): What is open (the whole platform, not a teaser), what is deliberately left out, how decisions are recorded as ADRs, and the self-host story.
+- [Honest roadmap](https://oraclous.com/honest-roadmap): What Oraclous deliberately does not do — deferred features, non-goals, and the commitments it will never break (no unbounded agent autonomy, no hidden behaviour, no cross-customer data-mining).
+
+## Developers
+
+## Company
+
+- [About](https://oraclous.com/about): What Oraclous is as a company, why it exists, the "second mind" thesis, how it builds in the open, and what it deliberately does not claim.
+
+## Key facts
+
+- Category: open-source agentic AI / multi-agent orchestration platform ("agentic operations platform").
+- Core thesis: form an organisation's "second mind" — humans and AI Agents as symmetric Actors on one governed fabric.
+- Governance: ReBAC (relationship-based access control), enforced platform-wide at the Harness level under five named, versioned policy sets; coded enforcement always overrides prose.
+- Model choice: BYOM in three protocol shapes — Anthropic-native, OpenAI-compatible, Gemini-compatible.
+- Interoperability: first-class MCP (Model Context Protocol) as both server and client.
+- Data sovereignty: every record carries an `organization_id`; cross-organisation data flow is structurally impossible; in cloud mode KMS separation means Oraclous staff cannot decrypt customer state (ADR-008).
+- Portability: every export routes through OHM (Oraclous Harness Manifest); the reference runtime is open; limits are documented (credentials, ReBAC graph, Consciousness records do not travel).
+- Deployment: self-host (free, open source) or cloud-hosted (paid, usage-based) — identical data-sovereignty guarantees.
+- Compliance: ISO 27001 and SOC 2 Type II are target (roadmap) certifications for cloud-hosted mode — NOT certified today.
+- Maturity: pre/early — no published customers, logos, or benchmarks. Proof is the architecture, open code, and honest docs.
+
+## Contact
+
+- Website: https://oraclous.com
+- GitHub: https://github.com/OraclousAI
+- Full reference for AI ingestion: https://oraclous.com/llms-full.txt

@@ -2,9 +2,10 @@ import parserTypescript from '@typescript-eslint/parser';
 import pluginTypescript from '@typescript-eslint/eslint-plugin';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginReactRefresh from 'eslint-plugin-react-refresh';
+import pluginAstro from 'eslint-plugin-astro';
 
 export default [
-  { ignores: ['**/dist/**', '**/node_modules/**'] },
+  { ignores: ['**/dist/**', '**/node_modules/**', '**/.astro/**'] },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
@@ -24,4 +25,7 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  // Astro components (apps/marketing): real linting for .astro markup + frontmatter,
+  // closing the .astro gate blind spot (build-spec §7/R9).
+  ...pluginAstro.configs.recommended,
 ];

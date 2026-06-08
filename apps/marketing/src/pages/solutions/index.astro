@@ -1,0 +1,43 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+
+const pages = await getCollection('pages');
+const items = pages
+  .filter((e) => e.data.url?.startsWith('/solutions/'))
+  .sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+const data = {
+  title: 'Solutions — Oraclous by team & use case',
+  meta_description:
+    'Oraclous for operations, developers, regulated industries, and multi-model teams — agentic AI under your own governance.',
+  url: '/solutions',
+  schema: ['BreadcrumbList'],
+};
+---
+
+<BaseLayout data={data} url="/solutions" kind="page">
+  <PageHero
+    eyebrow="Solutions"
+    title="Pick the path that matches your work."
+    lede="The same governed platform, framed for the team that's adopting it."
+  />
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2">
+        {
+          items.map((p) => (
+            <a class="card reveal" href={p.data.url}>
+              <h2 class="card__title">{p.data.title}</h2>
+              <p class="card__body">{p.data.meta_description}</p>
+              <span class="card__more">
+                See the solution <span class="arrow" aria-hidden="true">→</span>
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

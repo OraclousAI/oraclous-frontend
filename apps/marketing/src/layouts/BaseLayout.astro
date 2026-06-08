@@ -1,0 +1,52 @@
+---
+import '@oraclous/design-system/tokens.css';
+import '@fontsource/sora/400.css';
+import '@fontsource/sora/600.css';
+import '@fontsource/sora/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '../styles/global.css';
+import '../styles/marketing.css';
+import '../styles/identity.css';
+
+import BaseHead from '../components/BaseHead.astro';
+import SchemaJsonLd from '../components/SchemaJsonLd.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+
+interface Props {
+  data: Record<string, any>;
+  body?: string;
+  url: string;
+  kind?: 'home' | 'page' | 'blog';
+}
+
+const { data, body = '', url, kind = 'page' } = Astro.props;
+const ogType = kind === 'blog' ? 'article' : 'website';
+const showBreadcrumbs = url !== '/';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead
+      title={data.title}
+      description={data.meta_description}
+      url={url}
+      ogType={ogType}
+      noindex={data.noindex ?? false}
+      image={data.og_image}
+    />
+    <SchemaJsonLd url={url} title={data.title} body={body} data={data} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <SiteHeader />
+    <main id="main">
+      {showBreadcrumbs && <Breadcrumbs url={url} title={data.title} />}
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

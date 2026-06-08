@@ -1,0 +1,146 @@
+---
+/**
+ * Model swap — a fixed Harness · Agent unit with one socket; three interchangeable model
+ * cards sit below it. ONE is plugged via the live mint connector (the only mint, non-text);
+ * the others sit unplugged. Form = socket + interchangeable plugs: swap the model by
+ * config, the Harness never moves. Schematic, zero-JS, reduced-motion-safe (the plug
+ * connector draws on motion; everything is legible without it).
+ */
+const { class: cls } = Astro.props;
+---
+
+<svg
+  class:list={['model-swap', cls]}
+  viewBox="0 0 480 280"
+  role="img"
+  aria-label="A fixed Harness Agent unit whose model is swapped by configuration: one of three interchangeable model providers is plugged in via the active connector, the others sit unplugged."
+  fill="none"
+>
+  <!-- fixed harness unit + socket -->
+  <g class="unit">
+    <rect x="150" y="20" width="180" height="58" rx="10" />
+    <rect class="agent-chip" x="170" y="36" width="26" height="26" rx="5" />
+    <circle class="agent-eye" cx="179" cy="49" r="2.2" />
+    <circle class="agent-eye" cx="187" cy="49" r="2.2" />
+    <text class="lbl unit-lbl" x="270" y="46" text-anchor="middle">Harness · Agent</text>
+    <text class="lbl unit-sub" x="270" y="62" text-anchor="middle">FIXED</text>
+  </g>
+  <!-- socket (the slot the active model plugs into) -->
+  <g class="socket">
+    <rect x="228" y="78" width="24" height="14" rx="2" />
+    <line x1="234" y1="82" x2="234" y2="88" />
+    <line x1="240" y1="82" x2="240" y2="88" />
+    <line x1="246" y1="82" x2="246" y2="88" />
+  </g>
+
+  <!-- active plug connector (mint) — runs from socket down into the middle card -->
+  <path class="plug" d="M240 92 L240 196" />
+  <!-- plug head seating in the active card -->
+  <rect class="plug-head" x="232" y="190" width="16" height="10" rx="2" />
+
+  <!-- three interchangeable model cards -->
+  <g class="cards">
+    <!-- left: unplugged -->
+    <g class="card">
+      <rect x="40" y="200" width="120" height="56" rx="9" />
+      <rect class="pin" x="92" y="192" width="16" height="9" rx="2" />
+      <text class="lbl card-lbl" x="100" y="226" text-anchor="middle">Anthropic-native</text>
+      <text class="lbl card-sub" x="100" y="242" text-anchor="middle">swap by config</text>
+    </g>
+    <!-- middle: plugged (active) -->
+    <g class="card card--active">
+      <rect x="180" y="200" width="120" height="56" rx="9" />
+      <text class="lbl card-lbl" x="240" y="226" text-anchor="middle">OpenAI-compatible</text>
+      <text class="lbl card-sub" x="240" y="242" text-anchor="middle">connected</text>
+    </g>
+    <!-- right: unplugged -->
+    <g class="card">
+      <rect x="320" y="200" width="120" height="56" rx="9" />
+      <rect class="pin" x="372" y="192" width="16" height="9" rx="2" />
+      <text class="lbl card-lbl" x="380" y="226" text-anchor="middle">Gemini-compatible</text>
+      <text class="lbl card-sub" x="380" y="242" text-anchor="middle">swap by config</text>
+    </g>
+  </g>
+</svg>
+
+<style>
+  .model-swap {
+    width: 100%;
+    height: auto;
+    color: var(--fg);
+    overflow: visible;
+  }
+  .unit rect {
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: color-mix(in oklab, var(--fg) 5%, transparent);
+  }
+  .agent-chip {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: var(--bg);
+  }
+  .agent-eye {
+    fill: var(--accent);
+    stroke: none;
+  }
+  .socket rect {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: var(--bg);
+  }
+  .socket line {
+    stroke: currentColor;
+    stroke-width: 1.3;
+    opacity: 0.6;
+  }
+  .plug {
+    stroke: var(--accent);
+    stroke-width: 1.6;
+  }
+  .plug-head {
+    fill: var(--accent);
+    stroke: none;
+  }
+  .card rect {
+    stroke: currentColor;
+    stroke-width: 1.4;
+    fill: color-mix(in oklab, var(--fg) 4%, transparent);
+  }
+  .card .pin {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.55;
+  }
+  .card--active rect {
+    stroke: var(--accent);
+    fill: color-mix(in oklab, var(--accent) 8%, transparent);
+  }
+  .lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    fill: var(--fg-mute);
+  }
+  .unit-lbl {
+    fill: var(--fg);
+    font-weight: 600;
+  }
+  .card-lbl {
+    fill: var(--fg);
+  }
+  .unit-sub,
+  .card-sub {
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .plug {
+      stroke-dasharray: 320;
+      stroke-dashoffset: 320;
+      animation: m-draw 1.1s ease forwards;
+      animation-delay: 0.2s;
+    }
+  }
+</style>

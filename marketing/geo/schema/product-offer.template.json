@@ -1,0 +1,34 @@
+{
+  "_usage": "Product + Offer template for the Pricing page (/pricing). Emit on /pricing. Models ONLY what is real per pricing.md: a free self-host Offer with price 0, and a cloud Offer that is usage-based with NO fabricated price (use priceSpecification with a note / a quote URL, never an invented number). Do NOT add aggregateRating or review — there are none. The two Offers render as the two side-by-side cards on the page. When a real cloud figure is signed off by the maintainer, replace the cloud Offer's description-only pricing with a concrete priceSpecification. The Product references the Organization (brand) and the SoftwareApplication via @id.",
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "@id": "https://oraclous.com/pricing#product",
+  "name": "Oraclous",
+  "description": "Oraclous is an open-source agentic AI operations platform. Self-host it free, or run the cloud-hosted mode with identical data-sovereignty guarantees. Because Oraclous is BYOM, you pay your model provider directly — there is no markup on tokens.",
+  "brand": { "@id": "https://oraclous.com/#organization" },
+  "category": "Agentic AI orchestration platform",
+  "url": "https://oraclous.com/pricing",
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Open source — self-host",
+      "description": "Open source and free to self-host on your own infrastructure, including air-gapped environments. ReBAC governance, audit, provenance, metering, and OHM portability are included as substrate. You hold the keys; you pay your model provider directly under BYOM.",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "url": "https://github.com/OraclousAI"
+    },
+    {
+      "@type": "Offer",
+      "name": "Cloud — Oraclous-hosted",
+      "description": "Usage-based managed hosting with identical data-sovereignty guarantees to self-host: customer-held keys, KMS separation so staff cannot decrypt your state, ReBAC, provenance, and OHM portability. Pricing is sized per isolation tier and volume — contact Oraclous for a quote. No markup on model tokens (BYOM).",
+      "availability": "https://schema.org/InStock",
+      "url": "https://app.oraclous.com",
+      "priceSpecification": {
+        "@type": "PriceSpecification",
+        "priceCurrency": "USD",
+        "description": "Usage-based — quoted per isolation tier and volume. No published flat figure (TODO: replace with a concrete priceSpecification once a real pricing decision is signed off; do not fabricate a number)."
+      }
+    }
+  ]
+}

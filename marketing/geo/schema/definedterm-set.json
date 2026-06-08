@@ -1,0 +1,155 @@
+{
+  "_usage": "DefinedTermSet for the Oraclous Glossary. Emit DefinedTermSet on the glossary index (/glossary). Each DefinedTerm below also stands alone on its /glossary/{term} page as a single DefinedTerm with the same @id and inDefinedTermSet back-reference — split this file per page at build time, keeping the @id stable so AI engines resolve the term to one canonical entity. The `description` of each term is the canonical, citable, 40–60-word definition lifted verbatim from marketing/brand/glossary.md — do not paraphrase or vary casing (Harness, OHM, ReBAC never RBAC, BYOM, Agent never bot). The set includes all 17 glossary terms named in the IA plus the architectural terms defined in the source glossary. Proprietary terms each pair with an established one in body copy per internal-linking §7; the external sameAs-style citation (Wikipedia for ReBAC/MCP) lives on the term page, not in this schema.",
+  "@context": "https://schema.org",
+  "@type": "DefinedTermSet",
+  "@id": "https://oraclous.com/glossary#termset",
+  "name": "Oraclous Glossary",
+  "description": "The canonical definitions of Oraclous's brand-owned vocabulary (Harness, OHM, Operator, Capability, Consciousness, Portability, second mind, platform-as-code) and the category terms it builds on (ReBAC, MCP, BYOM, agentic AI, data sovereignty).",
+  "url": "https://oraclous.com/glossary",
+  "hasDefinedTerm": [
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/second-mind#term",
+      "name": "Second mind",
+      "url": "https://oraclous.com/glossary/second-mind",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "A second mind is the unified operational fabric Oraclous forms around an organisation, where human members and AI Agents work side by side under the organisation's own access rules. It is not a single clever agent but the organisation's combined human and Agent capacity, governed as one fabric and orchestrated by goals written in plain language."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/harness#term",
+      "name": "Harness",
+      "url": "https://oraclous.com/glossary/harness",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "A harness is a workspace artifact that describes how a goal gets done across humans and Agents. It contains a goal statement, a roster of Actors, an orchestration spec, triggers, a task-board reference, a policy envelope, and a provenance link. In Oraclous every executable thing is a harness; you describe one, you don't code it."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/ohm#term",
+      "name": "OHM (Oraclous Harness Manifest)",
+      "url": "https://oraclous.com/glossary/ohm",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "OHM is the serialised, portable form of a Harness — YAML with embedded Markdown, written to a .ohm.yaml file. It has two zones: a structured zone (machine-validated YAML fields) and a prose zone (model-interpreted Markdown). OHM is the canonical hub every portability operation routes through, so you can leave without re-implementing."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/operator#term",
+      "name": "Operator",
+      "url": "https://oraclous.com/glossary/operator",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "An Operator is the person who states an organisation's goal in natural language so the platform can compile it into a governed Harness. The Operator describes what needs doing in prose; the platform owns how the runtime enforces it. This separation lets teams ship workflows without an engineering sprint per use case."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/agent#term",
+      "name": "Agent",
+      "url": "https://oraclous.com/glossary/agent",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "An Agent is a non-human Actor with its own identity, role, capability allocation, scope, and Consciousness record. An Agent is not the language model — the LLM is a resource the Agent uses. Oraclous always says Agent, never bot or chatbot, because Agents are governed, identity-bearing participants in the work."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/actor#term",
+      "name": "Actor",
+      "url": "https://oraclous.com/glossary/actor",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "An Actor is any entity — human member or AI Agent — that can be assigned work in a Harness. Humans and Agents are symmetric Actors: each has an identity, a scope, and a capability allocation, and they share a common interface. This symmetry is the basis of the second mind."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/capability#term",
+      "name": "Capability",
+      "url": "https://oraclous.com/glossary/capability",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "A capability is anything an Actor can invoke in a workspace. There are five kinds: Tools (invokable functions), Skills (prose loaded into an Agent's context), Agents, Harnesses, and Human roles. The Capability Registry is the single source of truth for what capabilities exist, under one uniform descriptor model."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/consciousness#term",
+      "name": "Consciousness",
+      "url": "https://oraclous.com/glossary/consciousness",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "Consciousness is the per-Actor record of accumulated learning, written and consulted through Oraclous's Learn flow. It is the platform's term for an Actor's persistent memory of past work — not literal sentience. Consciousness is substrate-anchored: exporting a Harness exports its OHM definition but not its accumulated Consciousness records."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/rebac#term",
+      "name": "ReBAC (Relationship-Based Access Control)",
+      "url": "https://oraclous.com/glossary/rebac",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "ReBAC defines permissions by the relationships between entities — people, Agents, workspaces, data — rather than by static roles. Oraclous enforces ReBAC platform-wide, at the Harness level, so the fabric that runs the work also proves who could touch what. Contrast with RBAC: RBAC grants access by assigned role and suffers role explosion; ReBAC grants access by relationship to the resource."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/byom#term",
+      "name": "BYOM (Bring Your Own Model)",
+      "url": "https://oraclous.com/glossary/byom",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "BYOM means Oraclous runs the language-model provider you choose, treating the LLM as a resource an Agent uses rather than the Agent itself. Supported protocol shapes are Anthropic-native, OpenAI-compatible, and Gemini-compatible; model configuration resolves at agent, workspace, or organisation level. Switch providers by config without rewriting the Harness."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/portability#term",
+      "name": "Portability",
+      "url": "https://oraclous.com/glossary/portability",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "Portability is the property that OHM and Oraclous's open reference runtime let a customer leave without re-implementing their work. Every portability operation routes through OHM, the canonical hub. The docs state portability's limits plainly: knowledge-graph data goes via standard exports, and credentials, the ReBAC graph, and Consciousness records do not travel."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/human-in-the-loop#term",
+      "name": "Human-in-the-loop (HITL)",
+      "url": "https://oraclous.com/glossary/human-in-the-loop",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "HITL is the assignment of a step in a Harness to a human for review, approval, or action. Oraclous's Runtime treats waiting on a human like waiting on a tool return — same primitives, different latency — so human oversight is structural, not a manual side-channel. The Runtime enforces HITL gates regardless of prose."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/mcp#term",
+      "name": "MCP (Model Context Protocol)",
+      "url": "https://oraclous.com/glossary/mcp",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "MCP is an open protocol for connecting AI systems to tools and context, which Oraclous supports as both a server and a client. As an MCP server (via the Application Gateway, ReBAC-scoped), it exposes workspace capabilities to clients like Claude Desktop. As an MCP client, it imports external MCP tools into the Capability Registry as native OHM tools."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/agentic-ai#term",
+      "name": "Agentic AI",
+      "url": "https://oraclous.com/glossary/agentic-ai",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "Agentic AI is AI that acts toward goals — planning steps, invoking tools, and making decisions — rather than only generating a single response to a prompt. In Oraclous, agentic work is carried out by Agents that are governed, identity-bearing Actors using a language model as a resource, orchestrated through Harnesses under ReBAC."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/multi-agent-orchestration#term",
+      "name": "Multi-agent orchestration",
+      "url": "https://oraclous.com/glossary/multi-agent-orchestration",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "Multi-agent orchestration is coordinating several AI Agents — assigning their work, sequencing their hand-offs, and governing what each can do — so they act as one system rather than in isolation. Oraclous orchestrates Agents and humans together through one runtime, under one ReBAC policy envelope, with the Harness as the unit being orchestrated."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/data-sovereignty#term",
+      "name": "Data sovereignty",
+      "url": "https://oraclous.com/glossary/data-sovereignty",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "Data sovereignty is Oraclous's architectural guarantee that an organisation's data stays under its control, identically whether self-hosted or cloud-hosted. Every record carries an organization_id, credentials never leave the broker in plaintext, and in cloud mode KMS separation means Oraclous staff cannot decrypt customer state. Cross-organisation data flow is structurally impossible."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/platform-as-code#term",
+      "name": "Platform-as-code, actors-as-harnesses",
+      "url": "https://oraclous.com/glossary/platform-as-code",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "This is Oraclous's founding principle: the platform's machinery is code (it enforces governance and executes deterministically), while its behaviour is Harnesses (which reason and act on goals). Governance is written once by the platform; work is described in prose by Operators. The category boundary shifts from build the agent to describe the goal."
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://oraclous.com/glossary/actors-as-harnesses#term",
+      "name": "Actors-as-harnesses",
+      "url": "https://oraclous.com/glossary/actors-as-harnesses",
+      "inDefinedTermSet": "https://oraclous.com/glossary#termset",
+      "description": "Actors-as-harnesses is the half of Oraclous's founding principle that says actor behaviour is not code but Harnesses described in OHM and interpreted by the runtime. Composition is expressed by a Harness referencing other capabilities, not by a separate workflow concept, so you describe the goal rather than build the agent."
+    }
+  ]
+}
