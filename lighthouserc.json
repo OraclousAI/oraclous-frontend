@@ -9,9 +9,9 @@
         "http://localhost:4321/platform/byom",
         "http://localhost:4321/how-it-works",
         "http://localhost:4321/solutions/operations",
-        "http://localhost:4321/why-oraclous/data-sovereignty",
+        "http://localhost:4321/security",
         "http://localhost:4321/glossary",
-        "http://localhost:4321/pricing",
+        "http://localhost:4321/honest-roadmap",
         "http://localhost:4321/blog"
       ],
       "numberOfRuns": 1
