@@ -15,7 +15,7 @@
   --ge-fg-2: oklch(0.66 0.008 240);
   --ge-fg-3: oklch(0.52 0.01 240);
   --ge-accent: var(--accent);
-  --ge-accent-soft: oklch(0.79 0.18 158 / 0.18);
+  --ge-accent-soft: color-mix(in oklab, var(--accent) 18%, transparent);
   --ge-error: #ffb4a8;
   --ge-shadow: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 12px 40px oklch(0 0 0 / 0.45);
 
@@ -53,7 +53,7 @@
   margin: 0;
   max-width: 420px;
   text-align: center;
-  font-size: 14px;
+  font-size: var(--t-dense-size);
   line-height: 1.5;
   color: var(--ge-fg-1);
 }
@@ -81,7 +81,7 @@
   align-items: center;
   gap: 6px;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: var(--t-caption-size);
   font-family: var(--font-mono);
   color: var(--ge-fg-1);
   background: transparent;
@@ -96,22 +96,22 @@
 .ge-chip:focus-visible,
 .ge input:focus-visible,
 .ge button:focus-visible {
-  outline: 2px solid var(--ge-accent);
+  outline: 2px solid var(--ge-fg-0);
   outline-offset: 1px;
 }
 .ge-chip[aria-pressed='true'],
 .ge-chip.on {
   background: var(--ge-accent-soft);
   color: var(--ge-fg-0);
-  border-color: oklch(0.79 0.18 158 / 0.5);
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
 }
 .ge-chip input[type='checkbox'] {
-  accent-color: #10d88a;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 .ge-date {
   padding: 5px 8px;
-  font-size: 12px;
+  font-size: var(--t-caption-size);
   font-family: var(--font-mono);
   color: var(--ge-fg-0);
   background: var(--ge-bg-2);
@@ -156,7 +156,7 @@
 }
 .ge-panel .eyebrow {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -167,7 +167,7 @@
   border: none;
   background: transparent;
   color: var(--ge-fg-2);
-  font-size: 20px;
+  font-size: var(--t-h4-size);
   line-height: 1;
   cursor: pointer;
   padding: 0;
@@ -179,26 +179,26 @@
 }
 .ge-panel h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--t-body-size);
   font-weight: 600;
   color: var(--ge-fg-0);
   overflow-wrap: break-word;
 }
 .ge-panel .muted {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   color: var(--ge-fg-3);
 }
 .ge-panel .err {
   margin: 0;
-  font-size: 12.5px;
+  font-size: var(--t-caption-size);
   color: var(--ge-error);
 }
 
 /* Primary action on the dark surface — paper-on-depth (mint is never a CTA). */
 .ge-btn {
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   font-weight: 600;
   font-family: var(--font-sans);
   color: var(--ge-bg-0);
@@ -225,14 +225,14 @@
 }
 .ge-dl dt {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ge-fg-2);
 }
 .ge-dl dd {
   margin: 2px 0 0;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   color: var(--ge-fg-1);
   overflow-wrap: break-word;
 }
@@ -242,7 +242,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   font-family: var(--font-sans);
   color: var(--ge-fg-0);
   background: var(--ge-bg-1);
@@ -277,22 +277,22 @@
 /* Selection is the live cursor of the explorer — it lights mint. */
 .ge-list-item[aria-current='true'] {
   background: var(--ge-accent-soft);
-  border-color: oklch(0.79 0.18 158 / 0.5);
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
 }
 .ge-list-item .type {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--t-tiny-size);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ge-fg-2);
 }
 .ge-list-item .label {
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   color: var(--ge-fg-0);
   overflow-wrap: break-word;
 }
 .ge-list-empty {
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   color: var(--ge-fg-3);
   padding: 6px 2px;
 }
@@ -306,7 +306,7 @@
   gap: 14px;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--ge-fg-2);
   z-index: 3;
   pointer-events: none;
