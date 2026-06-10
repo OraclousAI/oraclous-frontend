@@ -249,22 +249,27 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
     return () => window.removeEventListener('resize', onR);
   }, []);
 
-  // Deterministic per-node z coordinate
+  // Deterministic per-node z coordinate, uniform in [-1, 1). The legacy banded z by community,
+  // which reads as a sphere only with many communities — real graphs often carry two or three
+  // node types, collapsing the cloud into thin slabs (a funnel when rotated). A uniform id-hash
+  // fills the ball evenly while staying stable across sims and expands.
   const zMap = useMemo(() => {
     const m = new Map<string, number>();
-    const COMMS = new Set(sim.nodes.map((n) => n.community || 0));
-    const nComm = Math.max(1, COMMS.size);
-    for (let i = 0; i < sim.nodes.length; i++) {
-      const n = sim.nodes[i]!;
-      const c = ((n.community || 0) % nComm) / nComm;
-      const jitter = (((Math.sin((i + 1) * 12.9898) * 43758.5453) % 1) + 1) % 1;
-      const z01 = (c * 0.7 + (n.score || 0) * 0.2 + jitter * 0.25) % 1;
-      m.set(n.id, z01 * 2 - 1);
+    for (const n of sim.nodes) {
+      let h = 2166136261;
+      for (let k = 0; k < n.id.length; k++) {
+        h ^= n.id.charCodeAt(k);
+        h = Math.imul(h, 16777619);
+      }
+      m.set(n.id, ((h >>> 0) % 2000) / 1000 - 1);
     }
     return m;
   }, [sim.nodes]);
-  const Z_SCALE = 420;
   const R_GLOBE = 240;
+  // The 3D envelope tracks the layout's actual radius (smoothed per frame in the draw loop), so
+  // the whole graph always sits inside the sphere — a fixed radius flattened outliers into a
+  // brim. Depth scales with the radius (legacy ratio 420/460) to keep the ball spherical.
+  const rMaxRef = useRef(460);
 
   // Deterministic per-node phase — so each node breathes on its own offset
   // and the graph never moves in lockstep.
@@ -446,9 +451,9 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
       const dx = wx - cx,
         dy = wy - cy;
       const rXY = Math.sqrt(dx * dx + dy * dy);
-      const R_MAX = 460;
+      const R_MAX = rMaxRef.current;
       const envelope = Math.sqrt(Math.max(0, 1 - Math.min(1, (rXY / R_MAX) ** 2)));
-      const Z = (zMap.get(id || '') ?? 0) * Z_SCALE * envelope;
+      const Z = (zMap.get(id || '') ?? 0) * R_MAX * 0.91 * envelope;
       const { yaw, pitch } = rotRef.current;
       const cyaw = Math.cos(yaw),
         syaw = Math.sin(yaw);
@@ -485,9 +490,9 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
       const dxe = wx0 - cx,
         dye = wy0 - cy;
       const rXY = Math.sqrt(dxe * dxe + dye * dye);
-      const R_MAX = 460;
+      const R_MAX = rMaxRef.current;
       const envelope = Math.sqrt(Math.max(0, 1 - Math.min(1, (rXY / R_MAX) ** 2)));
-      const Z = (zMap.get(id) ?? 0) * Z_SCALE * envelope;
+      const Z = (zMap.get(id) ?? 0) * R_MAX * 0.91 * envelope;
       const { yaw, pitch } = rotRef.current;
       const cyaw = Math.cos(yaw),
         syaw = Math.sin(yaw);
@@ -542,6 +547,19 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
     if (!ctx) return;
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     ctx.clearRect(0, 0, w, h);
+
+    // Track the layout's radius (force layouts breathe) with a smoothed follow, floor 460.
+    if (view3d && !geoEnabled) {
+      let maxR2 = 0;
+      for (const n of sim.nodes) {
+        const ddx = n.x - 800;
+        const ddy = n.y - 500;
+        const r2 = ddx * ddx + ddy * ddy;
+        if (r2 > maxR2) maxR2 = r2;
+      }
+      const target = Math.max(460, Math.sqrt(maxR2) * 1.04);
+      rMaxRef.current += (target - rMaxRef.current) * 0.08;
+    }
 
     // Earth (geo mode)
     if (geoEnabled) {
