@@ -6,10 +6,13 @@ import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
   createAuthClient,
+  createCapabilitiesClient,
   createCredentialsClient,
+  createEngineClient,
   createExplorerClient,
   createFetchTransport,
   createGraphsClient,
+  createHarnessesClient,
   createInstancesClient,
   createInvitationsClient,
   createOrgsClient,
@@ -17,9 +20,12 @@ import {
   createSearchClient,
   createToolsClient,
   type AuthClient,
+  type CapabilitiesClient,
   type CredentialsClient,
+  type EngineClient,
   type ExplorerClient,
   type GraphsClient,
+  type HarnessesClient,
   type InstancesClient,
   type InvitationsClient,
   type OrgsClient,
@@ -40,6 +46,9 @@ interface ApiContextValue {
   readonly credentials: CredentialsClient;
   readonly explorer: ExplorerClient;
   readonly recipes: RecipesClient;
+  readonly harnesses: HarnessesClient;
+  readonly engine: EngineClient;
+  readonly capabilities: CapabilitiesClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -66,6 +75,9 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       graphs: createGraphsClient(transport),
       search: createSearchClient(transport),
       tools: createToolsClient(transport),
+      harnesses: createHarnessesClient(transport),
+      engine: createEngineClient(transport),
+      capabilities: createCapabilitiesClient(transport),
       invitations: createInvitationsClient(transport),
       instances: createInstancesClient(transport),
       credentials: createCredentialsClient(transport),
