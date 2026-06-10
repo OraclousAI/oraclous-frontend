@@ -39,7 +39,7 @@
 
 .auth-eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
@@ -57,14 +57,14 @@
 
 .auth-title {
   margin: 0;
-  font-size: 26px;
+  font-size: var(--t-h3-size);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
 .auth-sub {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--t-dense-size);
   line-height: 1.55;
   color: var(--mute);
   max-width: 38ch;
@@ -95,7 +95,7 @@
   align-items: center;
   gap: var(--sp-3);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
@@ -111,7 +111,7 @@
 /* Terminal-styled accent line — the brand prompt (chevron + live cursor). */
 .terminal-strip {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: var(--t-caption-size);
   color: var(--mute);
   display: inline-flex;
   align-items: center;
@@ -150,15 +150,15 @@
   display: grid;
   place-items: center;
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
 }
 .invite-from .who {
-  font-size: 13.5px;
+  font-size: var(--t-dense-size);
   font-weight: 500;
 }
 .invite-from .email {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
 }
 
@@ -166,7 +166,7 @@
   padding: var(--sp-4) 36px;
   border-top: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
   display: flex;
   justify-content: space-between;
@@ -187,6 +187,6 @@
 }
 .auth-foot a:focus-visible,
 .auth-foot button:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
