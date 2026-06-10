@@ -7,6 +7,23 @@
  * mockups don't carry).
  */
 
+/* ── App base (the handoff reshape.css body rules) ───────────────────────── */
+/* Nothing else sets a global font: without this, headings and any element that
+   doesn't declare a family fall back to the UA serif. */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
