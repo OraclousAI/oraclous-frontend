@@ -52,6 +52,7 @@ const Workspaces = lazy(() => import('./pages/WorkspacesPage.js'));
 const Agents = lazy(() => import('./pages/AgentsPage.js'));
 const AgentDetail = lazy(() => import('./pages/AgentDetailPage.js'));
 const AgentHarnessDetail = lazy(() => import('./pages/AgentHarnessDetailPage.js'));
+const AgentBuilder = lazy(() => import('./pages/AgentBuilderPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
@@ -140,10 +141,26 @@ export function App() {
               }
             />
             <Route
+              path="agents/new"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AgentBuilder />
+                </Suspense>
+              }
+            />
+            <Route
               path="agents/harness/:capabilityId"
               element={
                 <Suspense fallback={<PageLoader />}>
                   <AgentHarnessDetail />
+                </Suspense>
+              }
+            />
+            <Route
+              path="agents/harness/:capabilityId/edit"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AgentBuilder />
                 </Suspense>
               }
             />
