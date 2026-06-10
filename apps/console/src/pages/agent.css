@@ -1,0 +1,476 @@
+/* Agent detail (Wave 1) — patterns extracted from the handoff's agent-detail.html (the tabbed
+   variant), type scale bound to tokens per the Wave-0 review convention. Regions the mockup
+   shows that have no backend (eval gates, credits, lineage, trigger config, sparklines) are
+   not extracted — the page renders real fields or honest empty states. */
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.agent-hero {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  padding: 24px 26px;
+}
+.agent-hero .ident {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.agent-hero .crumb {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.agent-hero .crumb a {
+  color: inherit;
+  text-decoration: none;
+}
+.agent-hero .crumb a:hover {
+  color: var(--ink);
+}
+.agent-hero .crumb .sep {
+  color: var(--rule);
+}
+.agent-hero h1 {
+  margin: 4px 0 0;
+  font-size: 28px;
+  font-weight: var(--t-h3-weight);
+  letter-spacing: var(--t-h2-track);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.agent-hero h1 .id-token {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono-size);
+  font-weight: 500;
+  color: var(--mute);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  letter-spacing: 0;
+}
+.agent-hero h1 .live-tag {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  font-weight: 500;
+  color: var(--accent-ink, var(--accent));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent) 10%, var(--paper));
+  border: 1px solid color-mix(in oklab, var(--accent) 32%, var(--rule));
+  white-space: nowrap;
+}
+.agent-hero h1 .live-tag .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.agent-hero p.lede {
+  font-size: var(--t-dense-size);
+  font-weight: var(--t-body-weight);
+  color: var(--mute);
+  line-height: var(--t-body-lh);
+  margin: 8px 0 0;
+  max-width: 64ch;
+}
+.agent-hero .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.agent-hero .actions .row {
+  display: flex;
+  gap: 6px;
+}
+.agent-hero .actions .ver {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  margin-top: 4px;
+}
+
+/* ── Live KPI strip — real run counts only ────────────────────────────────── */
+.live-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.live-kpis .col {
+  padding: 16px 18px;
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.live-kpis .col:last-child {
+  border-right: none;
+}
+.live-kpis .l {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.live-kpis .l .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.live-kpis .v {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.live-kpis .s {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-kpis .s.is-ok {
+  color: var(--success);
+}
+
+/* ── Section spine ────────────────────────────────────────────────────────── */
+.sec {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.sec-h {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.sec-h .t {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.sec-h h2 {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: var(--t-h4-weight);
+  letter-spacing: -0.005em;
+}
+.sec-h .sub {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
+.sec-h .right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sec-body {
+  padding: 18px 20px;
+}
+.sec-body.is-flush {
+  padding: 0;
+}
+
+/* ── System prompt (ink-on-depth mono block) ──────────────────────────────── */
+.prompt-block {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: var(--t-caption-size);
+  line-height: 1.65;
+  padding: 18px 20px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.prompt-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: var(--paper-soft);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
+.prompt-meta .spacer {
+  flex: 1;
+}
+
+/* ── Tool rows ────────────────────────────────────────────────────────────── */
+.tool-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule);
+  align-items: center;
+}
+.tool-row:last-child {
+  border-bottom: none;
+}
+.tool-row .ix {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
+.tool-row .body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tool-row .nm {
+  font-size: var(--t-dense-size);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tool-row .nm .src {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  font-weight: 400;
+  color: var(--mute);
+}
+.tool-row .dx {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tool-row .scope {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--ink);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+/* ── Config grid ──────────────────────────────────────────────────────────── */
+.cfg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+}
+.cfg-cell {
+  padding: 14px 18px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.cfg-cell:nth-child(3n) {
+  border-right: none;
+}
+.cfg-cell .k {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.cfg-cell .v {
+  font-family: var(--font-mono);
+  font-size: var(--t-caption-size);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ── Run table ────────────────────────────────────────────────────────────── */
+.run-table {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) 110px 110px 150px;
+  font-family: var(--font-mono);
+}
+.run-th,
+.run-td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--t-tiny-size);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.run-th {
+  background: var(--paper-soft);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.run-td {
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.run-td.mute {
+  color: var(--mute);
+}
+.run-td .s {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--mute);
+  flex-shrink: 0;
+}
+.run-row-live .s {
+  background: var(--accent);
+}
+.run-row-ok .s {
+  background: var(--success);
+}
+.run-row-warn .s {
+  background: var(--warning);
+}
+.run-row-fail .s {
+  background: var(--error);
+}
+.run-row-fail .run-td {
+  color: var(--error);
+}
+/* Rows are buttons (they open the run drawer) — reset, keep the grid display. */
+.run-row {
+  display: contents;
+}
+.run-row button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.run-row:hover .run-td {
+  background: var(--paper-soft);
+}
+
+/* ── Run trigger ──────────────────────────────────────────────────────────── */
+.run-trigger {
+  display: flex;
+  gap: var(--sp-2);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-soft);
+}
+.run-trigger input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Run drawer: output + step timeline ───────────────────────────────────── */
+.run-detail {
+  border-top: 1px solid var(--rule);
+}
+.run-detail .out {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: var(--t-caption-size);
+  line-height: 1.65;
+  padding: 16px 20px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.step-row {
+  display: grid;
+  grid-template-columns: 26px 64px minmax(0, 1fr) 90px;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+}
+.step-row:last-child {
+  border-bottom: none;
+}
+.step-row .ix {
+  color: var(--mute);
+}
+.step-row .kind {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mute);
+}
+.step-row .nm {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.step-row .nm .detail {
+  display: block;
+  color: var(--mute);
+  margin-top: 2px;
+  white-space: pre-wrap;
+}
+.step-row .st {
+  text-align: right;
+  color: var(--mute);
+}
+.step-row.is-error .st,
+.step-row.is-error .nm .detail {
+  color: var(--error);
+}
+
+@media (max-width: 860px) {
+  .agent-hero {
+    grid-template-columns: 1fr;
+  }
+  .agent-hero .actions {
+    align-items: flex-start;
+  }
+  .live-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cfg-grid {
+    grid-template-columns: 1fr;
+  }
+  .cfg-cell {
+    border-right: none;
+  }
+}
