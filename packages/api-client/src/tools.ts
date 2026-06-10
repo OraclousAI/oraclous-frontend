@@ -14,6 +14,8 @@ export interface CredentialRequirement {
 export interface Tool {
   readonly id: string;
   readonly kind: string;
+  /** Registry approval state — e.g. active | pending_approval. Unapproved tools can't run. */
+  readonly status: string | null;
   readonly name: string;
   readonly category: string | null;
   readonly description: string | null;
@@ -24,6 +26,7 @@ export interface Tool {
 interface CapabilityOutWire {
   readonly id: string;
   readonly kind: string;
+  readonly status?: string | null;
   readonly name: string | null;
   readonly descriptor: {
     readonly metadata?: {
@@ -57,6 +60,7 @@ function toTool(wire: CapabilityOutWire): Tool {
   return {
     id: wire.id,
     kind: wire.kind,
+    status: wire.status ?? null,
     name: wire.name ?? md?.name ?? '(unnamed)',
     category: md?.category ?? null,
     description: md?.description ?? null,

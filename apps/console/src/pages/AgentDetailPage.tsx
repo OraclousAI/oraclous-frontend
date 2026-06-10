@@ -1,4 +1,4 @@
-// Agent detail — one capability instance: readiness (validate), run it (input_data JSON), and the
+// Tool-instance detail — one capability instance: readiness (validate), run it (input_data JSON), and the
 // result. /execute returns 201 for both success and failure, so we branch on the execution status.
 import { useId, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -354,7 +354,7 @@ export default function AgentDetailPage() {
         <SkeletonList rows={2} />
       ) : isError || instance === null ? (
         <p style={styles.error} role="alert">
-          This agent could not be found.
+          This tool instance could not be found.
         </p>
       ) : (
         <>
