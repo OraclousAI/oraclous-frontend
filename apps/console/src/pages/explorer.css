@@ -1,7 +1,28 @@
-/* Graph Explorer — dark working-depth surface, per the handoff explorer.html.
-   Scoped palette: the explorer carries its own depth ramp (bg-0..3 / fg-0..4 /
-   hairlines); mint stays the only live-signal accent. The canvas renderer
-   (GraphSphere) draws its own colors — this file is the chrome around it. */
+/* Graph Explorer — dark working-depth surface. The container (.ge) and node-list panel are
+   the console's Wave-0 chrome; everything og-* is the legacy explorer's panel system, ported
+   (clone-and-refactor, §7) from legacy-reference/old-frontend src/dash/explorer/explorer.css —
+   already brand-v1 dark tokens with mint reserved for the live signal. Only the components the
+   legacy app actually rendered are here; rail/console/replay/legend/ask/chat were dormant and
+   are not ported. */
+
+/* ── Legacy explorer palette — aliased to brand tokens where exact ─────────── */
+.ge {
+  --og-bg-0: #0b1220;
+  --og-bg-1: #11192a;
+  --og-bg-2: #1e2638;
+  --og-bg-3: #28344a;
+  --og-line: rgba(255, 255, 255, 0.07);
+  --og-line-2: rgba(255, 255, 255, 0.12);
+  --og-fg-0: #f4f4f2;
+  --og-fg-1: rgba(244, 244, 242, 0.84);
+  --og-fg-2: rgba(244, 244, 242, 0.62);
+  --og-fg-3: #8e9199;
+  --og-fg-4: rgba(142, 145, 153, 0.55);
+  --og-accent: var(--accent);
+  --og-accent-soft: color-mix(in oklab, var(--accent) 16%, transparent);
+  --og-accent-ink: var(--accent-ink);
+  --og-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 40px rgba(0, 0, 0, 0.48);
+}
 
 .ge {
   --ge-bg-0: oklch(0.16 0.008 240);
@@ -28,6 +49,7 @@
   color: var(--ge-fg-0);
   background: radial-gradient(circle at 50% 50%, oklch(0.2 0.01 240) 0%, oklch(0.16 0.008 240) 80%);
 }
+
 /* Faint engineering grid over the canvas backdrop. */
 .ge::before {
   content: '';
@@ -49,6 +71,7 @@
   place-items: center;
   padding: var(--sp-6);
 }
+
 .ge-center p {
   margin: 0;
   max-width: 420px;
@@ -58,66 +81,11 @@
   color: var(--ge-fg-1);
 }
 
-/* ── Floating dock (top-left over canvas) ────────────────────────────────── */
-.ge-fdock {
-  position: absolute;
-  left: var(--sp-4);
-  top: var(--sp-4);
-  display: flex;
-  gap: var(--sp-2);
-  align-items: center;
-  flex-wrap: wrap;
-  background: oklch(0.2 0.01 240 / 0.82);
-  backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid var(--ge-line-2);
-  border-radius: var(--r-4);
-  padding: 6px;
-  box-shadow: var(--ge-shadow);
-  z-index: 4;
-  max-width: calc(100% - 28px);
-}
-.ge-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  font-size: var(--t-caption-size);
-  font-family: var(--font-mono);
-  color: var(--ge-fg-1);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--r-3);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.ge-chip:hover {
-  background: oklch(1 0 0 / 0.06);
-}
 .ge-chip:focus-visible,
 .ge input:focus-visible,
 .ge button:focus-visible {
   outline: 2px solid var(--ge-fg-0);
   outline-offset: 1px;
-}
-.ge-chip[aria-pressed='true'],
-.ge-chip.on {
-  background: var(--ge-accent-soft);
-  color: var(--ge-fg-0);
-  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
-}
-.ge-chip input[type='checkbox'] {
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-.ge-date {
-  padding: 5px 8px;
-  font-size: var(--t-caption-size);
-  font-family: var(--font-mono);
-  color: var(--ge-fg-0);
-  background: var(--ge-bg-2);
-  border: 1px solid var(--ge-line-2);
-  border-radius: var(--r-3);
-  color-scheme: dark;
 }
 
 /* ── Overlay panels (inspector / node list) ──────────────────────────────── */
@@ -137,10 +105,7 @@
   box-shadow: var(--ge-shadow);
   z-index: 5;
 }
-.ge-panel--inspector {
-  top: var(--sp-4);
-  right: var(--sp-4);
-}
+
 .ge-panel--list {
   top: 56px;
   left: var(--sp-4);
@@ -154,6 +119,7 @@
   justify-content: space-between;
   gap: var(--sp-2);
 }
+
 .ge-panel .eyebrow {
   font-family: var(--font-mono);
   font-size: var(--t-tiny-size);
@@ -162,6 +128,7 @@
   letter-spacing: 0.06em;
   color: var(--ge-fg-2);
 }
+
 .ge-panel .close {
   appearance: none;
   border: none;
@@ -174,67 +141,9 @@
   width: 24px;
   height: 24px;
 }
+
 .ge-panel .close:hover {
   color: var(--ge-fg-0);
-}
-.ge-panel h2 {
-  margin: 0;
-  font-size: var(--t-body-size);
-  font-weight: 600;
-  color: var(--ge-fg-0);
-  overflow-wrap: break-word;
-}
-.ge-panel .muted {
-  margin: 0;
-  font-size: var(--t-mono-size);
-  color: var(--ge-fg-3);
-}
-.ge-panel .err {
-  margin: 0;
-  font-size: var(--t-caption-size);
-  color: var(--ge-error);
-}
-
-/* Primary action on the dark surface — paper-on-depth (mint is never a CTA). */
-.ge-btn {
-  padding: 8px 12px;
-  font-size: var(--t-mono-size);
-  font-weight: 600;
-  font-family: var(--font-sans);
-  color: var(--ge-bg-0);
-  background: var(--ge-fg-0);
-  border: none;
-  border-radius: var(--r-3);
-  cursor: pointer;
-  width: fit-content;
-}
-.ge-btn:hover {
-  background: var(--ge-fg-1);
-}
-.ge-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* Property list */
-.ge-dl {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-.ge-dl dt {
-  font-family: var(--font-mono);
-  font-size: var(--t-tiny-size);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ge-fg-2);
-}
-.ge-dl dd {
-  margin: 2px 0 0;
-  font-size: var(--t-mono-size);
-  color: var(--ge-fg-1);
-  overflow-wrap: break-word;
 }
 
 /* Node list */
@@ -249,9 +158,11 @@
   border: 1px solid var(--ge-line-2);
   border-radius: var(--r-3);
 }
+
 .ge-search:focus {
   border-color: var(--ge-accent);
 }
+
 .ge-list {
   list-style: none;
   margin: 0;
@@ -260,6 +171,7 @@
   flex-direction: column;
   gap: var(--sp-1);
 }
+
 .ge-list-item {
   display: grid;
   gap: 1px;
@@ -271,14 +183,17 @@
   border-radius: var(--r-3);
   cursor: pointer;
 }
+
 .ge-list-item:hover {
   background: oklch(1 0 0 / 0.05);
 }
+
 /* Selection is the live cursor of the explorer — it lights mint. */
 .ge-list-item[aria-current='true'] {
   background: var(--ge-accent-soft);
   border-color: color-mix(in oklab, var(--accent) 50%, transparent);
 }
+
 .ge-list-item .type {
   font-family: var(--font-mono);
   font-size: var(--t-tiny-size);
@@ -286,34 +201,649 @@
   letter-spacing: 0.04em;
   color: var(--ge-fg-2);
 }
+
 .ge-list-item .label {
   font-size: var(--t-mono-size);
   color: var(--ge-fg-0);
   overflow-wrap: break-word;
 }
+
 .ge-list-empty {
   font-size: var(--t-mono-size);
-  color: var(--ge-fg-3);
+  color: var(--ge-fg-2);
   padding: 6px 2px;
 }
 
-/* Bottom-left live meta strip */
-.ge-meta {
-  position: absolute;
-  left: var(--sp-4);
-  bottom: var(--sp-4);
+/* ── Ported legacy panel system ──────────────────────────────────────────── */
+.ge * {
+  box-sizing: border-box;
+}
+/* JetBrains Mono for all identifiers, counts, labels, Cypher */
+.ge .og-mono {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace);
+}
+.ge .num {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.ge button {
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+.ge input,
+.ge select {
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+/* Grid layout: topbar / [canvas | inspector].
+   Chat dock floats absolutely inside og-canvas-wrap — no grid row 3. */
+.ge .og-app {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  /* grid-template-columns is owned by the page's inline style (28px collapsed / 330px open). */
+  height: 100%;
+  transition: grid-template-columns 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  background:
+    radial-gradient(
+      1200px 800px at 60% -10%,
+      color-mix(in oklab, var(--accent) 4%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(900px 600px at 100% 110%, rgba(30, 38, 56, 0.8) 0%, transparent 60%),
+    var(--og-bg-0);
+}
+.ge .og-app > .og-topbar {
+  grid-column: 1 / -1;
+}
+/* No animation while the inspector is being drag-resized. */
+.ge .og-app.resizing {
+  transition: none;
+}
+/* canvas-wrap is position:relative so the chat dock can be absolutely positioned inside it */
+.ge .og-canvas-wrap {
+  grid-row: 2 / 3;
+  grid-column: 1;
+  position: relative;
+}
+.ge .og-inspector {
+  grid-row: 2 / 3;
+  grid-column: 2;
+}
+.ge .og-inspector.collapsed {
+  border-left: 1px solid var(--og-line);
+  background: var(--og-bg-1);
   display: flex;
-  gap: 14px;
   align-items: center;
+  flex-direction: column;
+  padding-top: 12px;
+}
+.ge .og-collapse-btn {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line-2);
+  border-radius: 5px;
+  color: var(--og-fg-2);
+  font-size: var(--t-mono-size);
+  line-height: 1;
+}
+.ge .og-collapse-btn:hover {
+  background: var(--og-bg-3);
+  color: var(--og-fg-0);
+}
+.ge .og-collapse-btn.inline {
+  margin-left: auto;
+}
+.ge .og-collapse-btn.inline.floating {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+}
+.ge .og-inspector {
+  position: relative;
+}
+/* TopBar — matches prod-graph-topbar in product.css */
+.ge .og-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  background: rgba(11, 18, 32, 0.88);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-bottom: 1px solid #1e2638;
+  z-index: 5;
+}
+.ge .og-search {
+  position: relative;
+  flex: 0 1 360px;
+  height: 32px;
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line-2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+.ge .og-search:focus-within {
+  border-color: var(--og-accent);
+  box-shadow: 0 0 0 3px var(--og-accent-soft);
+}
+.ge .og-search-icon {
+  color: var(--og-fg-3);
+  margin-right: 8px;
+  font-size: var(--t-dense-size);
+}
+.ge .og-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  font-size: var(--t-caption-size);
+  color: var(--og-fg-0);
+}
+.ge .og-search input::placeholder {
+  color: var(--og-fg-3);
+}
+.ge .og-kbd {
   font-family: var(--font-mono);
   font-size: var(--t-tiny-size);
-  color: var(--ge-fg-2);
-  z-index: 3;
-  pointer-events: none;
+  color: var(--og-fg-3);
+  border: 1px solid var(--og-line-2);
+  border-radius: 4px;
+  padding: 1px 5px;
 }
-.ge-meta .live {
-  color: var(--ge-accent);
+.ge .og-suggest {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  background: var(--og-bg-1);
+  border: 1px solid var(--og-line-2);
+  border-radius: 10px;
+  padding: 4px;
+  z-index: 50;
+  box-shadow: var(--og-shadow);
+  max-height: 320px;
+  overflow-y: auto;
+}
+.ge .og-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  font-size: var(--t-caption-size);
+}
+.ge .og-suggest-row:hover {
+  background: var(--og-bg-2);
+}
+.ge .og-suggest-name {
+  flex: 1;
+}
+.ge .og-suggest-meta {
+  color: var(--og-fg-3);
+  font-size: var(--t-tiny-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ge .og-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ge .og-chips::-webkit-scrollbar {
+  display: none;
+}
+.ge .og-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line);
+  border-radius: 999px;
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-1);
+  white-space: nowrap;
+  transition: background 80ms;
+}
+.ge .og-chip:hover {
+  background: var(--og-bg-3);
+}
+.ge .og-chip.off {
+  opacity: 0.7;
+}
+.ge .og-chip.on {
+  border-color: var(--og-line-2);
+}
+.ge .og-type-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ge .og-type-dot.lg {
+  width: 14px;
+  height: 14px;
+}
+.ge .og-type-dot.dim {
+  background: rgba(142, 145, 153, 0.35);
+}
+.ge .og-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: var(--og-fg-2);
+  font-size: var(--t-tiny-size);
+}
+.ge .og-meta b {
+  color: var(--og-fg-0);
+}
+.ge .og-meta span {
+  color: var(--og-fg-3);
+}
+.ge .og-dot {
+  color: var(--og-fg-4);
+}
+.ge .og-seg {
+  display: inline-flex;
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line);
+  border-radius: 7px;
+  padding: 2px;
+}
+.ge .og-seg button {
+  background: transparent;
+  border: 0;
+  padding: 4px 10px;
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-2);
+  border-radius: 5px;
+  text-transform: capitalize;
+}
+.ge .og-seg button.on {
+  background: var(--og-bg-3);
+  color: var(--og-fg-0);
+}
+/* Inspector */
+.ge .og-inspector {
+  background: var(--og-bg-1);
+  border-left: 1px solid var(--og-line);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.ge .og-inspector.empty {
+  align-items: center;
+  justify-content: center;
+}
+.ge .og-insp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 18px 10px;
+  border-bottom: 1px solid var(--og-line);
+}
+.ge .og-insp-name {
+  font-size: var(--t-dense-size);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.ge .og-insp-id {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-3);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+.ge .og-insp-headtext {
+  min-width: 0;
+  flex: 1;
+}
+.ge .og-insp-kind {
+  flex-shrink: 0;
+}
+.ge .og-insp-id .og-mono {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ge .og-insp-actions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--og-line);
+}
+.ge .og-insp-section {
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 14px 18px 6px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ge .og-count {
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line);
+  padding: 0 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+}
+.ge .og-kvs {
+  display: flex;
+  flex-direction: column;
+  padding: 0 18px 10px;
+}
+.ge .og-kvs > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--og-line);
+  font-size: var(--t-tiny-size);
+}
+.ge .og-kvs > div:last-child {
+  border-bottom: 0;
+}
+.ge .og-kvs span {
+  color: var(--og-fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  flex-shrink: 0;
+}
+.ge .og-kvs b {
+  color: var(--og-fg-0);
+  font-weight: 500;
+  min-width: 0;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ge .og-rels {
+  padding: 0 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ge .og-rel {
+  display: grid;
+  grid-template-columns: 14px 110px 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: var(--t-tiny-size);
+  border-radius: 6px;
+}
+.ge .og-rel:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.ge .og-rel-arrow {
+  color: var(--og-fg-3);
+}
+.ge .og-rel-rel {
+  color: var(--og-fg-3);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.04em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ge .og-rel-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ge .og-rel-other {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.ge .og-rel-other > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Canvas wrap & overlays — matches prod-graph-canvas in product.css */
+.ge .og-canvas-wrap {
+  position: relative;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklab, var(--accent) 4%, var(--og-bg-0)) 0%,
+    #0b1220 60%
+  );
+  overflow: hidden;
+}
+.ge .og-canvas-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+/* Floating dock */
+.ge .og-fdock {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  display: flex;
+  gap: 8px;
+  background: oklch(0.2 0.01 240 / 0.78);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--og-line-2);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: var(--og-shadow);
+  z-index: 4;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: calc(100% - 200px);
+}
+.ge .og-fgroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-right: 1px solid var(--og-line);
+}
+.ge .og-fgroup:last-child {
+  border-right: 0;
+}
+.ge .og-fdock-lbl {
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-3);
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ge .og-fdock-hint {
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-3);
+  margin-left: 4px;
+  opacity: 0.7;
+  font-style: italic;
+}
+.ge .og-iconbtn {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  color: var(--og-fg-1);
+  display: grid;
+  place-items: center;
+  font-size: var(--t-mono-size);
+}
+.ge .og-iconbtn:hover {
+  background: oklch(1 0 0 / 0.06);
+}
+.ge .og-iconbtn.on {
+  background: var(--og-accent-soft);
+  color: var(--og-accent);
+  font-weight: 600;
+  font-size: var(--t-tiny-size);
+}
+.ge .og-zoom {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-2);
+  width: 42px;
+  text-align: center;
+}
+.ge .og-dock-title .og-mono {
+  color: var(--og-fg-2);
+  font-size: var(--t-tiny-size);
+}
+.ge .og-table td .og-type-dot {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+/* Context menu */
+.ge .og-ctx {
+  position: fixed;
+  z-index: 100;
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line-2);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 200px;
+  box-shadow: var(--og-shadow);
+  font-size: var(--t-caption-size);
+}
+.ge .og-ctx-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 9px;
+  border-radius: 5px;
+}
+.ge .og-ctx-row:hover {
+  background: oklch(0.3 0.015 240);
+}
+.ge .og-ctx-row .og-kbd {
+  color: var(--og-fg-3);
+}
+.ge .og-ctx-div {
+  height: 1px;
+  background: var(--og-line);
+  margin: 4px 2px;
+}
+
+/* ── Console additions to the ported system ──────────────────────────────── */
+/* Buttons act, so they look it (the legacy reset used cursor: default). */
+.ge button {
+  cursor: pointer;
+}
+.ge button:focus-visible,
+.ge input:focus-visible,
+.ge select:focus-visible {
+  outline: 2px solid var(--ge-fg-0);
+  outline-offset: 1px;
+}
+/* Dropped in extraction: their legacy selectors were shared with skipped panels. */
+.ge .og-btn {
+  height: 28px;
+  padding: 0 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: var(--og-bg-3);
+  border: 1px solid var(--og-line-2);
+  border-radius: 5px;
+  font-size: var(--t-caption-size);
+  color: var(--og-fg-0);
+}
+.ge .og-btn:hover {
+  background: var(--og-bg-2);
+}
+.ge .og-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ge .og-fdock select {
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line);
+  color: var(--og-fg-0);
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: var(--t-tiny-size);
+}
+
+/* The As-of chip hosts a checkbox; the date input matches the dock controls. */
+.ge .og-chip input[type='checkbox'] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.ge .og-date {
+  padding: 4px 8px;
+  font-size: var(--t-caption-size);
+  font-family: var(--font-mono);
+  color: var(--og-fg-0);
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line-2);
+  border-radius: 5px;
+  color-scheme: dark;
+}
+/* Suggestion + relationship rows became real buttons — keep the row look. */
+.ge .og-suggest-row,
+.ge .og-rel {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+}
+.ge .og-insp-error {
+  margin: 0 14px;
+  font-size: var(--t-caption-size);
+  color: var(--ge-error);
+}
+.ge .og-rel-empty {
+  padding: 10px 14px;
+  font-size: var(--t-caption-size);
+  color: var(--og-fg-3);
+}
+.ge .og-collapse-glyph {
+  color: var(--og-fg-4);
+  font-size: var(--t-dense-size);
+  padding-top: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ge .og-app {
+    transition: none;
+  }
 }

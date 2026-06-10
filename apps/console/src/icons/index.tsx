@@ -146,6 +146,25 @@ export const IconList = (p: IconProps) => (
     <path d="M3 18h.01" />
   </Icon>
 );
+export const IconGlobe = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3a14.5 14.5 0 0 1 0 18 14.5 14.5 0 0 1 0-18Z" />
+  </Icon>
+);
+export const IconRotateCw = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+    <path d="M21 3v6h-6" />
+  </Icon>
+);
+export const IconRotateCcw = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 12a9 9 0 1 0 2.64-6.36" />
+    <path d="M3 3v6h6" />
+  </Icon>
+);
 export const IconDatabase = (p: IconProps) => (
   <Icon {...p}>
     <ellipse cx="12" cy="5.5" rx="8" ry="3" />
