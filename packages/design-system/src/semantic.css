@@ -1,0 +1,146 @@
+/*
+ * Oraclous Design System v1 — semantic type + motion classes
+ * Mirrored from the design handoff `01-design-tokens/colors_and_type.css`
+ * (§5 semantic typography, §6 motion). Consumes the custom properties
+ * declared in tokens.css — import that file first.
+ *
+ * Use these classes instead of bare px values in app code.
+ */
+
+/* ── Semantic typography ──────────────────────────────────────────────── */
+.t-display-xl,
+.t-display,
+.t-h1,
+.t-h2,
+.t-h3,
+.t-h4,
+.t-body-lg,
+.t-body,
+.t-dense,
+.t-caption {
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'ss02', 'cv11'; /* Sora alternates */
+}
+.t-mono {
+  font-family: var(--font-mono);
+}
+
+.t-display-xl {
+  font-size: var(--t-display-xl-size);
+  font-weight: var(--t-display-xl-weight);
+  line-height: var(--t-display-xl-lh);
+  letter-spacing: var(--t-display-xl-track);
+}
+.t-display {
+  font-size: var(--t-display-size);
+  font-weight: var(--t-display-weight);
+  line-height: var(--t-display-lh);
+  letter-spacing: var(--t-display-track);
+}
+.t-h1 {
+  font-size: var(--t-h1-size);
+  font-weight: var(--t-h1-weight);
+  line-height: var(--t-h1-lh);
+  letter-spacing: var(--t-h1-track);
+}
+.t-h2 {
+  font-size: var(--t-h2-size);
+  font-weight: var(--t-h2-weight);
+  line-height: var(--t-h2-lh);
+  letter-spacing: var(--t-h2-track);
+}
+.t-h3 {
+  font-size: var(--t-h3-size);
+  font-weight: var(--t-h3-weight);
+  line-height: var(--t-h3-lh);
+  letter-spacing: var(--t-h3-track);
+}
+.t-h4 {
+  font-size: var(--t-h4-size);
+  font-weight: var(--t-h4-weight);
+  line-height: var(--t-h4-lh);
+  letter-spacing: var(--t-h4-track);
+}
+.t-body-lg {
+  font-size: var(--t-body-lg-size);
+  font-weight: var(--t-body-lg-weight);
+  line-height: var(--t-body-lg-lh);
+  letter-spacing: var(--t-body-lg-track);
+}
+.t-body {
+  font-size: var(--t-body-size);
+  font-weight: var(--t-body-weight);
+  line-height: var(--t-body-lh);
+  letter-spacing: var(--t-body-track);
+}
+.t-dense {
+  font-size: var(--t-dense-size);
+  font-weight: var(--t-dense-weight);
+  line-height: var(--t-dense-lh);
+  letter-spacing: var(--t-dense-track);
+}
+.t-caption {
+  font-size: var(--t-caption-size);
+  font-weight: var(--t-caption-weight);
+  line-height: var(--t-caption-lh);
+  letter-spacing: var(--t-caption-track);
+}
+.t-mono {
+  font-size: var(--t-mono-size);
+  font-weight: var(--t-mono-weight);
+  line-height: var(--t-mono-lh);
+  letter-spacing: var(--t-mono-track);
+}
+
+/* Eyebrow / kicker — ALL-CAPS technical label */
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  font-weight: var(--t-tiny-weight);
+  line-height: var(--t-tiny-lh);
+  letter-spacing: var(--t-tiny-track);
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+/* ── Motion — brand signature timings ─────────────────────────────────── */
+/* Cursor blink is discrete (steps), NOT a fade — non-negotiable. */
+@keyframes oraclous-blink {
+  0%,
+  49.99% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes oraclous-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+.is-blink {
+  animation: oraclous-blink var(--motion-blink-dur) var(--motion-blink-ease) infinite;
+}
+.is-pulse {
+  animation: oraclous-pulse var(--motion-pulse-dur) var(--motion-pulse-ease) infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-blink,
+  .is-pulse {
+    animation: none;
+  }
+  .is-pulse {
+    opacity: 0.85;
+  }
+}
