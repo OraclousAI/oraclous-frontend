@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useTools } from '../lib/tools.js';
 import { useCreateInstance, useInstances } from '../lib/agents.js';
-import { isJobActive, useHarnessAgents, useJobs } from '../lib/runs.js';
+import { isRunActive, isRunEscalated, useHarnessAgents, useJobs } from '../lib/runs.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { IconBot } from '../icons/index.js';
 import './catalog.css';
@@ -107,7 +107,8 @@ export default function AgentsPage() {
               {harnessAgents.map((a) => {
                 const name = a.manifest?.metadata.name ?? a.name ?? 'Agent';
                 const agentJobs = jobs.filter((j) => j.manifestRef === a.id);
-                const live = agentJobs.some(isJobActive);
+                const live = agentJobs.some((j) => isRunActive(j) && !isRunEscalated(j));
+                const waiting = agentJobs.some(isRunEscalated);
                 return (
                   <li key={a.id}>
                     <Link to={`/app/agents/harness/${a.id}`} className="cat-tile">
@@ -116,8 +117,11 @@ export default function AgentsPage() {
                           {name}
                           {live && <span className="live-dot is-pulse" aria-hidden="true" />}
                         </span>
-                        <span className="status-pill" data-state={live ? 'active' : 'paused'}>
-                          {live ? 'running' : 'idle'}
+                        <span
+                          className="status-pill"
+                          data-state={live ? 'active' : waiting ? 'warning' : 'paused'}
+                        >
+                          {live ? 'running' : waiting ? 'needs attention' : 'idle'}
                         </span>
                       </div>
                       {a.manifest?.metadata.description != null &&
@@ -126,7 +130,7 @@ export default function AgentsPage() {
                         )}
                       <div className="meta">
                         <span>{(a.manifest?.capabilities ?? []).length} tools</span>
-                        <span>{agentJobs.length} runs</span>
+                        <span>{agentJobs.length} recent runs</span>
                       </div>
                     </Link>
                   </li>

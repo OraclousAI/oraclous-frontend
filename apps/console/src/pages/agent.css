@@ -39,9 +39,9 @@
 }
 .agent-hero h1 {
   margin: 4px 0 0;
-  font-size: 28px;
+  font-size: var(--t-h3-size);
   font-weight: var(--t-h3-weight);
-  letter-spacing: var(--t-h2-track);
+  letter-spacing: var(--t-h3-track);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -105,6 +105,18 @@
   margin-top: 4px;
 }
 
+.agent-hero h1 .wait-tag {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  font-weight: 500;
+  color: var(--ink);
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--warning) 14%, var(--paper));
+  border: 1px solid color-mix(in oklab, var(--warning) 40%, var(--rule));
+  white-space: nowrap;
+}
+
 /* ── Live KPI strip — real run counts only ────────────────────────────────── */
 .live-kpis {
   display: grid;
@@ -143,9 +155,9 @@
 }
 .live-kpis .v {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: var(--t-h3-size);
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: var(--t-h3-track);
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -156,9 +168,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.live-kpis .s.is-ok {
-  color: var(--success);
 }
 
 /* ── Section spine ────────────────────────────────────────────────────────── */
@@ -184,9 +193,9 @@
 }
 .sec-h h2 {
   margin: 0;
-  font-size: 14.5px;
+  font-size: var(--t-dense-size);
   font-weight: var(--t-h4-weight);
-  letter-spacing: -0.005em;
+  letter-spacing: var(--t-h4-track);
 }
 .sec-h .sub {
   font-family: var(--font-mono);
@@ -335,7 +344,7 @@
 }
 .run-th {
   background: var(--paper-soft);
-  font-size: 10px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
@@ -368,9 +377,6 @@
 .run-row-fail .s {
   background: var(--error);
 }
-.run-row-fail .run-td {
-  color: var(--error);
-}
 /* Rows are buttons (they open the run drawer) — reset, keep the grid display. */
 .run-row {
   display: contents;
@@ -382,6 +388,12 @@
   display: flex;
   align-items: center;
   min-width: 0;
+}
+/* all:unset kills the UA focus outline — restore it (the row button is the only path to the
+   results drawer). */
+.run-row button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
 }
 .run-row:hover .run-td {
   background: var(--paper-soft);
@@ -411,6 +423,26 @@ label.field > span.sr-only {
   cursor: pointer;
 }
 
+.run-td .run-cancel {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.run-td .run-cancel:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.run-td .run-cancel:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+
 /* ── Run trigger ──────────────────────────────────────────────────────────── */
 .run-trigger {
   display: flex;
@@ -422,6 +454,19 @@ label.field > span.sr-only {
 .run-trigger input {
   flex: 1;
   min-width: 0;
+  font-family: var(--font-sans);
+  font-size: var(--t-dense-size);
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+.run-trigger input:focus-visible {
+  border-color: var(--ink);
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
 }
 
 /* ── Run drawer: output + step timeline ───────────────────────────────────── */

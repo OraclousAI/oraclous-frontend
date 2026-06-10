@@ -1,3 +1,5 @@
+// Tool-INSTANCE hooks — the capability registry's single-tool run path (AgentsPage calls
+// these "tool instances"). The OHM harness AGENTS and engine-run hooks live in lib/runs.ts.
 // Agent (capability instance) hooks: list/create/read instances, read readiness, run executions,
 // and the credential configure flow (create a credential + map it so the instance becomes READY).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

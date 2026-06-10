@@ -66,9 +66,10 @@ export function createCapabilitiesClient(transport: ApiTransport): CapabilitiesC
     async listHarnesses(): Promise<HarnessCapability[]> {
       const { data } = await transport.execute<CapabilityListWire>({
         method: 'GET',
-        path: '/api/v1/capabilities',
+        path: '/api/v1/capabilities?kind=harness',
       });
       const rows = Array.isArray(data?.capabilities) ? data.capabilities : [];
+      // The kind filter is server-side; keep the client-side check as a defensive belt.
       return rows.filter((c) => c.kind === 'harness').map(toCapability);
     },
     async get(capabilityId: string): Promise<HarnessCapability> {

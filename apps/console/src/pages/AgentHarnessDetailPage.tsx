@@ -4,11 +4,21 @@
 // its output and the per-step provenance trace from the linked harness execution. Every number
 // on this page is computed from real jobs — nothing is fabricated.
 import { useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { Job, OhmManifest } from '@oraclous/api-client';
 import { isJobTerminal } from '@oraclous/api-client';
 import { Page } from '../components/shell/DashLayout.js';
-import { isJobActive, useExecution, useHarnessAgent, useJobs, useSubmitJob } from '../lib/runs.js';
+import {
+  isRunActive,
+  isRunEscalated,
+  useCancelJob,
+  useDeleteHarnessAgent,
+  useExecution,
+  useHarnessAgent,
+  useJob,
+  useJobs,
+  useSubmitJob,
+} from '../lib/runs.js';
 import './agent.css';
 
 const TABS = ['runs', 'prompt', 'tools', 'config'] as const;
@@ -79,8 +89,11 @@ function AgentView({
     () => jobs.filter((j) => j.manifestRef === capabilityId),
     [jobs, capabilityId]
   );
-  const running = agentJobs.filter(isJobActive);
+  // ESCALATED is parked for a human — presented as "waiting", never as running.
+  const running = agentJobs.filter((j) => isRunActive(j) && !isRunEscalated(j));
+  const escalated = agentJobs.filter(isRunEscalated);
   const succeeded = agentJobs.filter((j) => j.state === 'SUCCEEDED');
+  const failedOther = agentJobs.length - succeeded.length - running.length - escalated.length;
   const lastRun = agentJobs[0] ?? null;
 
   const displayName = manifest?.metadata.name ?? name ?? 'Agent';
@@ -107,6 +120,9 @@ function AgentView({
                 {running.length} running
               </span>
             )}
+            {escalated.length > 0 && (
+              <span className="wait-tag">{escalated.length} waiting on human</span>
+            )}
           </h1>
           {manifest?.metadata.description != null && manifest.metadata.description !== '' && (
             <p className="lede">{manifest.metadata.description}</p>
@@ -122,6 +138,7 @@ function AgentView({
             >
               Edit manifest
             </Link>
+            <DeleteAgentButton capabilityId={capabilityId} name={displayName} />
           </div>
           {manifest !== null && <span className="ver">ohm {manifest.ohm_version}</span>}
         </div>
@@ -136,9 +153,7 @@ function AgentView({
         <div className="col">
           <span className="l">Succeeded</span>
           <span className="v">{succeeded.length}</span>
-          <span className="s is-ok">
-            {agentJobs.length - succeeded.length - running.length} failed/other
-          </span>
+          <span className="s">{failedOther} failed/other</span>
         </div>
         <div className="col">
           <span className="l">
@@ -146,7 +161,13 @@ function AgentView({
             Running now
           </span>
           <span className="v">{running.length}</span>
-          <span className="s">{running.length > 0 ? 'polling · 2s' : 'idle'}</span>
+          <span className="s">
+            {escalated.length > 0
+              ? `${escalated.length} waiting on human`
+              : running.length > 0
+                ? 'polling · 2s'
+                : 'idle'}
+          </span>
         </div>
         <div className="col">
           <span className="l">Last run</span>
@@ -157,12 +178,13 @@ function AgentView({
         </div>
       </div>
 
-      <nav className="tabs" aria-label="Agent sections">
+      <div className="tabs" role="group" aria-label="Agent sections">
         {TABS.map((t) => (
           <button
             type="button"
             key={t}
             data-active={tab === t ? '' : undefined}
+            aria-pressed={tab === t}
             onClick={() => setParams(t === 'runs' ? {} : { tab: t }, { replace: true })}
           >
             {t === 'runs' ? 'Runs' : t === 'prompt' ? 'Prompt' : t === 'tools' ? 'Tools' : 'Config'}
@@ -171,7 +193,7 @@ function AgentView({
             )}
           </button>
         ))}
-      </nav>
+      </div>
 
       {tab === 'runs' && <RunsTab capabilityId={capabilityId} jobs={agentJobs} />}
       {tab === 'prompt' && <PromptTab manifest={manifest} />}
@@ -187,7 +209,11 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
   const [input, setInput] = useState('');
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const openJob = jobs.find((j) => j.id === openJobId) ?? null;
+  const listed = jobs.find((j) => j.id === openJobId) ?? null;
+  // Fallback fetch: right after submit (before the list refetch lands) and when other jobs
+  // push this one past the service's 50-row cap, the drawer must not vanish.
+  const { job: fetched } = useJob(listed === null ? openJobId : null);
+  const openJob = listed ?? fetched;
 
   async function onRun() {
     const text = input.trim();
@@ -210,7 +236,8 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') void onRun();
+            // isComposing: Enter that commits an IME composition must not submit a real run.
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) void onRun();
           }}
           placeholder="Input for the agent — what should this run do?"
           aria-label="Run input"
@@ -267,6 +294,7 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
                   type="button"
                   onClick={() => setOpenJobId(openJobId === j.id ? null : j.id)}
                   aria-expanded={openJobId === j.id}
+                  aria-controls="run-detail"
                   title={j.inputText}
                 >
                   {j.inputText}
@@ -274,6 +302,7 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
               </span>
               <span className="run-td" role="cell">
                 {j.state}
+                {isRunActive(j) && !isRunEscalated(j) && <CancelRunButton jobId={j.id} />}
               </span>
               <span className="run-td mute" role="cell">
                 {isJobTerminal(j.state) ? '—' : `${j.progress}%`}
@@ -294,11 +323,11 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
 // Output + per-step provenance for one run. The engine job carries the outcome; the linked
 // harness execution carries the step trace (llm / tool / gate, in loop order).
 function RunDetail({ job }: { job: Job }) {
-  const { execution, isLoading } = useExecution(job.harnessExecutionId);
+  const { execution, isLoading } = useExecution(job.harnessExecutionId, isRunActive(job));
   const failure = jobFailureText(job);
 
   return (
-    <div className="run-detail">
+    <div className="run-detail" id="run-detail">
       <div className="sec-h">
         <div className="t">
           <h2>Run {job.id.slice(0, 8)}</h2>
@@ -351,6 +380,59 @@ function RunDetail({ job }: { job: Job }) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function CancelRunButton({ jobId }: { jobId: string }) {
+  const cancel = useCancelJob();
+  return (
+    <button
+      type="button"
+      className="run-cancel"
+      onClick={(e) => {
+        e.stopPropagation();
+        cancel.mutate(jobId);
+      }}
+      disabled={cancel.isPending}
+      aria-label="Cancel this run"
+    >
+      {cancel.isPending ? 'cancelling…' : 'cancel'}
+    </button>
+  );
+}
+
+function DeleteAgentButton({ capabilityId, name }: { capabilityId: string; name: string }) {
+  const del = useDeleteHarnessAgent();
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        className="btn"
+        data-variant="ghost"
+        data-size="sm"
+        onClick={() => setConfirming(true)}
+      >
+        Delete
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className="btn"
+      data-variant="danger"
+      data-size="sm"
+      onClick={() =>
+        del.mutate(capabilityId, {
+          onSuccess: () => navigate('/app/agents'),
+        })
+      }
+      disabled={del.isPending}
+    >
+      {del.isPending ? 'Deleting…' : `Really delete ${name}?`}
+    </button>
   );
 }
 

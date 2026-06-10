@@ -1,10 +1,18 @@
 // Agent builder (Wave 1) — form-driven OHM v1.0 authoring, create and edit. Every field maps
-// 1:1 onto the manifest (the cross-repo contract in @oraclous/api-client's ohm.ts); nothing the
-// runtime doesn't validate is offered. The entrypoint must name a bound tool (the only loop
-// shape proven against the live runtime), so the form requires at least one tool.
+// 1:1 onto the manifest (the cross-repo contract in @oraclous/api-client's ohm.ts).
+//
+// Two invariants the review hardened:
+// - Edits MERGE over the saved manifest — fields the form doesn't model (governance, actors,
+//   capability credential_mappings, extra prompts/models, model config, labels, signatures,
+//   observability tags, unmodeled budget keys) pass through verbatim. Retained tools keep their
+//   original ref + config; a bound capability whose tool left the catalogue is preserved and
+//   shown read-only.
+// - Tool selection is keyed by registry id, and every newly added capability pins it via
+//   config.capability_id (the registry's fail-closed pin) — name-slug collisions can't bind a
+//   different row than the one the user clicked.
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import type { OhmCapability, OhmManifest } from '@oraclous/api-client';
+import type { OhmCapability, OhmManifest, OhmMetadata, OhmPrompt } from '@oraclous/api-client';
 import { Page } from '../components/shell/DashLayout.js';
 import { useMe } from '../lib/session.js';
 import { useTools } from '../lib/tools.js';
@@ -15,8 +23,8 @@ import './agent.css';
 const DEFAULT_MODEL = 'openrouter/meta-llama/llama-3.1-8b-instruct';
 const PROTOCOL = 'openai-compatible' as const;
 
-// "PostgreSQL Reader" -> ref "core/postgresql-reader@1.0.0", binding "postgresql_reader".
-// Refs resolve by slug-matching the tool name in the registry (all-or-nothing at load time).
+// "PostgreSQL Reader" -> slug "postgresql-reader", binding "postgresql_reader". Refs resolve by
+// slug-matching the tool name; the capability_id pin makes the match unambiguous.
 function toolSlug(name: string): string {
   return name
     .toLowerCase()
@@ -24,12 +32,34 @@ function toolSlug(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// crypto.randomUUID needs a secure context, and the console is also reached over plain
+// host-IP HTTP in the current deployment — fall back to a getRandomValues v4.
+function makeManifestId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6]! & 0x0f) | 0x40;
+  b[8] = (b[8]! & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+function capabilityPinId(c: OhmCapability): string | null {
+  const pin = c.config?.['capability_id'];
+  return typeof pin === 'string' ? pin : null;
+}
+
+function capabilityRefSlug(c: OhmCapability): string {
+  const match = /^(?:core|org:[^/]+)\/([^@]+)@/.exec(c.ref);
+  return match?.[1] ?? c.binding.replace(/_/g, '-');
+}
+
 interface FormState {
   name: string;
   description: string;
   prompt: string;
   model: string;
-  toolSlugs: readonly string[];
+  // The manifest's capability entries, verbatim — retained entries keep ref/config untouched.
+  caps: readonly OhmCapability[];
   entrypoint: string;
   maxToolCalls: string;
   maxWallTime: string;
@@ -41,7 +71,7 @@ function emptyForm(): FormState {
     description: '',
     prompt: '',
     model: DEFAULT_MODEL,
-    toolSlugs: [],
+    caps: [],
     entrypoint: '',
     maxToolCalls: '',
     maxWallTime: '',
@@ -49,32 +79,44 @@ function emptyForm(): FormState {
 }
 
 function formFromManifest(m: OhmManifest): FormState {
-  const slugs = (m.capabilities ?? []).map((c) => {
-    const match = /^(?:core|org:[^/]+)\/([^@]+)@/.exec(c.ref);
-    return match?.[1] ?? c.binding.replace(/_/g, '-');
-  });
   return {
     name: m.metadata.name,
     description: m.metadata.description ?? '',
     prompt: m.prompts?.find((p) => p.role === 'primary')?.body ?? m.prompts?.[0]?.body ?? '',
     model: m.models?.[0]?.binding ?? DEFAULT_MODEL,
-    toolSlugs: slugs,
+    caps: m.capabilities ?? [],
     entrypoint: m.runtime.entrypoint,
     maxToolCalls: m.runtime.budget?.max_tool_calls?.toString() ?? '',
     maxWallTime: m.runtime.budget?.max_wall_time_seconds?.toString() ?? '',
   };
 }
 
+// Replace the primary prompt's body, preserving any other prompts verbatim.
+function mergePrompts(existing: readonly OhmPrompt[] | undefined, body: string): OhmPrompt[] {
+  const prompts = [...(existing ?? [])];
+  const i = prompts.findIndex((p) => p.role === 'primary');
+  if (i >= 0) prompts[i] = { ...prompts[i]!, source: prompts[i]!.source ?? 'inline', body };
+  else prompts.unshift({ role: 'primary', source: 'inline', body });
+  return prompts;
+}
+
 export default function AgentBuilderPage() {
   const { capabilityId } = useParams<{ capabilityId: string }>();
   const isEdit = capabilityId !== undefined && capabilityId !== '';
   const { agent, isLoading, isError } = useHarnessAgent(capabilityId ?? '');
+  // In edit mode a null manifest means the stored descriptor couldn't be read — never offer a
+  // form that would overwrite it with a from-scratch document.
+  const unreadable = isEdit && !isLoading && !isError && agent !== null && agent.manifest === null;
 
   return (
     <Page>
-      {isEdit && isError ? (
+      {isEdit && (isError || unreadable) ? (
         <div className="empty">
-          <p>Couldn’t load this agent for editing.</p>
+          <p>
+            {unreadable
+              ? 'This agent’s saved manifest can’t be read, so it can’t be edited here.'
+              : 'Couldn’t load this agent for editing.'}
+          </p>
           <Link to="/app/agents" className="btn" data-variant="ghost" data-size="sm">
             ← Agents
           </Link>
@@ -85,6 +127,7 @@ export default function AgentBuilderPage() {
         </p>
       ) : (
         <BuilderForm
+          key={capabilityId ?? 'new'}
           capabilityId={isEdit ? (capabilityId ?? null) : null}
           existing={isEdit ? (agent?.manifest ?? null) : null}
         />
@@ -120,36 +163,74 @@ function BuilderForm({
         name: t.name,
         slug: toolSlug(t.name),
         description: t.description,
+        // Unapproved (e.g. pending_approval) tools can't execute — offered disabled, labelled.
+        approved: t.status === null || t.status === 'active',
       })),
     [tools]
   );
-  const chosen = palette.filter((t) => form.toolSlugs.includes(t.slug));
-  const bindings = chosen.map((t) => t.slug.replace(/-/g, '_'));
+
+  // A palette tool is bound iff a capability entry pins its id, or (entries saved without the
+  // pin) its ref slug matches. Capabilities whose tool left the catalogue stay in form.caps.
+  const boundCapOf = (toolId: string, slug: string): OhmCapability | undefined =>
+    form.caps.find((c) => capabilityPinId(c) === toolId) ??
+    form.caps.find((c) => capabilityPinId(c) === null && capabilityRefSlug(c) === slug);
+
+  const orphanCaps = form.caps.filter((c) => !palette.some((t) => boundCapOf(t.id, t.slug) === c));
+
+  function toggleTool(toolId: string, slug: string) {
+    const bound = boundCapOf(toolId, slug);
+    if (bound !== undefined) {
+      set({ caps: form.caps.filter((c) => c !== bound) });
+    } else {
+      const cap: OhmCapability = {
+        ref: `core/${slug}@1.0.0`,
+        binding: slug.replace(/-/g, '_'),
+        config: { capability_id: toolId },
+      };
+      set({ caps: [...form.caps, cap] });
+    }
+  }
+
+  const bindings = form.caps.map((c) => c.binding);
   const entrypoint = bindings.includes(form.entrypoint) ? form.entrypoint : (bindings[0] ?? '');
 
   const valid = form.name.trim() !== '' && form.prompt.trim() !== '' && entrypoint !== '';
 
-  function buildManifest(): OhmManifest | null {
-    if (principal === null) return null;
-    const capabilities: OhmCapability[] = chosen.map((t) => ({
-      ref: `core/${t.slug}@1.0.0`,
-      binding: t.slug.replace(/-/g, '_'),
-    }));
-    const budget: Record<string, number> = {};
+  function buildManifest(principalOrgId: string): OhmManifest {
+    // Merge over the saved manifest: only form-managed fields change.
+    const metadata: OhmMetadata = {
+      ...existing?.metadata,
+      id: existing?.metadata.id ?? makeManifestId(),
+      name: form.name.trim(),
+      owner_organization_id: existing?.metadata.owner_organization_id ?? principalOrgId,
+    };
+    const md = metadata as { description?: string | null };
+    if (form.description.trim() !== '') md.description = form.description.trim();
+    else delete md.description;
+
+    const models =
+      existing?.models !== undefined && existing.models.length > 0
+        ? existing.models.map((m, i) => (i === 0 ? { ...m, binding: form.model.trim() } : m))
+        : [{ role: 'primary', binding: form.model.trim(), protocol_shape: PROTOCOL }];
+
+    // Budget: the two form keys are owned here (set or removed); other keys pass through.
+    const budget: Record<string, number> = Object.fromEntries(
+      Object.entries(existing?.runtime.budget ?? {}).filter(([, v]) => typeof v === 'number')
+    ) as Record<string, number>;
+    delete budget['max_tool_calls'];
+    delete budget['max_wall_time_seconds'];
     if (/^\d+$/.test(form.maxToolCalls)) budget['max_tool_calls'] = Number(form.maxToolCalls);
     if (/^\d+$/.test(form.maxWallTime)) budget['max_wall_time_seconds'] = Number(form.maxWallTime);
+
     return {
-      ohm_version: '1.0',
-      metadata: {
-        id: existing?.metadata.id ?? crypto.randomUUID(),
-        name: form.name.trim(),
-        owner_organization_id: principal.organisationId,
-        ...(form.description.trim() !== '' ? { description: form.description.trim() } : {}),
-      },
-      capabilities,
-      models: [{ role: 'primary', binding: form.model.trim(), protocol_shape: PROTOCOL }],
-      prompts: [{ role: 'primary', source: 'inline', body: form.prompt }],
+      ...existing,
+      ohm_version: existing?.ohm_version ?? '1.0',
+      metadata,
+      capabilities: [...form.caps],
+      models,
+      prompts: mergePrompts(existing?.prompts, form.prompt),
       runtime: {
+        ...existing?.runtime,
         entrypoint,
         ...(Object.keys(budget).length > 0 ? { budget } : {}),
       },
@@ -158,13 +239,13 @@ function BuilderForm({
 
   async function onSave() {
     if (!valid || saving) return;
-    const manifest = buildManifest();
-    if (manifest === null) {
-      setError('Your session isn’t ready yet — try again in a moment.');
-      return;
-    }
     setError(null);
     try {
+      if (principal === null) {
+        setError('Your session isn’t ready yet — try again in a moment.');
+        return;
+      }
+      const manifest = buildManifest(principal.organisationId);
       if (capabilityId !== null) {
         await update.mutateAsync(manifest);
         navigate(`/app/agents/harness/${capabilityId}`);
@@ -181,10 +262,7 @@ function BuilderForm({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', maxWidth: 760 }}>
       <header className="page-head">
         <div>
-          <span className="eyebrow">
-            <span className="dot" aria-hidden="true" />
-            {capabilityId !== null ? 'edit agent' : 'new agent'}
-          </span>
+          <span className="eyebrow">{capabilityId !== null ? 'edit agent' : 'new agent'}</span>
           <h1>{capabilityId !== null ? `Edit ${form.name || 'agent'}` : 'Build an agent'}</h1>
           <p className="sub">
             An agent is an OHM manifest: a prompt, a model, the tools it may call, and a budget.
@@ -283,40 +361,57 @@ function BuilderForm({
           >
             Loading the tool catalogue…
           </p>
-        ) : palette.length === 0 ? (
+        ) : palette.length === 0 && orphanCaps.length === 0 ? (
           <div className="empty" style={{ border: 'none' }}>
             <p>No tools are registered for this organisation yet.</p>
           </div>
         ) : (
           <div>
             {palette.map((t) => {
-              const on = form.toolSlugs.includes(t.slug);
+              const bound = boundCapOf(t.id, t.slug);
+              const unselectable = t.slug === '' || (!t.approved && bound === undefined);
               return (
-                <label className="tool-row" key={t.id} style={{ cursor: 'pointer' }}>
+                <label
+                  className="tool-row"
+                  key={t.id}
+                  style={{ cursor: unselectable ? 'not-allowed' : 'pointer' }}
+                >
                   <input
                     type="checkbox"
-                    checked={on}
-                    onChange={() =>
-                      set({
-                        toolSlugs: on
-                          ? form.toolSlugs.filter((s) => s !== t.slug)
-                          : [...form.toolSlugs, t.slug],
-                      })
-                    }
+                    aria-label={t.name}
+                    checked={bound !== undefined}
+                    disabled={unselectable}
+                    onChange={() => toggleTool(t.id, t.slug)}
                   />
                   <span className="body">
                     <span className="nm">
                       {t.name}
-                      <span className="src">core/{t.slug}@1.0.0</span>
+                      {bound !== undefined && <span className="src">{bound.ref}</span>}
                     </span>
                     {t.description !== null && <span className="dx">{t.description}</span>}
                   </span>
-                  {on && entrypoint === t.slug.replace(/-/g, '_') && (
+                  {!t.approved && <span className="scope">pending approval</span>}
+                  {bound !== undefined && bound.binding === entrypoint && (
                     <span className="scope">entrypoint</span>
                   )}
                 </label>
               );
             })}
+            {orphanCaps.map((c) => (
+              <div className="tool-row" key={c.binding}>
+                <input type="checkbox" checked disabled aria-label={`${c.binding} (kept)`} />
+                <span className="body">
+                  <span className="nm">
+                    {c.binding}
+                    <span className="src">{c.ref}</span>
+                  </span>
+                  <span className="dx">
+                    kept from the saved manifest — its tool isn’t in the catalogue
+                  </span>
+                </span>
+                {c.binding === entrypoint && <span className="scope">entrypoint</span>}
+              </div>
+            ))}
           </div>
         )}
         {bindings.length > 1 && (
