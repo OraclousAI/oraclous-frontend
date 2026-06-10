@@ -210,12 +210,34 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
     autoRotRef.current.last = performance.now();
   }, [view3d, autoRotate, reduceMotion]);
 
-  // Animation loop
+  // Idle-aware animation loop. It runs only while something actually moves — the sim converging,
+  // a camera tween, auto-rotate, a live pointer gesture, or a short post-interaction window for
+  // the decorative pulses — then parks (zero CPU until woken). Every render wakes it (cheap), so
+  // any prop/state change redraws; pointer handlers wake it directly. Under reduced motion the
+  // layout converges in fast-forward instead of animating the drift.
+  const runningRef = useRef(false);
+  const draggingRef = useRef(false);
+  const lastInteractRef = useRef(0);
+  const wakeRef = useRef<() => void>(() => {});
   useEffect(() => {
+    let disposed = false;
     let raf = 0;
+    const DECOR_WINDOW_MS = 2500;
     const loop = () => {
+      if (disposed) {
+        runningRef.current = false;
+        return;
+      }
       try {
-        if (tick) sim.tick();
+        if (tick && sim.active()) {
+          if (reduceRef.current && !draggingRef.current) {
+            // Settle without animating: a burst of ticks per frame until convergence.
+            let guard = 0;
+            while (sim.active() && guard++ < 40) sim.tick();
+          } else {
+            sim.tick();
+          }
+        }
         const traceR = traceRotRef.current;
         if (traceR.active && !dragRef.current?.orbit) {
           const t = Math.min(1, (performance.now() - (traceR.t0 ?? 0)) / (traceR.dur ?? 1));
@@ -234,14 +256,44 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
           autoRotRef.current.last = performance.now();
         }
         drawRef.current();
+        const animating =
+          (tick && sim.active()) ||
+          traceRotRef.current.active ||
+          autoRotRef.current.enabled ||
+          draggingRef.current ||
+          lassoRef.current !== null ||
+          (!reduceRef.current && performance.now() - lastInteractRef.current < DECOR_WINDOW_MS);
+        if (animating) {
+          raf = requestAnimationFrame(loop);
+        } else {
+          runningRef.current = false;
+        }
       } catch (err) {
         console.error('[explorer draw loop]', err);
+        runningRef.current = false;
       }
-      raf = requestAnimationFrame(loop);
     };
-    loop();
-    return () => cancelAnimationFrame(raf);
+    const wake = () => {
+      lastInteractRef.current = performance.now();
+      if (!runningRef.current && !disposed) {
+        runningRef.current = true;
+        raf = requestAnimationFrame(loop);
+      }
+    };
+    wakeRef.current = wake;
+    wake();
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      runningRef.current = false;
+    };
   }, [sim, tick]);
+
+  // Any render means something the canvas shows may have changed — redraw (and let the
+  // decorative pulses run their short window).
+  useEffect(() => {
+    wakeRef.current();
+  });
 
   useEffect(() => {
     const onR = () => force(Math.random());
@@ -747,13 +799,13 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
         const ps = project3D(surf.X, surf.Y, surf.Z);
         if (ps.z3 > 20) continue;
         const np = screen(n.x, n.y, n.id);
-        ctx.strokeStyle = `oklch(0.74 0.13 159 / ${0.22 + (1 - ps.depth) * 0.3})`;
+        ctx.strokeStyle = `oklch(0.74 0.10 220 / ${0.22 + (1 - ps.depth) * 0.3})`;
         ctx.lineWidth = 0.9;
         ctx.beginPath();
         ctx.moveTo(ps.x, ps.y);
         ctx.lineTo(np.x, np.y);
         ctx.stroke();
-        ctx.fillStyle = `oklch(0.88 0.184 159 / ${0.6 + (1 - ps.depth) * 0.3})`;
+        ctx.fillStyle = `oklch(0.88 0.12 220 / ${0.6 + (1 - ps.depth) * 0.3})`;
         ctx.beginPath();
         ctx.arc(ps.x, ps.y, 1.8, 0, Math.PI * 2);
         ctx.fill();
@@ -1183,6 +1235,8 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = true;
+    wakeRef.current();
     const rect = wrapRef.current!.getBoundingClientRect();
     const sx = e.clientX - rect.left,
       sy = e.clientY - rect.top;
@@ -1274,6 +1328,8 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
   };
 
   const onPointerUp = (_e: React.PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = false;
+    wakeRef.current();
     setCursor('grab');
     if (lassoRef.current) {
       const L = lassoRef.current;
@@ -1307,6 +1363,7 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
 
   const onPointerCancel = () => {
     // A cancelled gesture (capture lost, touch interrupted) must not leave a live drag/lasso.
+    draggingRef.current = false;
     dragRef.current = null;
     lassoRef.current = null;
     setCursor('grab');
@@ -1324,6 +1381,7 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
   const wheelRef = useRef<(e: WheelEvent) => void>(() => {});
   wheelRef.current = (e: WheelEvent) => {
     e.preventDefault();
+    wakeRef.current();
     const rect = wrapRef.current!.getBoundingClientRect();
     const sx = e.clientX - rect.left,
       sy = e.clientY - rect.top;
@@ -1372,7 +1430,7 @@ export function ExplorerCanvas(props: ExplorerCanvasProps) {
       <canvas
         ref={cvsRef}
         role="img"
-        aria-label="Knowledge graph visualisation — use the Nodes list for keyboard access"
+        aria-label="Knowledge graph visualisation — the Nodes panel lists every node for keyboard selection"
         style={{ position: 'absolute', inset: 0 }}
       />
       {lassoStyle && <div style={lassoStyle} />}

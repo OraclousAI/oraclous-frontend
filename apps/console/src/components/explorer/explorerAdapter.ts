@@ -36,10 +36,20 @@ function numericProp(p: Readonly<Record<string, unknown>>, key: string): number 
   return typeof v === 'number' && Number.isFinite(v) ? v : 0;
 }
 
+function coord(v: unknown): number | null {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  // Ingested coordinates frequently arrive JSON-stringified.
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
 function geoOf(p: Readonly<Record<string, unknown>>): { lat: number; lng: number } | undefined {
-  const lat = p['lat'] ?? p['latitude'];
-  const lng = p['lng'] ?? p['longitude'];
-  if (typeof lat === 'number' && typeof lng === 'number') return { lat, lng };
+  const lat = coord(p['lat'] ?? p['latitude']);
+  const lng = coord(p['lng'] ?? p['longitude']);
+  if (lat !== null && lng !== null) return { lat, lng };
   return undefined;
 }
 

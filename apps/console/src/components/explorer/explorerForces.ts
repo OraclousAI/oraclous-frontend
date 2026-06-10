@@ -24,6 +24,9 @@ export interface OGSim {
   nodes: OGNode[];
   edges: OGEdge[];
   tick: () => void;
+  // True while the layout is still converging. The canvas idles its rAF loop once this goes
+  // false; pin/drag/setLayout call restart() to wake it.
+  active: () => boolean;
   restart: () => void;
   setLayout: (name: LayoutName, focusId?: string | null) => void;
   pin: (id: string, x: number, y: number) => void;
@@ -147,8 +150,10 @@ export function createSim(
     });
   }
 
+  const SETTLED_ALPHA = 0.04;
+
   function tick(): void {
-    if (alpha < 0.01) alpha = 0.01;
+    if (alpha <= SETTLED_ALPHA) return;
     const fx = new Float32Array(N);
     const fy = new Float32Array(N);
 
@@ -284,7 +289,6 @@ export function createSim(
     }
 
     alpha *= 0.992;
-    if (alpha < 0.04) alpha = 0.04;
   }
 
   setLayout(layoutName, focusId);
@@ -294,6 +298,7 @@ export function createSim(
     nodes,
     edges,
     tick,
+    active: () => alpha > SETTLED_ALPHA,
     restart: () => {
       alpha = 1.0;
     },

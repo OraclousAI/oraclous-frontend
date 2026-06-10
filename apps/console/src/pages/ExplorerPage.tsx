@@ -34,8 +34,13 @@ function mergeGraph(base: RawGraph | null, extra: RawGraph): RawGraph {
   for (const n of base?.nodes ?? []) nodes.set(n.id, n);
   for (const n of extra.nodes) if (!nodes.has(n.id)) nodes.set(n.id, n);
   const edges = new Map<string, GraphEdge>();
+  // First-seen wins: base edges are real and DIRECTED; expand edges are synthesized from the
+  // undirected /neighbors payload (direction guessed) and must never overwrite them.
   for (const e of base?.edges ?? []) edges.set(edgeKey(e), e);
-  for (const e of extra.edges) edges.set(edgeKey(e), e);
+  for (const e of extra.edges) {
+    const k = edgeKey(e);
+    if (!edges.has(k)) edges.set(k, e);
+  }
   return { nodes: [...nodes.values()], edges: [...edges.values()] };
 }
 
@@ -168,7 +173,8 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
   const [view3d, setView3d] = useState(true);
   const [autoRotate, setAutoRotate] = useState(false);
   const [geoEnabled, setGeoEnabled] = useState(false);
-  const [showList, setShowList] = useState(false);
+  // Open by default: this panel is the keyboard/AT path to node selection (Gate 3).
+  const [showList, setShowList] = useState(true);
   const [temporalOn, setTemporalOn] = useState(false);
   const [asOf, setAsOf] = useState('');
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -288,7 +294,9 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
             target: m.id,
             type: typeof rel === 'string' && rel !== '' ? rel : 'RELATED',
           };
-          edges.set(edgeKey(e), e);
+          // First-seen wins — a synthesized direction never replaces an earlier expand's edge.
+          const k = edgeKey(e);
+          if (!edges.has(k)) edges.set(k, e);
         }
         return { nodes: [...nodes.values()], edges: [...edges.values()] };
       });
