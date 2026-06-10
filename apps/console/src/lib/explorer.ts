@@ -1,4 +1,4 @@
-// Explorer hooks: load a bounded subgraph (capped nodes + edges) for the sphere visualisation,
+// Explorer hooks: load a bounded subgraph (capped nodes + edges) for the explorer visualisation,
 // and expand a node's 1-hop neighbourhood on demand.
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { GraphNode, Subgraph } from '@oraclous/api-client';
@@ -19,7 +19,7 @@ export function useSubgraph(graphId: string, limit = 250): SubgraphState {
     queryKey: ['subgraph', graphId, limit],
     queryFn: () => explorer.subgraph(graphId, limit),
     enabled: isAuthenticated && graphId !== '',
-    // The subgraph is a heavier read and the sphere re-derives layout from the node array; keep it
+    // The subgraph is a heavier read and the explorer re-derives layout from the node array; keep it
     // stable for a while so background refetches don't churn the visualisation.
     staleTime: 60_000,
   });
