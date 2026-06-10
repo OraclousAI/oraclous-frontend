@@ -2,7 +2,7 @@
 // — item counts, tokens, bytes — and billing is a separable downstream consumer not yet built). So
 // this page is honest: it shows the current plan from session context and a clear "metering coming,
 // no charges" usage section, rather than fabricating spend/usage figures.
-import type { CSSProperties } from 'react';
+// Styled per the handoff billing.html (KPI/plan card + usage table treatment).
 import { useDash } from '../context/dash.js';
 
 const METERED: readonly { readonly label: string; readonly unit: string }[] = [
@@ -17,121 +17,86 @@ export default function BillingPage() {
   const plan = tenant.plan.trim() !== '' ? tenant.plan : 'Free';
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <h1 style={styles.h1}>Billing</h1>
-        <p style={styles.sub}>Your plan and usage.</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', maxWidth: 880 }}>
+      <header className="page-head" style={{ marginBottom: 0 }}>
+        <div>
+          <span className="eyebrow">Cost transparency</span>
+          <h1>Billing</h1>
+          <p className="sub">Your plan and usage.</p>
+        </div>
       </header>
 
-      <section style={styles.card} aria-label="Current plan">
-        <div style={styles.planTop}>
-          <div style={styles.planInfo}>
-            <span style={styles.eyebrow}>Current plan</span>
-            <p style={styles.planName}>{plan}</p>
-            <p style={styles.muted}>{tenant.name}</p>
+      <section className="card" aria-label="Current plan">
+        <div
+          className="card-body"
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 'var(--sp-3)',
+            }}
+          >
+            <div className="kpi" style={{ border: 'none', padding: 0 }}>
+              <span className="l">Current plan</span>
+              <span className="v" style={{ fontSize: 24, textTransform: 'capitalize' }}>
+                {plan}
+              </span>
+              <span className="s">{tenant.name}</span>
+            </div>
+            <button type="button" className="btn" data-variant="secondary" disabled>
+              Manage plan
+            </button>
           </div>
-          <button type="button" style={styles.disabled} disabled aria-disabled="true">
-            Manage plan
-          </button>
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--mute)' }}>
+            Self-serve plan changes aren’t available yet — reach out to us to change your plan.
+          </p>
         </div>
-        <p style={styles.note}>
-          Self-serve plan changes aren’t available yet — reach out to us to change your plan.
-        </p>
       </section>
 
-      <section style={styles.card} aria-label="Usage and metering">
-        <h2 style={styles.h2}>Usage</h2>
-        <p style={styles.banner} role="status">
-          Usage metering is coming. The platform records usage at the substrate (item counts,
-          tokens, and bytes); billing on top of it isn’t live yet, and{' '}
-          <strong>no charges are being collected</strong>.
-        </p>
-        <ul style={styles.list}>
-          {METERED.map((m) => (
-            <li key={m.label} style={styles.row}>
-              <div style={styles.rowMain}>
-                <span style={styles.rowLabel}>{m.label}</span>
-                <span style={styles.rowUnit}>{m.unit}</span>
+      <section className="card" aria-label="Usage and metering">
+        <div className="card-head">
+          <div className="h">
+            <h2>Usage</h2>
+            <span className="sub">Metered at the substrate · billing not live yet</span>
+          </div>
+        </div>
+        <div
+          className="card-body"
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+        >
+          <p className="callout" role="status" style={{ margin: 0 }}>
+            Usage metering is coming. The platform records usage at the substrate (item counts,
+            tokens, and bytes); billing on top of it isn’t live yet, and{' '}
+            <strong>no charges are being collected</strong>.
+          </p>
+          <div className="table">
+            <div
+              className="table-head"
+              aria-hidden="true"
+              style={{ gridTemplateColumns: '1fr auto' }}
+            >
+              <span>Meter</span>
+              <span>This month</span>
+            </div>
+            {METERED.map((m) => (
+              <div key={m.label} className="table-row" style={{ gridTemplateColumns: '1fr auto' }}>
+                <span style={{ display: 'grid', gap: 1 }}>
+                  <span>{m.label}</span>
+                  <span className="mute" style={{ fontSize: 12 }}>
+                    {m.unit}
+                  </span>
+                </span>
+                <span className="mono mute" aria-label="Not yet available">
+                  —
+                </span>
               </div>
-              <span style={styles.rowValue} aria-label="Not yet available">
-                —
-              </span>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );
 }
-
-const styles = {
-  page: { display: 'grid', gap: 18, maxWidth: 720 },
-  header: { display: 'grid', gap: 4 },
-  h1: { margin: 0, fontSize: 22, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  sub: { margin: 0, fontSize: 13.5, color: 'var(--mute, #65686f)' },
-  h2: { margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  muted: { margin: 0, fontSize: 13, color: 'var(--mute, #65686f)' },
-  card: {
-    display: 'grid',
-    gap: 12,
-    padding: 20,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 12,
-  },
-  planTop: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  planInfo: { display: 'grid', gap: 2 },
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    color: 'var(--mute, #65686f)',
-  },
-  planName: {
-    margin: 0,
-    fontSize: 20,
-    fontWeight: 600,
-    color: 'var(--ink, #0b1220)',
-    textTransform: 'capitalize',
-  },
-  disabled: {
-    padding: '8px 14px',
-    fontSize: 13,
-    fontWeight: 500,
-    color: 'var(--mute, #65686f)',
-    background: 'var(--paper-soft, #eceae5)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-    cursor: 'not-allowed',
-    whiteSpace: 'nowrap',
-  },
-  note: { margin: 0, fontSize: 12.5, color: 'var(--mute, #65686f)' },
-  banner: {
-    margin: 0,
-    padding: '11px 13px',
-    fontSize: 13,
-    lineHeight: 1.5,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--paper-soft, #eceae5)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
-  row: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    padding: '10px 2px',
-    borderBottom: '1px solid var(--rule, #d7d6d2)',
-  },
-  rowMain: { display: 'grid', gap: 1 },
-  rowLabel: { fontSize: 13.5, color: 'var(--ink, #0b1220)' },
-  rowUnit: { fontSize: 12, color: 'var(--mute, #65686f)' },
-  rowValue: {
-    fontSize: 14,
-    fontFamily: 'var(--font-mono, monospace)',
-    color: 'var(--mute, #65686f)',
-  },
-} satisfies Record<string, CSSProperties>;
