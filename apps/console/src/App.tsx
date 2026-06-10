@@ -8,7 +8,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TenantGate } from './components/auth/TenantGate.js';
 import { AppShell } from './components/shell/AppShell.js';
 import { PlaceholderView } from './components/views/PlaceholderView.js';
-import { useSilentRefresh } from './lib/session.js';
+import { useSessionHydration, useSilentRefresh } from './lib/session.js';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.js'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallbackPage.js'));
@@ -61,7 +61,9 @@ const Explorer = lazy(() => import('./pages/ExplorerPage.js'));
 const AcceptInvite = lazy(() => import('./pages/AcceptInvitePage.js'));
 
 export function App() {
-  // Keep the session alive by silently refreshing the access token before it expires.
+  // Restore the session from the vault on boot (a page refresh stays in the app), then keep it
+  // alive by silently refreshing the access token before it expires.
+  useSessionHydration();
   useSilentRefresh();
 
   return (

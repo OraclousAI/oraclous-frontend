@@ -16,12 +16,90 @@ import {
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
+import { vaultClear, vaultRead, vaultWrite } from './session-vault.js';
 
 function isAuthFailure(error: unknown): boolean {
   return (
     ApiClientError.is(error) &&
     (error.code === ErrorCode.UNAUTHENTICATED || error.code === ErrorCode.UNAUTHORIZED)
   );
+}
+
+// ── Locked refresh — the only way a refresh token is ever presented ─────────
+// Refresh tokens are single-use: the auth-service rotates the pair on every call and treats a
+// re-presented token as theft, revoking the whole token family. So the vault copy must be the
+// one presented, and the rotated replacement must land in the vault before the lock releases.
+// The Web Lock serialises refreshes across tabs; re-reading the vault inside the lock means a
+// tab that lost the race presents the winner's fresh token, never its own stale one.
+const REFRESH_LOCK = 'oraclous-session-refresh';
+
+interface RefreshCapable {
+  refresh(refreshToken: string): Promise<AuthSession>;
+}
+
+async function lockedRefresh(
+  auth: RefreshCapable,
+  fallbackRefreshToken?: string
+): Promise<AuthSession | null> {
+  const run = async (): Promise<AuthSession | null> => {
+    const stored = await vaultRead();
+    // Fallback covers a vault that is unavailable (private browsing) or was cleared mid-session.
+    const refreshToken = stored?.refreshToken ?? fallbackRefreshToken;
+    if (refreshToken === undefined || refreshToken === '') return null;
+    try {
+      const session = await auth.refresh(refreshToken);
+      // Persist the rotated token before releasing the lock — the vault must never be left
+      // holding a token that has already been presented.
+      await vaultWrite({ refreshToken: session.refreshToken, email: session.email });
+      return session;
+    } catch (cause) {
+      if (isAuthFailure(cause)) await vaultClear();
+      throw cause;
+    }
+  };
+  if (typeof navigator !== 'undefined' && navigator.locks !== undefined) {
+    return navigator.locks.request(REFRESH_LOCK, run);
+  }
+  return run();
+}
+
+// Boot-once memo: StrictMode double-mounts effects; both runs share one restore attempt.
+let bootRestore: Promise<AuthSession | null> | null = null;
+
+// Boot-time session restore: if the vault holds a refresh token from a previous load, exchange it
+// for a fresh session before ProtectedRoute decides to bounce to /login. Marks the store hydrated
+// whatever the outcome; a transient (non-auth) failure leaves the vault intact so the next load
+// can retry, while a rejected token clears it (inside lockedRefresh).
+export function useSessionHydration(): void {
+  const { auth } = useApi();
+  const { tokenPayload, setToken, hydrated, markHydrated } = useTokenStore();
+
+  useEffect(() => {
+    if (hydrated) return;
+    if (tokenPayload !== null) {
+      // A session arrived before the restore finished (e.g. a fast manual login) — it wins;
+      // the cleanup below cancels the in-flight restore's apply.
+      markHydrated();
+      return;
+    }
+    let cancelled = false;
+    bootRestore ??= lockedRefresh(auth).catch(() => null);
+    void bootRestore.then((session) => {
+      if (cancelled) return;
+      if (session !== null) {
+        setToken({
+          token: session.accessToken,
+          refreshToken: session.refreshToken,
+          email: session.email,
+          expiresAt: Date.now() + session.expiresIn * 1000,
+        });
+      }
+      markHydrated();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [auth, tokenPayload, setToken, hydrated, markHydrated]);
 }
 
 export interface MeState {
@@ -200,9 +278,10 @@ export function useLogout(): () => void {
   }, [setToken, queryClient, navigate]);
 }
 
-// Silently re-issue the session ~60s before the access token expires, using the in-memory refresh
-// token (both tokens rotate). On success it reschedules (the new expiry re-runs the effect); on
-// failure (expired/invalid refresh token) it clears the session so ProtectedRoute returns to /login.
+// Silently re-issue the session ~60s before the access token expires (both tokens rotate). The
+// refresh goes through lockedRefresh so the vault stays the single live copy across tabs. On
+// success it reschedules (the new expiry re-runs the effect); on failure (expired/invalid refresh
+// token) it clears the session so ProtectedRoute returns to /login.
 export function useSilentRefresh(): void {
   const { auth } = useApi();
   const { tokenPayload, setToken } = useTokenStore();
@@ -216,9 +295,13 @@ export function useSilentRefresh(): void {
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     const delay = Math.max(0, expiresAt - Date.now() - 60_000);
     const timer = setTimeout(() => {
-      auth
-        .refresh(refreshToken)
+      lockedRefresh(auth, refreshToken)
         .then((session) => {
+          if (session === null) {
+            // No refresh token anywhere (vault cleared and none in memory) — end the session.
+            setToken(null);
+            return;
+          }
           setToken({
             token: session.accessToken,
             refreshToken: session.refreshToken,
