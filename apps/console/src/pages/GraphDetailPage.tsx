@@ -292,7 +292,11 @@ export default function GraphDetailPage() {
               {graph.description !== null && graph.description !== '' && (
                 <p
                   className="sub"
-                  style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--mute)' }}
+                  style={{
+                    margin: '6px 0 0',
+                    fontSize: 'var(--t-dense-size)',
+                    color: 'var(--mute)',
+                  }}
                 >
                   {graph.description}
                 </p>
@@ -323,7 +327,9 @@ export default function GraphDetailPage() {
                 </button>
                 {confirmingDelete ? (
                   <>
-                    <span style={{ fontSize: 13 }}>Delete this workspace and its data?</span>
+                    <span style={{ fontSize: 'var(--t-mono-size)' }}>
+                      Delete this workspace and its data?
+                    </span>
                     <button
                       type="button"
                       className="btn"
@@ -422,7 +428,7 @@ export default function GraphDetailPage() {
                   region is a polite live region so arriving results (or none) are announced. */}
               <div role="status" aria-live="polite">
                 {search.isSuccess && searchResults.length === 0 && (
-                  <p style={{ margin: 0, fontSize: 13.5, color: 'var(--mute)' }}>
+                  <p style={{ margin: 0, fontSize: 'var(--t-dense-size)', color: 'var(--mute)' }}>
                     No results for that query.
                   </p>
                 )}
