@@ -30,7 +30,7 @@
   border-color: var(--ink);
 }
 .cat-tile:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 .cat-tile[data-selected],
@@ -45,7 +45,7 @@
   gap: var(--sp-2);
 }
 .cat-tile .nm {
-  font-size: 13.5px;
+  font-size: var(--t-dense-size);
   font-weight: 600;
   letter-spacing: -0.005em;
   display: inline-flex;
@@ -56,7 +56,7 @@
 }
 .cat-tile .desc {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   line-height: 1.5;
   color: var(--mute);
   overflow-wrap: break-word;
@@ -64,17 +64,17 @@
 .cat-tile .meta {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
 }
 .cat-tile .doc {
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   color: var(--ink);
   width: fit-content;
   text-underline-offset: 3px;
 }
 .cat-tile .doc:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -83,7 +83,7 @@
   margin: 0;
   padding: var(--sp-3) 14px;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: var(--t-caption-size);
   line-height: 1.55;
   color: var(--ink);
   background: var(--paper-soft);
