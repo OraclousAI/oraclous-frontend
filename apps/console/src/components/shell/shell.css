@@ -83,7 +83,7 @@
 }
 
 .shell-sidebar__brand-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -130,7 +130,7 @@
 }
 
 .shell-nav-item:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 
@@ -168,7 +168,7 @@
 }
 
 .shell-ws-item:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 
@@ -268,7 +268,7 @@
 }
 
 .shell-topbar__tenant-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -357,7 +357,7 @@
 }
 
 .shell-dropdown__item:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: -1px;
 }
 
@@ -460,7 +460,7 @@
 }
 
 .shell-icon-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 
@@ -520,7 +520,7 @@
 }
 
 .shell-menu-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 

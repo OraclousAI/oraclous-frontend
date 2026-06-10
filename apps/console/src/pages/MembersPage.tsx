@@ -210,7 +210,7 @@ export default function MembersPage() {
                               disabled={managing}
                               style={{
                                 padding: '6px 9px',
-                                fontSize: 13,
+                                fontSize: 'var(--t-mono-size)',
                                 fontFamily: 'var(--font-sans)',
                                 color: 'var(--ink)',
                                 background: 'var(--paper)',
@@ -257,13 +257,19 @@ export default function MembersPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
         >
           {orgId === '' ? (
-            <p className="sub" style={{ margin: 0, color: 'var(--mute)', fontSize: 13.5 }}>
+            <p
+              className="sub"
+              style={{ margin: 0, color: 'var(--mute)', fontSize: 'var(--t-dense-size)' }}
+            >
               No organisation selected.
             </p>
           ) : meLoading || orgLoading ? (
             <SkeletonList rows={1} />
           ) : !isOwner ? (
-            <p className="sub" style={{ margin: 0, color: 'var(--mute)', fontSize: 13.5 }}>
+            <p
+              className="sub"
+              style={{ margin: 0, color: 'var(--mute)', fontSize: 'var(--t-dense-size)' }}
+            >
               Only the organisation owner can invite members.
             </p>
           ) : (
@@ -314,7 +320,7 @@ export default function MembersPage() {
               )}
               {inviteLink !== null && (
                 <div className="invite-link" role="status">
-                  <p style={{ margin: 0, fontSize: 13.5 }}>
+                  <p style={{ margin: 0, fontSize: 'var(--t-dense-size)' }}>
                     Invitation created. Share this link with your teammate — it is shown only once.
                   </p>
                   <div className="row">

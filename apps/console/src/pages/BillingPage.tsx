@@ -41,7 +41,10 @@ export default function BillingPage() {
           >
             <div className="kpi" style={{ border: 'none', padding: 0 }}>
               <span className="l">Current plan</span>
-              <span className="v" style={{ fontSize: 24, textTransform: 'capitalize' }}>
+              <span
+                className="v"
+                style={{ fontSize: 'var(--t-h3-size)', textTransform: 'capitalize' }}
+              >
                 {plan}
               </span>
               <span className="s">{tenant.name}</span>
@@ -50,7 +53,7 @@ export default function BillingPage() {
               Manage plan
             </button>
           </div>
-          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--mute)' }}>
+          <p style={{ margin: 0, fontSize: 'var(--t-caption-size)', color: 'var(--mute)' }}>
             Self-serve plan changes aren’t available yet — reach out to us to change your plan.
           </p>
         </div>
@@ -85,7 +88,7 @@ export default function BillingPage() {
               <div key={m.label} className="table-row" style={{ gridTemplateColumns: '1fr auto' }}>
                 <span style={{ display: 'grid', gap: 1 }}>
                   <span>{m.label}</span>
-                  <span className="mute" style={{ fontSize: 12 }}>
+                  <span className="mute" style={{ fontSize: 'var(--t-caption-size)' }}>
                     {m.unit}
                   </span>
                 </span>

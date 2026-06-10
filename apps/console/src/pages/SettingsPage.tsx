@@ -117,7 +117,7 @@ export default function SettingsPage() {
         </div>
         <div className="card-body">
           {orgId === '' ? (
-            <p style={{ margin: 0, fontSize: 13.5, color: 'var(--mute)' }}>
+            <p style={{ margin: 0, fontSize: 'var(--t-dense-size)', color: 'var(--mute)' }}>
               No organisation selected.
             </p>
           ) : isLoading || meLoading ? (
@@ -191,7 +191,7 @@ export default function SettingsPage() {
                   {updateOrg.isPending ? 'Saving…' : 'Save changes'}
                 </button>
               ) : (
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--mute)' }}>
+                <p style={{ margin: 0, fontSize: 'var(--t-mono-size)', color: 'var(--mute)' }}>
                   Only the organisation owner can edit these settings.
                 </p>
               )}
@@ -210,7 +210,9 @@ export default function SettingsPage() {
         <div className="card-body" style={formGap}>
           <div className="field">
             <span style={{ ...labelLike }}>Email</span>
-            <span style={{ fontSize: 14 }}>{user.email !== '' ? user.email : '—'}</span>
+            <span style={{ fontSize: 'var(--t-dense-size)' }}>
+              {user.email !== '' ? user.email : '—'}
+            </span>
           </div>
           <form style={formGap} onSubmit={onChangePassword}>
             {pwError !== null && (
@@ -269,7 +271,7 @@ export default function SettingsPage() {
 // Matches the .field label treatment for the read-only email row.
 const labelLike = {
   fontFamily: 'var(--font-mono)',
-  fontSize: 10.5,
+  fontSize: 'var(--t-tiny-size)',
   letterSpacing: '0.06em',
   textTransform: 'uppercase',
   color: 'var(--mute)',
