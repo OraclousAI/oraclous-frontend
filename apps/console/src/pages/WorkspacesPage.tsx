@@ -1,11 +1,13 @@
 // Workspaces — the organisation's knowledge graphs (GET/POST /api/v1/graphs).
-// Lists existing graphs and creates new ones inline.
-import { useId, useState, type CSSProperties, type FormEvent } from 'react';
+// Lists existing graphs and creates new ones inline. Styled per the handoff page patterns.
+import { useId, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useCreateGraph, useGraphs } from '../lib/graphs.js';
 import { useToast } from '../lib/toast.jsx';
 import { SkeletonList } from '../components/ui/Skeleton.js';
+import { IconLayers } from '../icons/index.js';
+import './workspace.css';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -17,96 +19,15 @@ function formatDate(iso: string): string {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString();
 }
 
-const styles = {
-  page: { display: 'grid', gap: 20, maxWidth: 920 },
-  header: { display: 'grid', gap: 4 },
-  h1: { margin: 0, fontSize: 22, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  sub: { margin: 0, fontSize: 13.5, color: 'var(--mute, #65686f)' },
-  createCard: {
-    display: 'grid',
-    gap: 12,
-    padding: 16,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 12,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-  },
-  createRow: { display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
-  field: { display: 'grid', gap: 6, minWidth: 160 },
-  label: { fontSize: 13, fontWeight: 500, color: 'var(--ink, #0b1220)' },
-  optional: { fontWeight: 400, color: 'var(--mute, #65686f)' },
-  input: {
-    width: '100%',
-    boxSizing: 'border-box',
-    padding: '9px 12px',
-    fontSize: 14,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  primary: {
-    padding: '9px 16px',
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--paper, #f4f4f2)',
-    background: 'var(--ink, #0b1220)',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  busy: { opacity: 0.6, cursor: 'default' },
-  error: {
-    margin: 0,
-    padding: '10px 12px',
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--error-bg, #fbeae8)',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-  },
-  listWrap: { display: 'grid', gap: 8 },
-  muted: { margin: 0, fontSize: 13.5, color: 'var(--mute, #65686f)' },
-  grid: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    display: 'grid',
-    gap: 12,
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-  },
-  card: {
-    display: 'grid',
-    gap: 6,
-    padding: 16,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 10,
-  },
-  cardTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  cardName: { fontSize: 15, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  badge: {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--paper-soft, #eceae5)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 999,
-    padding: '2px 8px',
-  },
-  cardDesc: { margin: 0, fontSize: 13, color: 'var(--ink, #0b1220)' },
-  cardMeta: {
-    margin: 0,
-    fontSize: 12,
-    color: 'var(--mute, #65686f)',
-    fontFamily: 'var(--font-mono, monospace)',
-  },
-} satisfies Record<string, CSSProperties>;
+// Live mint is reserved for live states; terminal/idle states stay neutral.
+function pillState(status: string): string {
+  const s = status.toLowerCase();
+  if (s.includes('error') || s.includes('fail')) return 'error';
+  if (s === 'active' || s === 'ready' || s === 'processing' || s === 'running') return 'active';
+  return 'paused';
+}
+
+const nf = new Intl.NumberFormat();
 
 export default function WorkspacesPage() {
   const { graphs, isLoading, isError } = useGraphs();
@@ -139,87 +60,122 @@ export default function WorkspacesPage() {
   const busy = createGraph.isPending;
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <h1 style={styles.h1}>Workspaces</h1>
-        <p style={styles.sub}>Knowledge graphs in your organisation.</p>
+    <div>
+      <header className="page-head">
+        <div>
+          <span className="eyebrow">Knowledge graphs</span>
+          <h1>Workspaces</h1>
+          <p className="sub">
+            Each workspace is a knowledge graph — ingest sources, search it, and point agents at it.
+          </p>
+        </div>
       </header>
 
-      <form style={styles.createCard} onSubmit={onSubmit} aria-label="Create a workspace">
-        {error !== null && (
-          <p id={errorId} role="alert" style={styles.error}>
-            {error}
-          </p>
-        )}
-        <div style={styles.createRow}>
-          <div style={{ ...styles.field, flex: 2 }}>
-            <label htmlFor="graph-name" style={styles.label}>
-              Name
-            </label>
-            <input
-              id="graph-name"
-              name="name"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              aria-invalid={error !== null}
-              aria-describedby={error !== null ? errorId : undefined}
-              style={styles.input}
-            />
+      <form
+        className="card"
+        style={{ marginBottom: 'var(--sp-6)' }}
+        onSubmit={onSubmit}
+        aria-label="Create a workspace"
+      >
+        <div className="card-head">
+          <div className="h">
+            <h2>New workspace</h2>
+            <span className="sub">Spin up a graph for a team, a project, or a corpus</span>
           </div>
-          <div style={{ ...styles.field, flex: 3 }}>
-            <label htmlFor="graph-desc" style={styles.label}>
-              Description <span style={styles.optional}>(optional)</span>
-            </label>
-            <input
-              id="graph-desc"
-              name="description"
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              style={styles.input}
-            />
+        </div>
+        <div
+          className="card-body"
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+        >
+          {error !== null && (
+            <p
+              id={errorId}
+              role="alert"
+              className="callout"
+              data-tone="error"
+              style={{ margin: 0 }}
+            >
+              {error}
+            </p>
+          )}
+          <div className="control-row">
+            <div className="field" style={{ flex: 2, minWidth: 180 }}>
+              <label htmlFor="graph-name">Name</label>
+              <input
+                id="graph-name"
+                name="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                aria-invalid={error !== null}
+                aria-describedby={error !== null ? errorId : undefined}
+              />
+            </div>
+            <div className="field" style={{ flex: 3, minWidth: 220 }}>
+              <label htmlFor="graph-desc">Description · optional</label>
+              <input
+                id="graph-desc"
+                name="description"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              className="btn"
+              data-variant="primary"
+              disabled={busy || name.trim() === ''}
+              aria-busy={busy}
+            >
+              {busy ? 'Creating…' : 'Create graph'}
+            </button>
           </div>
-          <button
-            type="submit"
-            disabled={busy || name.trim() === ''}
-            aria-busy={busy}
-            style={busy ? { ...styles.primary, ...styles.busy } : styles.primary}
-          >
-            {busy ? 'Creating…' : 'Create graph'}
-          </button>
         </div>
       </form>
 
-      <section aria-label="Workspaces list" style={styles.listWrap}>
+      <section aria-label="Workspaces list">
         {isLoading ? (
           <SkeletonList rows={3} />
         ) : isError ? (
-          <p style={styles.error} role="alert">
+          <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
             Could not load your workspaces.
           </p>
         ) : graphs.length === 0 ? (
-          <p style={styles.muted}>No workspaces yet. Create your first one above.</p>
+          <div className="card">
+            <div className="empty">
+              <span className="empty-icon">
+                <IconLayers size={24} />
+              </span>
+              <span className="t">No workspaces yet</span>
+              <span className="s">Create your first one above to start building a graph.</span>
+            </div>
+          </div>
         ) : (
-          <ul style={styles.grid}>
+          <ul className="ws-grid">
             {graphs.map((g) => (
               <li key={g.id}>
-                <Link
-                  to={`/app/workspaces/${g.id}`}
-                  style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}
-                >
-                  <div style={styles.cardTop}>
-                    <span style={styles.cardName}>{g.name}</span>
-                    <span style={styles.badge} aria-label={`status: ${g.status}`}>
+                <Link to={`/app/workspaces/${g.id}`} className="ws-card">
+                  <div className="top">
+                    <span className="nm">{g.name}</span>
+                    <span
+                      className="status-pill"
+                      data-state={pillState(g.status)}
+                      aria-label={`status: ${g.status}`}
+                    >
+                      <span
+                        className={pillState(g.status) === 'active' ? 'dot is-pulse' : 'dot'}
+                        aria-hidden="true"
+                      />
                       {g.status}
                     </span>
                   </div>
                   {g.description !== null && g.description !== '' && (
-                    <p style={styles.cardDesc}>{g.description}</p>
+                    <p className="desc">{g.description}</p>
                   )}
-                  <p style={styles.cardMeta}>
-                    {g.nodeCount} nodes · {g.relationshipCount} relationships
+                  <p className="stats">
+                    {nf.format(g.nodeCount)} nodes · {nf.format(g.relationshipCount)} edges
                     {formatDate(g.createdAt) !== '' ? ` · created ${formatDate(g.createdAt)}` : ''}
                   </p>
                 </Link>
