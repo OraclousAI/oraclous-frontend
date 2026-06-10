@@ -1,0 +1,97 @@
+/* Agents / Tools / Recipes — the catalogue clusters, per the handoff agents.html
+   tile patterns (agent-tile / agent-grid) generalised for the three pages. */
+
+.cat-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.cat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  padding: var(--sp-3) 14px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--motion-hover-dur) var(--motion-hover-ease);
+}
+.cat-tile:hover {
+  border-color: var(--ink);
+}
+.cat-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.cat-tile[data-selected],
+.cat-tile[aria-expanded='true'] {
+  border-color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+.cat-tile .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.cat-tile .nm {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.cat-tile .desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mute);
+  overflow-wrap: break-word;
+}
+.cat-tile .meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mute);
+}
+.cat-tile .doc {
+  font-size: 13px;
+  color: var(--ink);
+  width: fit-content;
+  text-underline-offset: 3px;
+}
+.cat-tile .doc:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Recipe document viewer */
+.cat-pre {
+  margin: 0;
+  padding: var(--sp-3) 14px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-height: 460px;
+  overflow-y: auto;
+}
