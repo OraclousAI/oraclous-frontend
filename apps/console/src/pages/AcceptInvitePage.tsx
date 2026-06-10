@@ -1,63 +1,26 @@
 // Accept-invite landing — reached via the shared link (/app/accept-invite?token=…), behind auth.
 // Peeks the invitation (org + role) by its token, then lets the signed-in user accept and join.
-import { useState, type CSSProperties } from 'react';
+// Styled per the handoff login.html (state 02 — accept invitation), with the in-shell card chrome.
+import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
 import { useAcceptInvitation, usePeekInvitation } from '../lib/invitations.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
+import './auth.css';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
   return 'Something went wrong. Please try again.';
 }
 
-const styles = {
-  page: { display: 'grid', placeItems: 'start center', paddingTop: 24 },
-  card: {
-    display: 'grid',
-    gap: 16,
-    width: '100%',
-    maxWidth: 460,
-    padding: 24,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 12,
-  },
-  h1: { margin: 0, fontSize: 20, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  lead: { margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--ink, #0b1220)' },
-  muted: { margin: 0, fontSize: 13.5, color: 'var(--ink, #0b1220)' },
-  actions: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
-  primary: {
-    padding: '9px 16px',
-    fontSize: 14,
-    fontWeight: 600,
-    color: 'var(--paper, #f4f4f2)',
-    background: 'var(--ink, #0b1220)',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-  },
-  busy: { opacity: 0.6, cursor: 'default' },
-  secondary: {
-    padding: '9px 16px',
-    fontSize: 14,
-    fontWeight: 500,
-    color: 'var(--ink, #0b1220)',
-    background: 'transparent',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-    textDecoration: 'none',
-  },
-  error: {
-    margin: 0,
-    padding: '10px 12px',
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--error-bg, #fbeae8)',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-  },
-} satisfies Record<string, CSSProperties>;
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((w) => w.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function AcceptInvitePage() {
   const [params] = useSearchParams();
@@ -77,55 +40,87 @@ export default function AcceptInvitePage() {
     }
   }
 
+  const orgName = peek?.organisationName ?? 'an organisation';
+
   return (
-    <div style={styles.page}>
-      <section style={styles.card} aria-label="Accept invitation">
-        <h1 style={styles.h1}>Join organisation</h1>
-        {token === '' ? (
-          <p style={styles.error} role="alert">
-            This invite link is missing its token.
-          </p>
-        ) : isLoading ? (
-          <SkeletonList rows={2} />
-        ) : isError || peek === null ? (
-          <p style={styles.error} role="alert">
-            This invitation is invalid or has expired.
-          </p>
-        ) : peek.status !== 'pending' ? (
-          <>
-            <p style={styles.muted}>This invitation is no longer available ({peek.status}).</p>
-            <Link to="/app" style={styles.secondary}>
-              Go to the app
-            </Link>
-          </>
-        ) : (
-          <>
-            <p style={styles.lead}>
-              You&rsquo;ve been invited to join{' '}
-              <strong>{peek.organisationName ?? 'an organisation'}</strong> as{' '}
-              <strong>{peek.role}</strong>.
+    <div style={{ display: 'grid', placeItems: 'start center', paddingTop: 'var(--sp-6)' }}>
+      <section
+        className="card"
+        style={{ width: '100%', maxWidth: 460 }}
+        aria-label="Accept invitation"
+      >
+        <div
+          className="card-body"
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}
+        >
+          <div>
+            <span className="auth-eyebrow">Invitation</span>
+            <h1 className="auth-title" style={{ marginTop: 6 }}>
+              {peek !== null && peek.status === 'pending'
+                ? `You're invited to ${orgName}.`
+                : 'Join organisation'}
+            </h1>
+          </div>
+
+          {token === '' ? (
+            <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+              This invite link is missing its token.
             </p>
-            {error !== null && (
-              <p style={styles.error} role="alert">
-                {error}
+          ) : isLoading ? (
+            <SkeletonList rows={2} />
+          ) : isError || peek === null ? (
+            <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+              This invitation is invalid or has expired.
+            </p>
+          ) : peek.status !== 'pending' ? (
+            <>
+              <p className="auth-sub" style={{ maxWidth: 'none' }}>
+                This invitation is no longer available ({peek.status}).
               </p>
-            )}
-            <div style={styles.actions}>
-              <button
-                type="button"
-                onClick={onAccept}
-                disabled={accept.isPending}
-                aria-busy={accept.isPending}
-                style={accept.isPending ? { ...styles.primary, ...styles.busy } : styles.primary}
-              >
-                {accept.isPending ? 'Joining…' : 'Accept invitation'}
-              </button>
-              <Link to="/app" style={styles.secondary}>
-                Maybe later
-              </Link>
-            </div>
-          </>
-        )}
+              <div className="btn-row" style={{ flexDirection: 'row' }}>
+                <Link to="/app" className="btn" data-variant="secondary">
+                  Go to the app
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="invite-from">
+                <div className="av" aria-hidden="true">
+                  {initials(orgName)}
+                </div>
+                <div>
+                  <div className="who">
+                    Join <strong>{orgName}</strong>
+                  </div>
+                  <div className="email">role · {peek.role}</div>
+                </div>
+              </div>
+
+              {error !== null && (
+                <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+                  {error}
+                </p>
+              )}
+
+              <div className="btn-row" style={{ flexDirection: 'row' }}>
+                <button
+                  type="button"
+                  className="btn"
+                  data-variant="primary"
+                  onClick={onAccept}
+                  disabled={accept.isPending}
+                  aria-busy={accept.isPending}
+                >
+                  {accept.isPending ? 'Joining…' : 'Accept invitation'}
+                </button>
+                <Link to="/app" className="btn" data-variant="ghost">
+                  Maybe later
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
       </section>
     </div>
   );

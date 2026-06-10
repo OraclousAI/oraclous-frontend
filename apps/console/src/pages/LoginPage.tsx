@@ -1,13 +1,15 @@
 // Auth — sign in or create an account against the gateway (POST /v1/auth/login | /register), plus
 // OAuth (GET /oauth/providers → /oauth/{provider}/login). On success the session token is held in
 // the in-memory token store (never persisted) and the user lands in the app.
-import { useId, useState, type CSSProperties, type FormEvent } from 'react';
+// Styled per the handoff login.html (state 01 — sign in).
+import { useId, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ApiClientError, ErrorCode } from '@oraclous/api-client';
 import { useApi } from '../lib/api.jsx';
 import { useTokenStore } from '../lib/token-store.jsx';
 import { Logo, Wordmark } from '../icons/index.js';
+import './auth.css';
 
 type Mode = 'login' | 'signup';
 
@@ -42,6 +44,18 @@ function messageFor(cause: unknown, mode: Mode): string {
     return cause.message;
   }
   return 'Something went wrong. Please try again.';
+}
+
+// The brand prompt chevron (the ">" of the ">|" mark) — always paired with the live cursor.
+function PromptChevron() {
+  return (
+    <svg viewBox="0 0 62 67" style={{ height: '0.8em', width: 'auto' }} aria-hidden="true">
+      <path
+        d="M 0,0 L 56,23 Q 62,25 62,30 L 62,36 Q 62,41 56,43 L 0,66 L 0,52 L 47,34 Q 48,33 47,32 L 0,13 Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 
 export default function LoginPage() {
@@ -121,216 +135,130 @@ export default function LoginPage() {
   const available = providers.data ?? [];
 
   return (
-    <main style={styles.main}>
-      <div style={styles.card}>
-        <div style={styles.brand}>
-          <Logo size={22} />
-          <Wordmark height={20} />
-        </div>
-
-        <div style={styles.head}>
-          <h1 id={titleId} style={styles.heading}>
-            {isSignup ? 'Create your account' : 'Welcome back'}
-          </h1>
-          <p style={styles.sub}>
-            {isSignup
-              ? 'Start building your living knowledge graph.'
-              : 'Sign in to your knowledge workspace.'}
-          </p>
-        </div>
-
-        {error !== null && (
-          <p id={errorId} role="alert" style={styles.error}>
-            {error}
-          </p>
-        )}
-
-        {available.length > 0 && (
-          <>
-            <div style={styles.oauthList}>
-              {available.map((p) => (
-                <button key={p} type="button" onClick={() => onOAuth(p)} style={styles.oauthBtn}>
-                  Continue with {providerLabel(p)}
-                </button>
-              ))}
-            </div>
-            <div style={styles.divider} aria-hidden="true">
-              <span style={styles.dividerText}>or</span>
-            </div>
-          </>
-        )}
-
-        <form style={styles.form} onSubmit={onSubmit} aria-labelledby={titleId} noValidate>
-          <div style={styles.field}>
-            <label htmlFor="auth-email" style={styles.label}>
-              Email
-            </label>
-            <input
-              id="auth-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={error !== null}
-              aria-describedby={error !== null ? errorId : undefined}
-              style={styles.input}
-            />
+    <main className="auth-main">
+      <div className="auth-card">
+        <div className="auth-body">
+          <div className="auth-brand">
+            <Logo size={22} />
+            <Wordmark height={20} />
           </div>
 
-          <div style={styles.field}>
-            <label htmlFor="auth-password" style={styles.label}>
-              Password
-            </label>
-            <input
-              id="auth-password"
-              name="password"
-              type="password"
-              autoComplete={isSignup ? 'new-password' : 'current-password'}
-              required
-              minLength={isSignup ? 8 : undefined}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              aria-invalid={error !== null}
-              aria-describedby={error !== null ? errorId : undefined}
-              style={styles.input}
-            />
-            {isSignup && <span style={styles.hint}>At least 8 characters.</span>}
+          <span className="auth-eyebrow">
+            <span className="dot is-pulse" aria-hidden="true" /> oraclous console
+          </span>
+
+          <div>
+            <h1 id={titleId} className="auth-title">
+              {isSignup ? 'Create your account.' : 'Welcome back.'}
+            </h1>
+            <p className="auth-sub" style={{ marginTop: 6 }}>
+              {isSignup
+                ? 'Start building your living knowledge graph.'
+                : 'Sign in to your tenant. Your session token is held in memory — never stored.'}
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            aria-busy={submitting}
-            style={submitting ? { ...styles.button, ...styles.buttonBusy } : styles.button}
-          >
-            {submitting
-              ? isSignup
-                ? 'Creating account…'
-                : 'Signing in…'
-              : isSignup
-                ? 'Create account'
-                : 'Sign in'}
-          </button>
-        </form>
+          {error !== null && (
+            <p
+              id={errorId}
+              role="alert"
+              className="callout"
+              data-tone="error"
+              style={{ margin: 0 }}
+            >
+              {error}
+            </p>
+          )}
 
-        <p style={styles.toggle}>
-          {isSignup ? 'Already have an account?' : 'New to Oraclous?'}{' '}
-          <button type="button" onClick={toggleMode} style={styles.toggleBtn}>
-            {isSignup ? 'Sign in' : 'Create an account'}
-          </button>
-        </p>
+          <form className="auth-form" onSubmit={onSubmit} aria-labelledby={titleId} noValidate>
+            <div className="field">
+              <label htmlFor="auth-email">Work email</label>
+              <input
+                id="auth-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={error !== null}
+                aria-describedby={error !== null ? errorId : undefined}
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="auth-password">Password</label>
+              <input
+                id="auth-password"
+                name="password"
+                type="password"
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
+                required
+                minLength={isSignup ? 8 : undefined}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={error !== null}
+                aria-describedby={error !== null ? errorId : undefined}
+              />
+              {isSignup && <span className="hint">At least 8 characters.</span>}
+            </div>
+
+            <div className="btn-row">
+              <button
+                type="submit"
+                className="btn"
+                data-variant="primary"
+                disabled={submitting}
+                aria-busy={submitting}
+              >
+                {submitting
+                  ? isSignup
+                    ? 'Creating account…'
+                    : 'Signing in…'
+                  : isSignup
+                    ? 'Create account'
+                    : 'Sign in'}
+              </button>
+
+              {available.length > 0 && (
+                <>
+                  <div className="div-or" aria-hidden="true">
+                    or
+                  </div>
+                  {available.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className="btn"
+                      data-variant="secondary"
+                      onClick={() => onOAuth(p)}
+                    >
+                      Continue with {providerLabel(p)}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          </form>
+
+          <span className="terminal-strip">
+            <span className="prompt">
+              <PromptChevron />
+            </span>
+            <span>oraclous auth · session held in memory</span>
+            <span className="cursor is-blink" aria-hidden="true" />
+          </span>
+        </div>
+
+        <div className="auth-foot">
+          <span>
+            {isSignup ? 'Already have an account?' : 'New to Oraclous?'}{' '}
+            <button type="button" onClick={toggleMode}>
+              {isSignup ? 'Sign in' : 'Create an account'}
+            </button>
+          </span>
+        </div>
       </div>
     </main>
   );
 }
-
-const styles = {
-  main: {
-    minHeight: '100dvh',
-    display: 'grid',
-    placeItems: 'center',
-    background: 'var(--paper, #f4f4f2)',
-    padding: 24,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 400,
-    display: 'grid',
-    gap: 18,
-    padding: 32,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 14,
-    boxShadow: 'var(--shadow-2, 0 2px 6px -2px rgba(11, 18, 32, 0.12))',
-  },
-  brand: { display: 'flex', alignItems: 'center', gap: 9 },
-  head: { display: 'grid', gap: 4 },
-  heading: {
-    margin: 0,
-    fontSize: 22,
-    fontWeight: 600,
-    letterSpacing: '-0.02em',
-    color: 'var(--ink, #0b1220)',
-  },
-  sub: { margin: 0, fontSize: 13.5, color: 'var(--mute, #65686f)' },
-  oauthList: { display: 'grid', gap: 8 },
-  oauthBtn: {
-    width: '100%',
-    padding: '10px 14px',
-    fontSize: 14,
-    fontWeight: 500,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-    cursor: 'pointer',
-  },
-  divider: {
-    display: 'grid',
-    placeItems: 'center',
-    position: 'relative',
-    borderTop: '1px solid var(--rule, #d7d6d2)',
-    height: 0,
-  },
-  dividerText: {
-    position: 'absolute',
-    top: -9,
-    padding: '0 8px',
-    fontSize: 12,
-    color: 'var(--mute, #65686f)',
-    background: 'var(--paper, #f4f4f2)',
-  },
-  form: { display: 'grid', gap: 16 },
-  field: { display: 'grid', gap: 6 },
-  label: { fontSize: 13, fontWeight: 500, color: 'var(--ink, #0b1220)' },
-  hint: { fontSize: 12, color: 'var(--mute, #65686f)' },
-  input: {
-    width: '100%',
-    boxSizing: 'border-box',
-    padding: '10px 12px',
-    fontSize: 14,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  button: {
-    width: '100%',
-    padding: '11px 16px',
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--paper, #f4f4f2)',
-    background: 'var(--ink, #0b1220)',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-  },
-  buttonBusy: { opacity: 0.6, cursor: 'default' },
-  error: {
-    margin: 0,
-    padding: '10px 12px',
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--error-bg, #fbeae8)',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-  },
-  toggle: { margin: 0, fontSize: 13, color: 'var(--mute, #65686f)', textAlign: 'center' },
-  toggleBtn: {
-    appearance: 'none',
-    border: 'none',
-    background: 'transparent',
-    padding: 0,
-    fontSize: 13,
-    fontWeight: 600,
-    color: 'var(--ink, #0b1220)',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-  },
-} satisfies Record<string, CSSProperties>;

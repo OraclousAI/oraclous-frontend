@@ -1,0 +1,192 @@
+/* Auth surfaces — the card chrome per the handoff login.html (state 01).
+   Shared by LoginPage and the invite/tenant flows. */
+
+.auth-main {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  padding: var(--sp-6);
+  font-family: var(--font-sans);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+}
+
+.auth-body {
+  flex: 1;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 2px;
+}
+
+.auth-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.auth-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  display: inline-block;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: var(--t-h3-size);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.auth-sub {
+  margin: 0;
+  font-size: var(--t-dense-size);
+  line-height: 1.55;
+  color: var(--mute);
+  max-width: 38ch;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+/* Auth inputs are mono — the terminal register of the sign-in surface. */
+.auth-card .field input {
+  font-family: var(--font-mono);
+}
+
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+.btn-row .btn {
+  justify-content: center;
+}
+
+.div-or {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.div-or::before,
+.div-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* Terminal-styled accent line — the brand prompt (chevron + live cursor). */
+.terminal-strip {
+  font-family: var(--font-mono);
+  font-size: var(--t-caption-size);
+  color: var(--mute);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.terminal-strip .prompt {
+  color: var(--ink);
+  display: inline-flex;
+}
+.terminal-strip .cursor {
+  display: inline-block;
+  width: 6px;
+  height: 14px;
+  background: var(--accent);
+  vertical-align: -2px;
+  margin-left: 2px;
+}
+
+/* Invite receipt card (state 02) */
+.invite-from {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-3) 14px;
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+}
+.invite-from .av {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-3);
+  background: var(--ink);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: var(--t-mono-size);
+}
+.invite-from .who {
+  font-size: var(--t-dense-size);
+  font-weight: 500;
+}
+.invite-from .email {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
+
+.auth-foot {
+  padding: var(--sp-4) 36px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.auth-foot a,
+.auth-foot button {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.auth-foot a:focus-visible,
+.auth-foot button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
