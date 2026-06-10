@@ -1,6 +1,7 @@
 // Workspace (knowledge-graph) detail: live node/relationship counts, an inline ingest form
 // (text/structured content -> async job) with live job status, and retrieval/search over the graph.
-import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+// Styled per the handoff workspace.html (ws-head + card patterns).
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiClientError, type IngestJob, type SearchMode } from '@oraclous/api-client';
@@ -17,6 +18,8 @@ import { resultScore, resultText, useSearch } from '../lib/search.js';
 import { useToast } from '../lib/toast.jsx';
 import { OntologyEditor } from '../components/graph/OntologyEditor.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
+import { IconArrowUpRight } from '../icons/index.js';
+import './workspace.css';
 
 const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
 const SEARCH_MODES = ['semantic', 'fulltext', 'hybrid'] as const;
@@ -32,230 +35,49 @@ function formatDate(iso: string): string {
 }
 
 // Mint (--accent) is reserved for a LIVE signal — an active job qualifies; terminal states do not.
-function badgeStyle(status: string): CSSProperties {
-  if (status === 'failed') {
-    return {
-      color: 'var(--ink, #0b1220)',
-      background: 'var(--error-bg, #fbeae8)',
-      borderColor: 'var(--error, #c8412c)',
-    };
-  }
-  if (status === 'pending' || status === 'running') {
-    return {
-      color: 'var(--ink, #0b1220)',
-      background: 'rgba(16,216,138,0.12)',
-      borderColor: 'var(--accent, #10d88a)',
-    };
-  }
-  return {
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--paper-soft, #eceae5)',
-    borderColor: 'var(--rule, #d7d6d2)',
-  };
+function jobPillState(status: string): string {
+  if (status === 'failed') return 'error';
+  if (status === 'pending' || status === 'running') return 'active';
+  return 'paused';
 }
 
-const styles = {
-  page: { display: 'grid', gap: 20, maxWidth: 920 },
-  back: {
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    textDecoration: 'none',
-    width: 'fit-content',
-  },
-  header: { display: 'grid', gap: 8 },
-  titleRow: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  h1: { margin: 0, fontSize: 22, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  badge: {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 999,
-    padding: '2px 8px',
-  },
-  metrics: { display: 'flex', gap: 16, flexWrap: 'wrap', margin: 0 },
-  metric: { fontSize: 13, color: 'var(--ink, #0b1220)' },
-  metricNum: { fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono, monospace)' },
-  meta: {
-    margin: 0,
-    fontSize: 12,
-    color: 'var(--ink, #0b1220)',
-    fontFamily: 'var(--font-mono, monospace)',
-  },
-  desc: { margin: 0, fontSize: 13.5, color: 'var(--ink, #0b1220)' },
-  card: {
-    display: 'grid',
-    gap: 12,
-    padding: 16,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 12,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-  },
-  cardTitle: { margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  field: { display: 'grid', gap: 6 },
-  label: { fontSize: 13, fontWeight: 500, color: 'var(--ink, #0b1220)' },
-  textarea: {
-    width: '100%',
-    boxSizing: 'border-box',
-    minHeight: 96,
-    padding: '10px 12px',
-    fontSize: 14,
-    fontFamily: 'var(--font-mono, monospace)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-    resize: 'vertical',
-  },
-  controlRow: { display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
-  select: {
-    padding: '9px 12px',
-    fontSize: 14,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  primary: {
-    padding: '9px 16px',
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--paper, #f4f4f2)',
-    background: 'var(--ink, #0b1220)',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  busy: { opacity: 0.6, cursor: 'default' },
-  error: {
-    margin: 0,
-    padding: '10px 12px',
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--error-bg, #fbeae8)',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-  },
-  muted: { margin: 0, fontSize: 13.5, color: 'var(--ink, #0b1220)' },
-  jobs: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 },
-  job: {
-    display: 'grid',
-    gap: 4,
-    padding: 12,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 10,
-  },
-  jobTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  jobName: { fontSize: 14, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  jobMeta: {
-    margin: 0,
-    fontSize: 12,
-    color: 'var(--ink, #0b1220)',
-    fontFamily: 'var(--font-mono, monospace)',
-  },
-  jobError: { margin: 0, fontSize: 12, color: 'var(--error, #c8412c)' },
-  input: {
-    width: '100%',
-    boxSizing: 'border-box',
-    padding: '9px 12px',
-    fontSize: 14,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  typeBadge: {
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--paper-soft, #eceae5)',
-    borderColor: 'var(--rule, #d7d6d2)',
-  },
-  results: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 },
-  result: {
-    display: 'grid',
-    gap: 6,
-    padding: 12,
-    minWidth: 0,
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 10,
-  },
-  score: { fontSize: 12, color: 'var(--ink, #0b1220)', fontFamily: 'var(--font-mono, monospace)' },
-  resultText: {
-    margin: 0,
-    fontSize: 13.5,
-    lineHeight: 1.5,
-    color: 'var(--ink, #0b1220)',
-    // arbitrary ingested content — wrap long unbreakable tokens (URLs/base64) instead of overflowing
-    overflowWrap: 'break-word',
-    wordBreak: 'break-word',
-  },
-  renameRow: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
-  headerActions: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  confirmText: { fontSize: 13, color: 'var(--ink, #0b1220)' },
-  secondary: {
-    padding: '7px 12px',
-    fontSize: 13,
-    fontWeight: 500,
-    color: 'var(--ink, #0b1220)',
-    background: 'transparent',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  danger: {
-    padding: '7px 12px',
-    fontSize: 13,
-    fontWeight: 600,
-    color: 'var(--paper, #f4f4f2)',
-    background: 'var(--error, #c8412c)',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  dangerGhost: {
-    padding: '7px 12px',
-    fontSize: 13,
-    fontWeight: 500,
-    color: 'var(--error, #c8412c)',
-    background: 'transparent',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  fileRow: {
-    display: 'grid',
-    gap: 6,
-    borderTop: '1px solid var(--rule, #d7d6d2)',
-    paddingTop: 12,
-  },
-} satisfies Record<string, CSSProperties>;
+function graphPillState(status: string): string {
+  const s = status.toLowerCase();
+  if (s.includes('error') || s.includes('fail')) return 'error';
+  if (s === 'active' || s === 'ready' || s === 'processing' || s === 'running') return 'active';
+  return 'paused';
+}
+
+function initials(name: string): string {
+  return name
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+const nf = new Intl.NumberFormat();
 
 function JobRow({ job }: { job: IngestJob }) {
+  const state = jobPillState(job.status);
   return (
-    <li style={styles.job}>
-      <div style={styles.jobTop}>
-        <span style={styles.jobName}>{job.filename ?? job.sourceType}</span>
+    <li>
+      <div className="top">
+        <span className="nm">{job.filename ?? job.sourceType}</span>
         {/* Always a live region so the terminal transition (running -> completed/failed) is announced. */}
-        <span style={{ ...styles.badge, ...badgeStyle(job.status) }} aria-live="polite">
+        <span className="status-pill" data-state={state} aria-live="polite">
+          <span className={state === 'active' ? 'dot is-pulse' : 'dot'} aria-hidden="true" />
           {job.status}
         </span>
       </div>
-      <p style={styles.jobMeta}>
+      <p className="meta">
         {job.extractedEntities ?? 0} entities · {job.extractedRelationships ?? 0} relationships
         {formatDate(job.createdAt) !== '' ? ` · ${formatDate(job.createdAt)}` : ''}
       </p>
       {job.status === 'failed' && job.errorMessage !== null && (
-        <p style={styles.jobError}>{job.errorMessage}</p>
+        <p className="err">{job.errorMessage}</p>
       )}
     </li>
   );
@@ -378,117 +200,149 @@ export default function GraphDetailPage() {
 
   const busy = ingest.isPending;
   const searchResults = search.data ?? [];
+  const cardGap = { display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' } as const;
 
   return (
-    <div style={styles.page}>
-      <Link to="/app/workspaces" style={styles.back}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+      <Link
+        to="/app/workspaces"
+        className="btn"
+        data-variant="ghost"
+        data-size="sm"
+        style={{ width: 'fit-content', marginLeft: -11 }}
+      >
         ← Workspaces
       </Link>
 
       {isLoading ? (
         <SkeletonList rows={3} />
       ) : isError || graph === null ? (
-        <p style={styles.error} role="alert">
+        <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
           This workspace could not be found.
         </p>
       ) : (
         <>
-          <header style={styles.header}>
-            {renaming ? (
-              <form style={styles.renameRow} onSubmit={onRename} aria-label="Rename workspace">
-                <input
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      e.preventDefault();
+          <header className="ws-head" style={{ marginBottom: 0 }}>
+            <span className="ws-badge" aria-hidden="true">
+              {initials(graph.name)}
+            </span>
+            <div>
+              {renaming ? (
+                <form className="control-row" onSubmit={onRename} aria-label="Rename workspace">
+                  <div className="field grow">
+                    <label htmlFor="ws-rename">Workspace name</label>
+                    <input
+                      id="ws-rename"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setRenaming(false);
+                          setMgmtError(null);
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn"
+                    data-variant="primary"
+                    data-size="sm"
+                    disabled={updateGraph.isPending || nameInput.trim() === ''}
+                  >
+                    {updateGraph.isPending ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    data-variant="secondary"
+                    data-size="sm"
+                    onClick={() => {
                       setRenaming(false);
                       setMgmtError(null);
-                    }
-                  }}
-                  aria-label="Workspace name"
-                  style={styles.input}
-                />
-                <button
-                  type="submit"
-                  disabled={updateGraph.isPending || nameInput.trim() === ''}
-                  style={styles.primary}
-                >
-                  {updateGraph.isPending ? 'Saving…' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRenaming(false);
-                    setMgmtError(null);
-                  }}
-                  style={styles.secondary}
-                >
-                  Cancel
-                </button>
-              </form>
-            ) : (
-              <div style={styles.titleRow}>
-                <h1 style={styles.h1}>{graph.name}</h1>
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <h1>{graph.name}</h1>
+              )}
+              <div className="meta">
                 <span
-                  style={{ ...styles.badge, ...badgeStyle(graph.status) }}
+                  className="status-pill"
+                  data-state={graphPillState(graph.status)}
                   aria-label={`status: ${graph.status}`}
                 >
+                  <span
+                    className={graphPillState(graph.status) === 'active' ? 'dot is-pulse' : 'dot'}
+                    aria-hidden="true"
+                  />
                   {graph.status}
                 </span>
+                <span>
+                  {nf.format(graph.nodeCount)} nodes · {nf.format(graph.relationshipCount)} edges
+                </span>
+                <span className="sep" aria-hidden="true" />
+                <span>created {formatDate(graph.createdAt)}</span>
+                <span className="sep" aria-hidden="true" />
+                <span>updated {formatDate(graph.updatedAt)}</span>
               </div>
-            )}
-            {graph.description !== null && graph.description !== '' && (
-              <p style={styles.desc}>{graph.description}</p>
-            )}
-            <p style={styles.metrics}>
-              <span style={styles.metric}>
-                <span style={styles.metricNum}>{graph.nodeCount}</span> nodes
-              </span>
-              <span style={styles.metric}>
-                <span style={styles.metricNum}>{graph.relationshipCount}</span> relationships
-              </span>
-            </p>
-            <p style={styles.meta}>
-              created {formatDate(graph.createdAt)} · updated {formatDate(graph.updatedAt)}
-            </p>
+              {graph.description !== null && graph.description !== '' && (
+                <p
+                  className="sub"
+                  style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--mute)' }}
+                >
+                  {graph.description}
+                </p>
+              )}
+            </div>
             {!renaming && (
-              <div style={styles.headerActions}>
+              <div className="page-head-actions">
                 <Link
                   to={`/app/workspaces/${graphId}/explorer`}
-                  style={{ ...styles.secondary, textDecoration: 'none' }}
+                  className="btn"
+                  data-variant="secondary"
+                  data-size="sm"
                 >
-                  Explore
+                  Open explorer <IconArrowUpRight size={13} />
                 </Link>
                 <button
                   type="button"
+                  className="btn"
+                  data-variant="secondary"
+                  data-size="sm"
                   onClick={() => {
                     setNameInput(graph.name);
                     setRenaming(true);
                     setMgmtError(null);
                   }}
-                  style={styles.secondary}
                 >
                   Rename
                 </button>
                 {confirmingDelete ? (
                   <>
-                    <span style={styles.confirmText}>Delete this workspace and its data?</span>
+                    <span style={{ fontSize: 13 }}>Delete this workspace and its data?</span>
                     <button
                       type="button"
+                      className="btn"
+                      data-variant="danger"
+                      data-size="sm"
                       onClick={onDelete}
                       disabled={deleteGraph.isPending}
-                      style={styles.danger}
                     >
                       {deleteGraph.isPending ? 'Deleting…' : 'Delete'}
                     </button>
                     <button
                       type="button"
+                      className="btn"
+                      data-variant="secondary"
+                      data-size="sm"
                       onClick={() => {
                         setConfirmingDelete(false);
                         setMgmtError(null);
                       }}
-                      style={styles.secondary}
                     >
                       Cancel
                     </button>
@@ -496,182 +350,214 @@ export default function GraphDetailPage() {
                 ) : (
                   <button
                     type="button"
+                    className="btn"
+                    data-variant="danger"
+                    data-size="sm"
                     onClick={() => {
                       setConfirmingDelete(true);
                       setMgmtError(null);
                     }}
-                    style={styles.dangerGhost}
                   >
                     Delete
                   </button>
                 )}
               </div>
             )}
-            {mgmtError !== null && (
-              <p role="alert" style={styles.error}>
-                {mgmtError}
-              </p>
-            )}
           </header>
+          {mgmtError !== null && (
+            <p role="alert" className="callout" data-tone="error" style={{ margin: 0 }}>
+              {mgmtError}
+            </p>
+          )}
 
-          <form style={styles.card} onSubmit={onSearch} aria-label="Search this workspace">
-            <h2 style={styles.cardTitle}>Search this workspace</h2>
-            <div style={styles.controlRow}>
-              <div style={{ ...styles.field, flex: 1, minWidth: 200 }}>
-                <label htmlFor="search-query" style={styles.label}>
-                  Query
-                </label>
-                <input
-                  id="search-query"
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Ask your knowledge…"
-                  style={styles.input}
+          <form className="card" onSubmit={onSearch} aria-label="Search this workspace">
+            <div className="card-head">
+              <div className="h">
+                <h2>Search this workspace</h2>
+                <span className="sub">Semantic, fulltext, or hybrid retrieval over the graph</span>
+              </div>
+            </div>
+            <div className="card-body" style={cardGap}>
+              <div className="control-row">
+                <div className="field grow">
+                  <label htmlFor="search-query">Query</label>
+                  <input
+                    id="search-query"
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Ask your knowledge…"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="search-mode">Mode</label>
+                  <select
+                    id="search-mode"
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value as SearchMode)}
+                  >
+                    {SEARCH_MODES.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="btn"
+                  data-variant="primary"
+                  disabled={search.isPending || query.trim() === ''}
+                  aria-busy={search.isPending}
+                >
+                  {search.isPending ? 'Searching…' : 'Search'}
+                </button>
+              </div>
+              {search.isError && (
+                <p role="alert" className="callout" data-tone="error" style={{ margin: 0 }}>
+                  Search failed. Please try again.
+                </p>
+              )}
+              {/* Results are gated on isSuccess so a failed re-search never shows stale rows; the
+                  region is a polite live region so arriving results (or none) are announced. */}
+              <div role="status" aria-live="polite">
+                {search.isSuccess && searchResults.length === 0 && (
+                  <p style={{ margin: 0, fontSize: 13.5, color: 'var(--mute)' }}>
+                    No results for that query.
+                  </p>
+                )}
+                {search.isSuccess && searchResults.length > 0 && (
+                  <ul
+                    className="row-list"
+                    aria-label="Search results"
+                    style={{ border: '1px solid var(--rule)', borderRadius: 'var(--r-4)' }}
+                  >
+                    {searchResults.map((r) => {
+                      const score = resultScore(r);
+                      return (
+                        <li key={r.id}>
+                          <div className="top">
+                            <span className="chip chip-sm">{r.type}</span>
+                            {score !== null && <span className="meta">{score.toFixed(3)}</span>}
+                          </div>
+                          <p className="body">{resultText(r)}</p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </form>
+
+          <form className="card" onSubmit={onSubmit} aria-label="Add knowledge">
+            <div className="card-head">
+              <div className="h">
+                <h2>Add knowledge</h2>
+                <span className="sub">Paste content or upload a file — ingestion runs async</span>
+              </div>
+            </div>
+            <div className="card-body" style={cardGap}>
+              {error !== null && (
+                <p
+                  id={errorId}
+                  role="alert"
+                  className="callout"
+                  data-tone="error"
+                  style={{ margin: 0 }}
+                >
+                  {error}
+                </p>
+              )}
+              <div className="field">
+                <label htmlFor="ingest-content">Content</label>
+                <textarea
+                  id="ingest-content"
+                  className="mono"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Paste text, CSV, JSON or code…"
+                  aria-invalid={error !== null}
+                  aria-describedby={error !== null ? errorId : undefined}
                 />
               </div>
-              <div style={styles.field}>
-                <label htmlFor="search-mode" style={styles.label}>
-                  Mode
-                </label>
-                <select
-                  id="search-mode"
-                  value={mode}
-                  onChange={(e) => setMode(e.target.value as SearchMode)}
-                  style={styles.select}
+              <div className="control-row">
+                <div className="field">
+                  <label htmlFor="ingest-type">Type</label>
+                  <select
+                    id="ingest-type"
+                    value={sourceType}
+                    onChange={(e) => setSourceType(e.target.value)}
+                  >
+                    {SOURCE_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="btn"
+                  data-variant="primary"
+                  disabled={busy || content.trim() === ''}
+                  aria-busy={busy}
                 >
-                  {SEARCH_MODES.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
+                  {busy ? 'Starting…' : 'Ingest'}
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={search.isPending || query.trim() === ''}
-                aria-busy={search.isPending}
-                style={search.isPending ? { ...styles.primary, ...styles.busy } : styles.primary}
+              <div
+                style={{
+                  borderTop: '1px solid var(--rule)',
+                  paddingTop: 'var(--sp-3)',
+                }}
               >
-                {search.isPending ? 'Searching…' : 'Search'}
-              </button>
+                <div className="control-row">
+                  <div className="field grow">
+                    <label htmlFor="ingest-file">Or upload a file</label>
+                    <input
+                      ref={fileRef}
+                      id="ingest-file"
+                      type="file"
+                      onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="btn"
+                    data-variant="secondary"
+                    onClick={onUploadFile}
+                    disabled={fileName === null || ingestFile.isPending}
+                    aria-busy={ingestFile.isPending}
+                  >
+                    {ingestFile.isPending ? 'Uploading…' : 'Upload'}
+                  </button>
+                </div>
+              </div>
             </div>
-            {search.isError && (
-              <p role="alert" style={styles.error}>
-                Search failed. Please try again.
-              </p>
-            )}
-            {/* Results are gated on isSuccess so a failed re-search never shows stale rows; the
-                region is a polite live region so arriving results (or none) are announced. */}
-            <div role="status" aria-live="polite">
-              {search.isSuccess && searchResults.length === 0 && (
-                <p style={styles.muted}>No results for that query.</p>
-              )}
-              {search.isSuccess && searchResults.length > 0 && (
-                <ul style={styles.results} aria-label="Search results">
-                  {searchResults.map((r) => {
-                    const score = resultScore(r);
-                    return (
-                      <li key={r.id} style={styles.result}>
-                        <div style={styles.jobTop}>
-                          <span style={{ ...styles.badge, ...styles.typeBadge }}>{r.type}</span>
-                          {score !== null && <span style={styles.score}>{score.toFixed(3)}</span>}
-                        </div>
-                        <p style={styles.resultText}>{resultText(r)}</p>
-                      </li>
-                    );
-                  })}
+          </form>
+
+          <section className="card" aria-label="Ingestion history">
+            <div className="card-head">
+              <div className="h">
+                <h2>Ingestion history</h2>
+                <span className="sub">Jobs for this workspace · live while running</span>
+              </div>
+            </div>
+            <div className="card-body no-pad">
+              {documents.length === 0 ? (
+                <div className="empty">
+                  <span className="t">No ingestion yet</span>
+                  <span className="s">Add some knowledge above to start the graph.</span>
+                </div>
+              ) : (
+                <ul className="row-list">
+                  {documents.map((job) => (
+                    <JobRow key={job.id} job={job} />
+                  ))}
                 </ul>
               )}
             </div>
-          </form>
-
-          <form style={styles.card} onSubmit={onSubmit} aria-label="Add knowledge">
-            <h2 style={styles.cardTitle}>Add knowledge</h2>
-            {error !== null && (
-              <p id={errorId} role="alert" style={styles.error}>
-                {error}
-              </p>
-            )}
-            <div style={styles.field}>
-              <label htmlFor="ingest-content" style={styles.label}>
-                Content
-              </label>
-              <textarea
-                id="ingest-content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Paste text, CSV, JSON or code…"
-                aria-invalid={error !== null}
-                aria-describedby={error !== null ? errorId : undefined}
-                style={styles.textarea}
-              />
-            </div>
-            <div style={styles.controlRow}>
-              <div style={styles.field}>
-                <label htmlFor="ingest-type" style={styles.label}>
-                  Type
-                </label>
-                <select
-                  id="ingest-type"
-                  value={sourceType}
-                  onChange={(e) => setSourceType(e.target.value)}
-                  style={styles.select}
-                >
-                  {SOURCE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={busy || content.trim() === ''}
-                aria-busy={busy}
-                style={busy ? { ...styles.primary, ...styles.busy } : styles.primary}
-              >
-                {busy ? 'Starting…' : 'Ingest'}
-              </button>
-            </div>
-            <div style={styles.fileRow}>
-              <label htmlFor="ingest-file" style={styles.label}>
-                Or upload a file
-              </label>
-              <div style={styles.controlRow}>
-                <input
-                  ref={fileRef}
-                  id="ingest-file"
-                  type="file"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                  style={{ ...styles.input, flex: 1, minWidth: 200 }}
-                />
-                <button
-                  type="button"
-                  onClick={onUploadFile}
-                  disabled={fileName === null || ingestFile.isPending}
-                  aria-busy={ingestFile.isPending}
-                  style={
-                    ingestFile.isPending ? { ...styles.primary, ...styles.busy } : styles.primary
-                  }
-                >
-                  {ingestFile.isPending ? 'Uploading…' : 'Upload'}
-                </button>
-              </div>
-            </div>
-          </form>
-
-          <section aria-label="Ingestion history" style={{ display: 'grid', gap: 8 }}>
-            <h2 style={styles.cardTitle}>Ingestion history</h2>
-            {documents.length === 0 ? (
-              <p style={styles.muted}>No ingestion yet. Add some knowledge above.</p>
-            ) : (
-              <ul style={styles.jobs}>
-                {documents.map((job) => (
-                  <JobRow key={job.id} job={job} />
-                ))}
-              </ul>
-            )}
           </section>
 
           {/* key by graphId so the editor remounts (and re-hydrates) per graph — never carries one
