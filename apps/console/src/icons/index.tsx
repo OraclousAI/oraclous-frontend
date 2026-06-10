@@ -136,6 +136,16 @@ export const IconArrowUpRight = (p: IconProps) => (
     <path d="M8 7h9v9" />
   </Icon>
 );
+export const IconList = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M8 6h13" />
+    <path d="M8 12h13" />
+    <path d="M8 18h13" />
+    <path d="M3 6h.01" />
+    <path d="M3 12h.01" />
+    <path d="M3 18h.01" />
+  </Icon>
+);
 export const IconDatabase = (p: IconProps) => (
   <Icon {...p}>
     <ellipse cx="12" cy="5.5" rx="8" ry="3" />
