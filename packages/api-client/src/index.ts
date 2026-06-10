@@ -169,3 +169,33 @@ export type {
   Execution,
   ExecutionStatus,
 } from './instances';
+
+// ── OHM manifests (the agent-builder document model) ─────────────────────────
+export type {
+  OhmManifest,
+  OhmMetadata,
+  OhmCapability,
+  OhmModel,
+  OhmPrompt,
+  OhmActor,
+  OhmGovernance,
+  OhmRuntime,
+} from './ohm';
+
+// ── Harness runtime (synchronous OHM execution + execution records) ──────────
+export { createHarnessesClient } from './harnesses';
+export type {
+  HarnessesClient,
+  HarnessExecution,
+  HarnessExecutionStatus,
+  HarnessStep,
+  ExecuteHarnessInput,
+} from './harnesses';
+
+// ── Execution engine (durable jobs + activity feed) ──────────────────────────
+export { createEngineClient, isJobTerminal } from './engine';
+export type { EngineClient, Job, JobState, SubmitJobInput, EngineActivityEvent } from './engine';
+
+// ── Capability registry: harness (saved-agent) CRUD ──────────────────────────
+export { createCapabilitiesClient } from './capabilities';
+export type { CapabilitiesClient, HarnessCapability } from './capabilities';
