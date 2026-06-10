@@ -1,0 +1,44 @@
+/* Members — roster + invitations, per the handoff members.html table treatment. */
+
+.members-table .table-head,
+.members-table .table-row {
+  grid-template-columns: minmax(0, 1.8fr) auto minmax(0, 1fr);
+}
+
+@media (max-width: 760px) {
+  .members-table .table-head {
+    display: none;
+  }
+  .members-table .table-row {
+    grid-template-columns: 1fr;
+    gap: var(--sp-2);
+  }
+}
+
+/* Display-once invite link panel */
+.invite-link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 14px;
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  border-radius: var(--r-3);
+}
+.invite-link .row {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.invite-link input {
+  flex: 1;
+  min-width: 220px;
+  box-sizing: border-box;
+  padding: var(--sp-2) 10px;
+  font-size: var(--t-caption-size);
+  font-family: var(--font-mono);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+}

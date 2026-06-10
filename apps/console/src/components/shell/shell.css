@@ -1,5 +1,12 @@
 /* Shell chrome — DashLayout / Sidebar / TopBar */
 
+/* Shell buttons never carry the UA chrome — each class draws its own border
+   (the handoff nav/tenant/icon buttons are all borderless on transparent). */
+.shell-root button {
+  font: inherit;
+  border: none;
+}
+
 /* Visually hidden but accessible to screen readers */
 .shell-visually-hidden {
   position: absolute;
@@ -76,7 +83,7 @@
 }
 
 .shell-sidebar__brand-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -123,7 +130,7 @@
 }
 
 .shell-nav-item:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 
@@ -161,7 +168,7 @@
 }
 
 .shell-ws-item:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 
@@ -261,7 +268,7 @@
 }
 
 .shell-topbar__tenant-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
 
@@ -350,7 +357,7 @@
 }
 
 .shell-dropdown__item:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: -1px;
 }
 
@@ -453,7 +460,7 @@
 }
 
 .shell-icon-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 
@@ -513,7 +520,7 @@
 }
 
 .shell-menu-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 

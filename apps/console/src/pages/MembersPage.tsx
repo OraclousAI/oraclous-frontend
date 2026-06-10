@@ -1,12 +1,15 @@
 // Members — the org roster + invitations. Owner sees + manages members (change role, remove), invites
 // by email, and revokes pending invitations. On invite the raw token is shown once as a share link.
-import { useId, useState, type CSSProperties, type FormEvent } from 'react';
+// Styled per the handoff members.html (named rows + table treatment + card chrome).
+import { useId, useState, type FormEvent } from 'react';
 import { ApiClientError, type MemberRole } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import { useChangeMemberRole, useMe, useMembers, useOrg, useRemoveMember } from '../lib/session.js';
 import { useCreateInvitation, useInvitations, useRevokeInvitation } from '../lib/invitations.js';
 import { useToast } from '../lib/toast.jsx';
 import { SkeletonList } from '../components/ui/Skeleton.js';
+import { IconUsers } from '../icons/index.js';
+import './members.css';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -18,128 +21,17 @@ function messageFor(cause: unknown): string {
   return 'Something went wrong. Please try again.';
 }
 
-const styles = {
-  page: { display: 'grid', gap: 20, maxWidth: 720 },
-  h1: { margin: 0, fontSize: 24, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  card: {
-    display: 'grid',
-    gap: 14,
-    padding: 20,
-    background: 'var(--paper, #f4f4f2)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 12,
-  },
-  h2: { margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-  field: { display: 'grid', gap: 6 },
-  label: { fontSize: 13, fontWeight: 500, color: 'var(--ink, #0b1220)' },
-  row: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' },
-  input: {
-    flex: 1,
-    minWidth: 200,
-    boxSizing: 'border-box',
-    padding: '9px 12px',
-    fontSize: 14,
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  select: {
-    padding: '9px 12px',
-    fontSize: 14,
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  primary: {
-    padding: '9px 16px',
-    fontSize: 14,
-    fontWeight: 600,
-    color: 'var(--paper, #f4f4f2)',
-    background: 'var(--ink, #0b1220)',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  secondary: {
-    padding: '7px 12px',
-    fontSize: 13,
-    fontWeight: 500,
-    color: 'var(--ink, #0b1220)',
-    background: 'transparent',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  },
-  busy: { opacity: 0.6, cursor: 'default' },
-  note: { margin: 0, fontSize: 13, color: 'var(--ink, #0b1220)', opacity: 0.75 },
-  muted: { margin: 0, fontSize: 13.5, color: 'var(--ink, #0b1220)' },
-  error: {
-    margin: 0,
-    padding: '10px 12px',
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--error-bg, #fbeae8)',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-  },
-  invitePanel: {
-    display: 'grid',
-    gap: 8,
-    padding: '12px 14px',
-    background: 'var(--success-bg, #e7f3ec)',
-    border: '1px solid var(--success, #2e8b57)',
-    borderRadius: 8,
-  },
-  linkRow: { display: 'flex', gap: 8, flexWrap: 'wrap' },
-  linkInput: {
-    flex: 1,
-    minWidth: 220,
-    boxSizing: 'border-box',
-    padding: '8px 10px',
-    fontSize: 12.5,
-    fontFamily: 'var(--font-mono, monospace)',
-    color: 'var(--ink, #0b1220)',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 6,
-  },
-  list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 },
-  item: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    padding: '10px 12px',
-    background: '#ffffff',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 8,
-  },
-  itemMain: { display: 'grid', gap: 2, minWidth: 0 },
-  itemEmail: { fontSize: 14, color: 'var(--ink, #0b1220)', overflowWrap: 'break-word' },
-  itemMeta: {
-    fontSize: 12,
-    color: 'var(--ink, #0b1220)',
-    opacity: 0.75,
-    textTransform: 'capitalize',
-  },
-  memberActions: { display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 },
-  badge: {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--paper-soft, #eceae5)',
-    border: '1px solid var(--rule, #d7d6d2)',
-    borderRadius: 999,
-    padding: '2px 8px',
-    whiteSpace: 'nowrap',
-  },
-} satisfies Record<string, CSSProperties>;
+function initialsOf(s: string): string {
+  const at = s.indexOf('@');
+  const base = at > 0 ? s.slice(0, at) : s;
+  return base
+    .split(/[._\s-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function MembersPage() {
   const { currentOrg } = useDash();
@@ -230,194 +122,302 @@ export default function MembersPage() {
   const managing = changeRole.isPending || removeMember.isPending;
 
   return (
-    <div style={styles.page}>
-      <h1 style={styles.h1}>Members</h1>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+      <header className="page-head" style={{ marginBottom: 0 }}>
+        <div>
+          <span className="eyebrow">Organisation</span>
+          <h1>Members</h1>
+          <p className="sub">The roster and its invitations — roles are owner, admin, member.</p>
+        </div>
+      </header>
 
-      <section style={styles.card} aria-label="Member roster">
-        <h2 style={styles.h2}>People</h2>
-        {orgId === '' ? (
-          <p style={styles.muted}>No organisation selected.</p>
-        ) : membersLoading ? (
-          <SkeletonList rows={3} />
-        ) : members.length === 0 ? (
-          <p style={styles.muted}>No members yet.</p>
-        ) : (
-          <>
-            {memberError !== null && (
-              <p role="alert" style={styles.error}>
-                {memberError}
-              </p>
-            )}
-            <ul style={styles.list} aria-label="Members">
-              {members.map((m) => {
-                const canManage = isOwner && m.role !== 'owner';
-                return (
-                  <li key={m.userId} style={styles.item}>
-                    <div style={styles.itemMain}>
-                      <span style={styles.itemEmail}>{m.email ?? m.userId}</span>
-                      <span style={styles.itemMeta}>
-                        {m.role}
-                        {formatDate(m.since) !== '' ? ` · since ${formatDate(m.since)}` : ''}
-                      </span>
-                    </div>
-                    {canManage ? (
-                      <div style={styles.memberActions}>
-                        <select
-                          aria-label={`Role for ${m.email ?? m.userId}`}
-                          value={m.role === 'admin' ? 'admin' : 'member'}
-                          onChange={(e) => onChangeRole(m.userId, e.target.value as MemberRole)}
-                          disabled={managing}
-                          style={styles.select}
-                        >
-                          <option value="member">Member</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => onRemoveMember(m.userId)}
-                          disabled={managing}
-                          style={styles.secondary}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <span style={styles.badge}>{m.role}</span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-      </section>
-
-      <section style={styles.card} aria-label="Invite a member">
-        <h2 style={styles.h2}>Invite a member</h2>
-        {orgId === '' ? (
-          <p style={styles.muted}>No organisation selected.</p>
-        ) : meLoading || orgLoading ? (
-          <SkeletonList rows={1} />
-        ) : !isOwner ? (
-          <p style={styles.note}>Only the organisation owner can invite members.</p>
-        ) : (
-          <>
-            <form style={styles.row} onSubmit={onInvite}>
-              <div style={{ ...styles.field, flex: 1, minWidth: 200 }}>
-                <label htmlFor={emailId} style={styles.label}>
-                  Email
-                </label>
-                <input
-                  id={emailId}
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setCreatedToken(null);
-                  }}
-                  placeholder="teammate@example.com"
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.field}>
-                <label htmlFor={roleId} style={styles.label}>
-                  Role
-                </label>
-                <select
-                  id={roleId}
-                  value={role}
-                  onChange={(e) => {
-                    setRole(e.target.value);
-                    setCreatedToken(null);
-                  }}
-                  style={styles.select}
+      <section className="card" aria-label="Member roster">
+        <div className="card-head">
+          <div className="h">
+            <h2>People</h2>
+            <span className="sub">
+              {members.length} member{members.length === 1 ? '' : 's'}
+            </span>
+          </div>
+        </div>
+        <div className="card-body no-pad">
+          {orgId === '' ? (
+            <div className="empty">
+              <span className="t">No organisation selected</span>
+            </div>
+          ) : membersLoading ? (
+            <div style={{ padding: 'var(--sp-4)' }}>
+              <SkeletonList rows={3} />
+            </div>
+          ) : members.length === 0 ? (
+            <div className="empty">
+              <span className="empty-icon">
+                <IconUsers size={24} />
+              </span>
+              <span className="t">No members yet</span>
+            </div>
+          ) : (
+            <>
+              {memberError !== null && (
+                <p
+                  role="alert"
+                  className="callout"
+                  data-tone="error"
+                  style={{ margin: 'var(--sp-3)' }}
                 >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={createInvite.isPending || email.trim() === ''}
-                aria-busy={createInvite.isPending}
-                style={
-                  createInvite.isPending ? { ...styles.primary, ...styles.busy } : styles.primary
-                }
-              >
-                {createInvite.isPending ? 'Inviting…' : 'Send invite'}
-              </button>
-            </form>
-            {error !== null && (
-              <p role="alert" style={styles.error}>
-                {error}
-              </p>
-            )}
-            {inviteLink !== null && (
-              <div style={styles.invitePanel} role="status">
-                <p style={styles.muted}>
-                  Invitation created. Share this link with your teammate — it is shown only once.
+                  {memberError}
                 </p>
-                <div style={styles.linkRow}>
-                  <input
-                    readOnly
-                    value={inviteLink}
-                    aria-label="Invite link"
-                    style={styles.linkInput}
-                  />
-                  <button type="button" onClick={onCopy} style={styles.secondary}>
-                    {copied ? 'Copied' : 'Copy link'}
-                  </button>
+              )}
+              <div className="table members-table" style={{ border: 'none', borderRadius: 0 }}>
+                <div className="table-head" aria-hidden="true">
+                  <span>Member</span>
+                  <span>Role</span>
+                  <span style={{ textAlign: 'right' }}>Manage</span>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </section>
-
-      <section style={styles.card} aria-label="Pending invitations">
-        <h2 style={styles.h2}>Pending invitations</h2>
-        {orgId === '' ? (
-          <p style={styles.muted}>No organisation selected.</p>
-        ) : meLoading || orgLoading ? (
-          <SkeletonList rows={1} />
-        ) : !isOwner ? (
-          <p style={styles.note}>Only the organisation owner can manage invitations.</p>
-        ) : invLoading ? (
-          <SkeletonList rows={2} />
-        ) : (
-          <>
-            {listError !== null && (
-              <p role="alert" style={styles.error}>
-                {listError}
-              </p>
-            )}
-            {pending.length === 0 ? (
-              <p style={styles.muted}>No pending invitations.</p>
-            ) : (
-              <ul style={styles.list} aria-label="Pending invitations">
-                {pending.map((invite) => (
-                  <li key={invite.id} style={styles.item}>
-                    <div style={styles.itemMain}>
-                      <span style={styles.itemEmail}>{invite.email}</span>
-                      <span style={styles.itemMeta}>
-                        {invite.role} · {invite.status}
+                {members.map((m) => {
+                  const canManage = isOwner && m.role !== 'owner';
+                  const label = m.email ?? m.userId;
+                  return (
+                    <div key={m.userId} className="table-row">
+                      <span className="named">
+                        <span className="avatar-sm" aria-hidden="true">
+                          {initialsOf(label)}
+                        </span>
+                        <span style={{ display: 'grid', minWidth: 0 }}>
+                          <span style={{ overflowWrap: 'break-word' }}>{label}</span>
+                          <span className="em">
+                            {formatDate(m.since) !== '' ? `since ${formatDate(m.since)}` : ''}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="chip chip-sm" style={{ textTransform: 'capitalize' }}>
+                        {m.role}
+                      </span>
+                      <span
+                        style={{
+                          display: 'flex',
+                          gap: 'var(--sp-2)',
+                          justifyContent: 'flex-end',
+                          alignItems: 'center',
+                        }}
+                      >
+                        {canManage ? (
+                          <>
+                            <select
+                              aria-label={`Role for ${label}`}
+                              value={m.role === 'admin' ? 'admin' : 'member'}
+                              onChange={(e) => onChangeRole(m.userId, e.target.value as MemberRole)}
+                              disabled={managing}
+                              style={{
+                                padding: '6px 9px',
+                                fontSize: 'var(--t-mono-size)',
+                                fontFamily: 'var(--font-sans)',
+                                color: 'var(--ink)',
+                                background: 'var(--paper)',
+                                border: '1px solid var(--rule)',
+                                borderRadius: 'var(--r-3)',
+                              }}
+                            >
+                              <option value="member">Member</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                            <button
+                              type="button"
+                              className="btn"
+                              data-variant="secondary"
+                              data-size="sm"
+                              onClick={() => onRemoveMember(m.userId)}
+                              disabled={managing}
+                            >
+                              Remove
+                            </button>
+                          </>
+                        ) : (
+                          <span className="mute mono">{m.role}</span>
+                        )}
                       </span>
                     </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="card" aria-label="Invite a member">
+        <div className="card-head">
+          <div className="h">
+            <h2>Invite a member</h2>
+            <span className="sub">The invite link is shown once — share it with your teammate</span>
+          </div>
+        </div>
+        <div
+          className="card-body"
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+        >
+          {orgId === '' ? (
+            <p
+              className="sub"
+              style={{ margin: 0, color: 'var(--mute)', fontSize: 'var(--t-dense-size)' }}
+            >
+              No organisation selected.
+            </p>
+          ) : meLoading || orgLoading ? (
+            <SkeletonList rows={1} />
+          ) : !isOwner ? (
+            <p
+              className="sub"
+              style={{ margin: 0, color: 'var(--mute)', fontSize: 'var(--t-dense-size)' }}
+            >
+              Only the organisation owner can invite members.
+            </p>
+          ) : (
+            <>
+              <form className="control-row" onSubmit={onInvite}>
+                <div className="field grow">
+                  <label htmlFor={emailId}>Email</label>
+                  <input
+                    id={emailId}
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setCreatedToken(null);
+                    }}
+                    placeholder="teammate@example.com"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor={roleId}>Role</label>
+                  <select
+                    id={roleId}
+                    value={role}
+                    onChange={(e) => {
+                      setRole(e.target.value);
+                      setCreatedToken(null);
+                    }}
+                  >
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="btn"
+                  data-variant="primary"
+                  disabled={createInvite.isPending || email.trim() === ''}
+                  aria-busy={createInvite.isPending}
+                >
+                  {createInvite.isPending ? 'Inviting…' : 'Send invite'}
+                </button>
+              </form>
+              {error !== null && (
+                <p role="alert" className="callout" data-tone="error" style={{ margin: 0 }}>
+                  {error}
+                </p>
+              )}
+              {inviteLink !== null && (
+                <div className="invite-link" role="status">
+                  <p style={{ margin: 0, fontSize: 'var(--t-dense-size)' }}>
+                    Invitation created. Share this link with your teammate — it is shown only once.
+                  </p>
+                  <div className="row">
+                    <input readOnly value={inviteLink} aria-label="Invite link" />
                     <button
                       type="button"
-                      onClick={() => onRevoke(invite.id)}
-                      disabled={revokeInvite.isPending}
-                      style={styles.secondary}
+                      className="btn"
+                      data-variant="secondary"
+                      data-size="sm"
+                      onClick={onCopy}
                     >
-                      Revoke
+                      {copied ? 'Copied' : 'Copy link'}
                     </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="card" aria-label="Pending invitations">
+        <div className="card-head">
+          <div className="h">
+            <h2>Pending invitations</h2>
+            <span className="sub">Revocable until accepted</span>
+          </div>
+        </div>
+        <div className="card-body no-pad">
+          {orgId === '' ? (
+            <div className="empty">
+              <span className="t">No organisation selected</span>
+            </div>
+          ) : meLoading || orgLoading ? (
+            <div style={{ padding: 'var(--sp-4)' }}>
+              <SkeletonList rows={1} />
+            </div>
+          ) : !isOwner ? (
+            <div className="empty">
+              <span className="s">Only the organisation owner can manage invitations.</span>
+            </div>
+          ) : invLoading ? (
+            <div style={{ padding: 'var(--sp-4)' }}>
+              <SkeletonList rows={2} />
+            </div>
+          ) : (
+            <>
+              {listError !== null && (
+                <p
+                  role="alert"
+                  className="callout"
+                  data-tone="error"
+                  style={{ margin: 'var(--sp-3)' }}
+                >
+                  {listError}
+                </p>
+              )}
+              {pending.length === 0 ? (
+                <div className="empty">
+                  <span className="t">No pending invitations</span>
+                </div>
+              ) : (
+                <ul className="row-list" aria-label="Pending invitations">
+                  {pending.map((invite) => (
+                    <li key={invite.id}>
+                      <div className="top">
+                        <span className="named">
+                          <span className="avatar-sm" aria-hidden="true">
+                            {initialsOf(invite.email)}
+                          </span>
+                          <span style={{ display: 'grid', minWidth: 0 }}>
+                            <span className="nm" style={{ overflowWrap: 'break-word' }}>
+                              {invite.email}
+                            </span>
+                            <span className="em" style={{ textTransform: 'capitalize' }}>
+                              {invite.role} · {invite.status}
+                            </span>
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          className="btn"
+                          data-variant="secondary"
+                          data-size="sm"
+                          onClick={() => onRevoke(invite.id)}
+                          disabled={revokeInvite.isPending}
+                        >
+                          Revoke
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
       </section>
     </div>
   );
