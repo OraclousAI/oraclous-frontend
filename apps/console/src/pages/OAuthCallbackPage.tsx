@@ -1,10 +1,11 @@
 // OAuth callback — the provider redirects here with ?code&state; we exchange them for a session
 // (GET /oauth/{provider}/callback) and land in the app. Public route (no session yet). The exchange
 // runs exactly once (state/code are single-use; a ref guards StrictMode's double-invoke).
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useApi } from '../lib/api.jsx';
 import { useTokenStore } from '../lib/token-store.jsx';
+import './auth.css';
 
 export default function OAuthCallbackPage() {
   const { provider = '' } = useParams<{ provider: string }>();
@@ -47,17 +48,27 @@ export default function OAuthCallbackPage() {
   }, [auth, navigate, params, provider, setToken]);
 
   return (
-    <main style={styles.main}>
+    <main className="auth-main">
       {error === null ? (
-        <p style={styles.msg} role="status">
-          Completing sign-in…
-        </p>
+        <span className="terminal-strip" role="status">
+          <span>Completing sign-in</span>
+          <span className="cursor is-blink" aria-hidden="true" />
+        </span>
       ) : (
-        <div style={styles.box}>
-          <p style={styles.err} role="alert">
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--sp-3)',
+            alignItems: 'center',
+            maxWidth: 360,
+            textAlign: 'center',
+          }}
+        >
+          <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
             {error}
           </p>
-          <a href="/login" style={styles.link}>
+          <a href="/login" className="btn" data-variant="secondary" data-size="sm">
             Back to sign in
           </a>
         </div>
@@ -65,26 +76,3 @@ export default function OAuthCallbackPage() {
     </main>
   );
 }
-
-const styles = {
-  main: {
-    minHeight: '100dvh',
-    display: 'grid',
-    placeItems: 'center',
-    background: 'var(--paper, #f4f4f2)',
-    padding: 24,
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-  },
-  msg: { margin: 0, fontSize: 14, color: 'var(--mute, #65686f)' },
-  box: { display: 'grid', gap: 12, justifyItems: 'center', maxWidth: 360, textAlign: 'center' },
-  err: {
-    margin: 0,
-    padding: '10px 12px',
-    fontSize: 13,
-    color: 'var(--ink, #0b1220)',
-    background: 'var(--error-bg, #fbeae8)',
-    border: '1px solid var(--error, #c8412c)',
-    borderRadius: 8,
-  },
-  link: { fontSize: 13, fontWeight: 600, color: 'var(--ink, #0b1220)' },
-} satisfies Record<string, CSSProperties>;
