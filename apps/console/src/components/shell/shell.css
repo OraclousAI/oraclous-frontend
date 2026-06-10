@@ -1,5 +1,12 @@
 /* Shell chrome — DashLayout / Sidebar / TopBar */
 
+/* Shell buttons never carry the UA chrome — each class draws its own border
+   (the handoff nav/tenant/icon buttons are all borderless on transparent). */
+.shell-root button {
+  font: inherit;
+  border: none;
+}
+
 /* Visually hidden but accessible to screen readers */
 .shell-visually-hidden {
   position: absolute;
