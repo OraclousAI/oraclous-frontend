@@ -34,7 +34,8 @@ export default function OAuthCallbackPage() {
     void (async () => {
       try {
         const session = await auth.oauthCallback(provider, code, state);
-        setToken({
+        // Await the vault commit so an immediate reload after sign-in still restores the session.
+        await setToken({
           token: session.accessToken,
           refreshToken: session.refreshToken,
           email: session.email,

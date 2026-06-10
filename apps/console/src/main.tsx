@@ -27,8 +27,9 @@ const queryClient = new QueryClient({
 const rootEl = document.getElementById('root');
 if (rootEl == null) throw new Error('Root element #root not found');
 
-// Auth is real: the session starts empty; ProtectedRoute sends the user to /login,
-// and LoginPage exchanges credentials at the gateway for a token held in memory only.
+// Auth is real: the access token lives in memory only. On boot, useSessionHydration restores the
+// session from the vault-held refresh token (so a page refresh stays in the app); otherwise
+// ProtectedRoute sends the user to /login and LoginPage exchanges credentials at the gateway.
 createRoot(rootEl).render(
   <StrictMode>
     <TokenStoreProvider>

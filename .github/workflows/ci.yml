@@ -121,6 +121,29 @@ jobs:
           fi
           echo "✅ no-token-in-storage clean"
 
+      - name: Reject IndexedDB usage outside the session vault
+        run: |
+          # CLAUDE.md §1.5: the session vault (apps/console/src/lib/session-vault.ts) is the ONE
+          # sanctioned persistence path for the ONE credential allowed to persist (the rotating
+          # refresh token). Any other IndexedDB use — direct or via the idb package — needs a
+          # deliberate §1.5 change, not a quiet import.
+          violations=$(grep -rn --include="*.ts" --include="*.tsx" --include="*.astro" \
+            -E "(indexedDB|IDBDatabase|from ['\"]idb['\"])" \
+            apps/ packages/ \
+            --exclude-dir=node_modules \
+            --exclude="session-vault.ts" \
+            --exclude="*.test.ts" \
+            --exclude="*.test.tsx" \
+            --exclude="*.spec.ts" \
+            --exclude="*.spec.tsx" \
+            2>/dev/null | grep -vE ":[[:digit:]]+:[[:space:]]*//" || true)
+          if [ -n "$violations" ]; then
+            echo "❌ IndexedDB usage outside apps/console/src/lib/session-vault.ts:"
+            echo "$violations"
+            exit 1
+          fi
+          echo "✅ vault-only persistence clean"
+
   # ─────────────────────────────────────────────────────────────────────────────
   # Gate 3 — axe-core AA
   #

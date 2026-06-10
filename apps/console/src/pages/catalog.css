@@ -11,6 +11,11 @@
 }
 
 .cat-tile {
+  /* The tile is sometimes the <li> itself (Tools), sometimes an <a>/<button>
+     child (Agents/Recipes). li/a default to content-box, so width:100% +
+     padding + border overflowed the grid track and the cards overlapped;
+     border-box sizes all three shapes to the track exactly. */
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);

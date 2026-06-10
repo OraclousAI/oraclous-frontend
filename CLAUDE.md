@@ -46,9 +46,11 @@ Every UI change ships at WCAG AA baseline:
 
 Every visual element either uses an existing design-system token/component, or extends the system in a **dedicated** PR (e.g. `feat(design-system): …`). Inventing local colours, spacings, typography, motion, or shadows in a feature PR is rejected.
 
-### 1.5 Auth tokens never touch persistent storage
+### 1.5 Access tokens never touch persistent storage
 
-The integration key, session token, and agent credential never go into `localStorage`, `sessionStorage`, or unconstrained cookies. The platform's storage primitives handle persistence; feature code calls them. *(CI: Gate 2.)*
+The integration key, session/access token, and agent credential never go into `localStorage`, `sessionStorage`, or unconstrained cookies — they live in memory only. *(CI: Gate 2.)*
+
+One deliberate, maintainer-approved exception: the **rotating refresh token** may persist, and only via the session-vault primitive (`apps/console/src/lib/session-vault.ts` — IndexedDB, AES-GCM under a non-extractable key). *(CI: Gate 2 also rejects IndexedDB usage outside the vault; what it cannot check is what you put in the vault — never anything but the refresh token.)* Honest threat model: the non-extractable key prevents on-origin exfiltration and casual storage scraping, but at-rest security equals the browser profile's — a filesystem attacker gets key and ciphertext together. The vault holds the single live copy: every refresh goes through the cross-tab `lockedRefresh` (Web Locks) path in `lib/session.ts`, which rotates the stored token before releasing the lock and discards itself if the session changed mid-flight; logout and a rejected refresh clear it, and logout is broadcast to other tabs. Don't hand-roll any other credential persistence — extend the vault. The strictly-better long-term mechanism is an HttpOnly refresh cookie minted at the gateway (tracked in the gap log as an `[INT]` follow-up); when that lands, this exception goes away.
 
 ### 1.6 Embeddable widgets respect the host
 
