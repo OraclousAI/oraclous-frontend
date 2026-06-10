@@ -82,13 +82,14 @@ export default function LoginPage() {
 
   const isSignup = mode === 'signup';
 
+  // Awaits the vault commit so an immediate reload after login still restores the session.
   function persist(session: {
     accessToken: string;
     refreshToken: string;
     email: string;
     expiresIn: number;
-  }) {
-    setToken({
+  }): Promise<void> {
+    return setToken({
       token: session.accessToken,
       refreshToken: session.refreshToken,
       email: session.email,
@@ -108,7 +109,7 @@ export default function LoginPage() {
       const session = isSignup
         ? await auth.register({ email, password })
         : await auth.login({ email, password });
-      persist(session);
+      await persist(session);
       navigate(redirect, { replace: true });
     } catch (cause) {
       setError(messageFor(cause, mode));

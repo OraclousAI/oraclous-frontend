@@ -46,8 +46,9 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, hydrated } = useTokenStore();
   const location = useLocation();
 
-  // Hold the redirect until the vault-backed restore has had its one chance.
-  if (!hydrated) {
+  // Hold the redirect until the vault-backed restore has had its one chance. An already-
+  // authenticated store never needs the restore screen (e.g. right after a fresh login).
+  if (!hydrated && !isAuthenticated) {
     return <RestoringSession />;
   }
 
