@@ -14,6 +14,9 @@ import '@fontsource/sora/700.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import '@oraclous/design-system/tokens.css';
+import '@oraclous/design-system/semantic.css';
+// Shared page-body patterns (the handoff app.css extraction) — page chrome below the shell.
+import './styles/page.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
