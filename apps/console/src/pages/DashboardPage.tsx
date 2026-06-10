@@ -381,7 +381,7 @@ export default function DashboardPage() {
           </div>
           <div className="card-body no-pad" style={{ flex: 1, display: 'flex' }}>
             {newest !== undefined ? (
-              <div className="graph-preview">
+              <div className="graph-preview surface-dark">
                 <GraphPreviewArt graph={newest} />
                 <Link to={`/app/workspaces/${newest.id}/explorer`} className="pv-cta">
                   <IconArrowUpRight size={11} /> Open Explorer

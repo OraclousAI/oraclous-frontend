@@ -15,7 +15,7 @@
   padding: 11px var(--sp-4);
   border-radius: var(--r-3);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--t-dense-size);
   font-weight: 500;
   line-height: 1;
   border: 1px solid transparent;
@@ -28,7 +28,7 @@
 }
 .btn[data-size='sm'] {
   padding: 7px 11px;
-  font-size: 13px;
+  font-size: var(--t-mono-size);
 }
 .btn[data-variant='primary'] {
   background: var(--ink);
@@ -62,7 +62,7 @@
   background: var(--error-bg);
 }
 .btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
 }
 .btn:disabled,
@@ -79,14 +79,14 @@
   padding: var(--sp-1) 10px;
   border-radius: var(--r-pill);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--ink);
   border: 1px solid var(--rule);
   background: var(--paper);
 }
 .chip-sm {
   padding: 2px var(--sp-2);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
 }
 
 /* ── Page header ─────────────────────────────────────────────────────────── */
@@ -99,14 +99,14 @@
 }
 .page-head h1 {
   margin: 0;
-  font-size: 30px;
+  font-size: var(--t-h2-size);
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.05;
 }
 .page-head .eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
@@ -124,7 +124,7 @@
 .page-head .sub {
   margin: 6px 0 0;
   color: var(--mute);
-  font-size: 14px;
+  font-size: var(--t-dense-size);
   max-width: 72ch;
 }
 .page-head-actions {
@@ -148,7 +148,7 @@
 .tabs button {
   padding: 7px 13px;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--t-mono-size);
   font-weight: 500;
   background: transparent;
   border: 1px solid transparent;
@@ -163,7 +163,7 @@
   color: var(--ink);
 }
 .tabs button:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 .tabs button[data-active] {
@@ -174,7 +174,7 @@
 }
 .tabs button .count {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
   padding: 1px 6px;
   background: var(--paper);
@@ -207,14 +207,14 @@
 }
 .kpi .l {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
 }
 .kpi .v {
   font-family: var(--font-mono);
-  font-size: 32px;
+  font-size: var(--t-h2-size);
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1;
@@ -226,7 +226,7 @@
 }
 .kpi .s {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
   margin-top: var(--sp-1);
 }
@@ -235,7 +235,7 @@
   align-items: center;
   gap: var(--sp-1);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   margin-top: var(--sp-1);
   color: var(--success);
 }
@@ -269,12 +269,12 @@
 .card-head h2,
 .card-head h3 {
   margin: 0;
-  font-size: 14.5px;
+  font-size: var(--t-body-size);
   font-weight: 600;
   letter-spacing: -0.005em;
 }
 .card-head .sub {
-  font-size: 12px;
+  font-size: var(--t-caption-size);
   color: var(--mute);
 }
 .card-body {
@@ -302,14 +302,14 @@
   background: var(--paper-soft);
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
 }
 .table-row {
   border-bottom: 1px solid var(--rule);
-  font-size: 13.5px;
+  font-size: var(--t-dense-size);
 }
 .table-row:last-child {
   border-bottom: none;
@@ -318,12 +318,12 @@
   background: var(--paper-soft);
 }
 .table-row:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: -2px;
 }
 .table-row .mono {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--t-caption-size);
 }
 .table-row .mute {
   color: var(--mute);
@@ -342,7 +342,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   padding: 3px var(--sp-2);
   border-radius: var(--r-pill);
   background: var(--paper-soft);
@@ -390,11 +390,11 @@
   color: var(--mute);
 }
 .empty .t {
-  font-size: 14px;
+  font-size: var(--t-dense-size);
   font-weight: 600;
 }
 .empty .s {
-  font-size: 12.5px;
+  font-size: var(--t-caption-size);
   color: var(--mute);
   max-width: 44ch;
 }
@@ -407,7 +407,7 @@
 }
 .field label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
@@ -416,7 +416,7 @@
 .field select,
 .field textarea {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--t-dense-size);
   padding: 9px 11px;
   border: 1px solid var(--rule);
   border-radius: var(--r-3);
@@ -428,16 +428,16 @@
 .field select:focus-visible,
 .field textarea:focus-visible {
   border-color: var(--ink);
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--fg);
   outline-offset: 1px;
 }
 .field .hint {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
 }
 .field .error-text {
-  font-size: 12.5px;
+  font-size: var(--t-caption-size);
   color: var(--error);
 }
 .field-row {
@@ -455,7 +455,7 @@
   color: var(--paper);
   display: inline-grid;
   place-items: center;
-  font-size: 10px;
+  font-size: var(--t-tiny-size);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -468,7 +468,7 @@
   color: var(--ink);
   display: inline-grid;
   place-items: center;
-  font-size: 12px;
+  font-size: var(--t-caption-size);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -479,11 +479,11 @@
   min-width: 0;
 }
 .named .nm {
-  font-size: 13.5px;
+  font-size: var(--t-dense-size);
 }
 .named .em {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--t-tiny-size);
   color: var(--mute);
 }
 
@@ -495,7 +495,7 @@
   border: 1px solid var(--rule);
   border-radius: var(--r-3);
   background: var(--paper-soft);
-  font-size: 13.5px;
+  font-size: var(--t-dense-size);
   line-height: 1.55;
   color: var(--ink);
 }
@@ -507,10 +507,6 @@
   background: var(--error-bg);
   border-color: color-mix(in oklab, var(--error) 35%, var(--rule));
 }
-.callout[data-tone='accent'] {
-  background: color-mix(in oklab, var(--accent) 10%, var(--paper));
-  border-color: color-mix(in oklab, var(--accent) 35%, var(--rule));
-}
 .callout .icon {
   color: var(--mute);
   flex-shrink: 0;
@@ -520,9 +516,6 @@
 }
 .callout[data-tone='error'] .icon {
   color: var(--error);
-}
-.callout[data-tone='accent'] .icon {
-  color: var(--ink);
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
