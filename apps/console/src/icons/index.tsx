@@ -125,6 +125,24 @@ export const IconSearch = (p: IconProps) => (
     <path d="m20 20-3.5-3.5" />
   </Icon>
 );
+export const IconActivity = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M22 12h-4l-3 8-6-16-3 8H2" />
+  </Icon>
+);
+export const IconArrowUpRight = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 17 17 7" />
+    <path d="M8 7h9v9" />
+  </Icon>
+);
+export const IconDatabase = (p: IconProps) => (
+  <Icon {...p}>
+    <ellipse cx="12" cy="5.5" rx="8" ry="3" />
+    <path d="M4 5.5v13c0 1.66 3.58 3 8 3s8-1.34 8-3v-13" />
+    <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
+  </Icon>
+);
 
 // The Oraclous brand symbol (the ">|" mark). `size` is the height; width follows the aspect ratio.
 // Decorative — it always sits beside the Wordmark or a button label, so it's hidden from AT.
