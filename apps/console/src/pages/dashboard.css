@@ -271,7 +271,8 @@
   flex: 1;
   border-radius: 0 0 var(--r-4) var(--r-4);
 }
-.graph-preview svg {
+/* Direct child only — the art canvas; overlay icons keep their own size. */
+.graph-preview > svg {
   width: 100%;
   height: 100%;
   display: block;
