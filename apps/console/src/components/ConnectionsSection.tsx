@@ -38,7 +38,6 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
   const providerId = useId();
   const nameId = useId();
   const secretId = useId();
-  const listId = useId();
 
   const [provider, setProvider] = useState('openrouter');
   const [name, setName] = useState('');
@@ -46,6 +45,10 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  // Two-step destructive confirm: first click on a row arms it, second deletes.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const hasUser = userId !== null && userId !== '';
 
   async function onAdd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,7 +56,7 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
     setSaved(false);
     const prov = provider.trim().toLowerCase();
     const key = secret.trim();
-    if (prov === '' || key === '') return;
+    if (prov === '' || key === '' || !hasUser) return;
     try {
       await create.mutateAsync({
         toolId: MODEL_CREDENTIAL_TOOL_ID,
@@ -73,6 +76,7 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
 
   async function onRemove(id: string) {
     setError(null);
+    setSaved(false);
     setRemovingId(id);
     try {
       await remove.mutateAsync(id);
@@ -80,6 +84,7 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
       setError(messageFor(cause));
     } finally {
       setRemovingId(null);
+      setConfirmId(null);
     }
   }
 
@@ -129,8 +134,8 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
             <span className="s">Add a model key below to run agents.</span>
           </div>
         ) : (
-          <div className="table" role="table" aria-label="Credentials" id={listId}>
-            <div className="table-head" style={cols} role="row" aria-hidden="true">
+          <div className="table" role="table" aria-label="Credentials">
+            <div className="table-head" style={cols} role="row">
               <span role="columnheader">Provider</span>
               <span role="columnheader">Type</span>
               <span role="columnheader">Name</span>
@@ -140,6 +145,8 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
             </div>
             {sorted.map((c) => {
               const isModel = c.toolId === MODEL_CREDENTIAL_TOOL_ID;
+              const kind = isModel ? 'model key' : 'tool credential';
+              const arming = confirmId === c.id;
               return (
                 <div className="table-row" style={cols} role="row" key={c.id}>
                   <span role="cell" className="mono">
@@ -157,16 +164,30 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
                       className="btn"
                       data-variant="danger"
                       data-size="sm"
-                      onClick={() => void onRemove(c.id)}
+                      aria-label={
+                        arming
+                          ? `Confirm removing the ${c.name ?? c.provider} ${kind}`
+                          : `Remove the ${c.name ?? c.provider} ${kind}`
+                      }
+                      onClick={() => {
+                        if (removingId === c.id) return;
+                        if (arming) void onRemove(c.id);
+                        else setConfirmId(c.id);
+                      }}
                       disabled={removingId === c.id}
                     >
-                      {removingId === c.id ? 'Removing…' : 'Remove'}
+                      {removingId === c.id ? 'Removing…' : arming ? 'Confirm' : 'Remove'}
                     </button>
                   </span>
                 </div>
               );
             })}
           </div>
+        )}
+        {!isLoading && !isError && sorted.length > 0 && (
+          <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
+            Removing a credential breaks any agent or tool that uses it.
+          </p>
         )}
 
         <form
@@ -199,7 +220,10 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
               <input
                 id={nameId}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setSaved(false);
+                }}
                 placeholder="e.g. my OpenRouter key"
               />
             </div>
@@ -223,7 +247,9 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
             className="btn"
             data-variant="primary"
             style={{ width: 'fit-content' }}
-            disabled={create.isPending || secret.trim() === '' || provider.trim() === ''}
+            disabled={
+              create.isPending || secret.trim() === '' || provider.trim() === '' || !hasUser
+            }
             aria-busy={create.isPending}
           >
             {create.isPending ? 'Adding…' : 'Add key'}
