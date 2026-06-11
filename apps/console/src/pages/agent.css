@@ -399,16 +399,19 @@
   background: var(--paper-soft);
 }
 
-/* Label-wrapped .field (the builder's form rows): the caption span styles like the
-   page.css .field label. */
-label.field > span {
+/* .field caption span styled like the page.css .field label — for both the label-wrapped form
+   rows and the div-wrapped credential rows (which can't be a <label>: the slot owns its own
+   labelled controls). */
+label.field > span,
+.field > span {
   font-family: var(--font-mono);
   font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
 }
-label.field > span.sr-only {
+label.field > span.sr-only,
+.field > span.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;

@@ -2,7 +2,7 @@
 // requirements): choose an existing credential or add a new one inline. The secret is only ever
 // SENT on create — it never re-enters the UI, so when editing an agent whose slot is already
 // wired, the slot keeps the wired id selected without ever reading the secret back.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CredType, Credential } from '@oraclous/api-client';
 import { useCreateCredential } from '../lib/credentials.js';
 
@@ -39,6 +39,22 @@ export function CredentialSlot({
   const [name, setName] = useState('');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const secretRef = useRef<HTMLInputElement>(null);
+  const addBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Opening the inline form unmounts the "+ Add key" button it was triggered from — move focus
+  // into the secret field so a keyboard/SR user isn't dropped onto <body>.
+  useEffect(() => {
+    if (adding) secretRef.current?.focus();
+  }, [adding]);
+
+  function closeAdd() {
+    setAdding(false);
+    setSecret('');
+    setError(null);
+    // Return focus to the trigger (it remounts after this render).
+    requestAnimationFrame(() => addBtnRef.current?.focus());
+  }
 
   // A wired id we can't match to a listed candidate (editing — the secret is unreadable) must
   // still render as the current selection rather than silently resetting to "none".
@@ -58,9 +74,8 @@ export function CredentialSlot({
         credential: { [secretKey]: trimmed },
       });
       onChange(cred.id);
-      setAdding(false);
-      setSecret('');
       setName('');
+      closeAdd();
     } catch {
       setError('Couldn’t save the credential. Please try again.');
     }
@@ -87,6 +102,7 @@ export function CredentialSlot({
         {manual && !adding && (
           <button
             type="button"
+            ref={addBtnRef}
             className="btn"
             data-variant="ghost"
             data-size="sm"
@@ -107,6 +123,7 @@ export function CredentialSlot({
             aria-label={`${label} name`}
           />
           <input
+            ref={secretRef}
             type="password"
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
@@ -129,11 +146,7 @@ export function CredentialSlot({
             className="btn"
             data-variant="ghost"
             data-size="sm"
-            onClick={() => {
-              setAdding(false);
-              setSecret('');
-              setError(null);
-            }}
+            onClick={closeAdd}
           >
             Cancel
           </button>

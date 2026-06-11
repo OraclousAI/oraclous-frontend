@@ -58,8 +58,25 @@ function readToolCreds(caps: readonly OhmCapability[]): ToolCredMap {
   return out;
 }
 
+// The harness drives the loop with the role=='primary' model (manifest.py primary_model()),
+// falling back to models[0] only when no model carries that role. The form reads/writes the
+// binding + BYOM key on that same model so a multi-model / imported manifest can't end up with
+// the key on the wrong entry.
+function primaryModelIndex(models: readonly OhmModel[] | undefined): number {
+  if (models === undefined || models.length === 0) return 0;
+  const i = models.findIndex((m) => m.role === 'primary');
+  return i >= 0 ? i : 0;
+}
+
+function modelBindingOf(m: OhmManifest | null): string | null {
+  const models = m?.models;
+  const binding = models?.[primaryModelIndex(models)]?.binding;
+  return typeof binding === 'string' ? binding : null;
+}
+
 function modelCredentialOf(m: OhmManifest | null): string | null {
-  const id = m?.models?.[0]?.config?.['credential_id'];
+  const models = m?.models;
+  const id = models?.[primaryModelIndex(models)]?.config?.['credential_id'];
   return typeof id === 'string' ? id : null;
 }
 
@@ -129,7 +146,7 @@ function formFromManifest(m: OhmManifest): FormState {
     name: m.metadata.name,
     description: m.metadata.description ?? '',
     prompt: m.prompts?.find((p) => p.role === 'primary')?.body ?? m.prompts?.[0]?.body ?? '',
-    model: m.models?.[0]?.binding ?? DEFAULT_MODEL,
+    model: modelBindingOf(m) ?? DEFAULT_MODEL,
     modelCredentialId: modelCredentialOf(m),
     caps: m.capabilities ?? [],
     toolCreds: readToolCreds(m.capabilities ?? []),
@@ -234,6 +251,18 @@ function BuilderForm({
     (c) => c.provider === modelProvider && c.credType === 'api_key'
   );
 
+  // Changing the binding can change the provider; a BYOM key for the old provider would resolve
+  // to a 401 at run time. If we can positively see the selected key is for a different provider,
+  // drop it (it must be re-picked) — but never clear a key we can't yet evaluate (list loading,
+  // or an editing key the list confirms matches), which keeps the "current key" fallback honest.
+  function setModelBinding(value: string) {
+    setForm((f) => {
+      const selected = credentials.find((c) => c.id === f.modelCredentialId);
+      const mismatched = selected !== undefined && selected.provider !== modelProviderOf(value);
+      return { ...f, model: value, modelCredentialId: mismatched ? null : f.modelCredentialId };
+    });
+  }
+
   function setToolCred(binding: string, reqType: string, credentialId: string | null) {
     setForm((f) => {
       const forBinding = { ...(f.toolCreds[binding] ?? {}) };
@@ -275,6 +304,7 @@ function BuilderForm({
   const valid =
     form.name.trim() !== '' &&
     form.prompt.trim() !== '' &&
+    form.model.trim() !== '' &&
     entrypoint !== '' &&
     form.modelCredentialId !== null;
 
@@ -290,13 +320,14 @@ function BuilderForm({
     if (form.description.trim() !== '') md.description = form.description.trim();
     else delete md.description;
 
-    // Model: keep the saved model's other config keys (temperature, …); the form owns the
-    // binding and the BYOM credential_id.
-    const baseModel = existing?.models?.[0];
+    // Model: the form owns the binding + BYOM credential_id on the role=='primary' model; keep
+    // that model's other config keys (temperature, …) and every other model verbatim.
+    const primaryIdx = primaryModelIndex(existing?.models);
+    const baseModel = existing?.models?.[primaryIdx];
     const modelConfig: Record<string, unknown> = { ...(baseModel?.config ?? {}) };
     if (form.modelCredentialId !== null) modelConfig['credential_id'] = form.modelCredentialId;
     else delete modelConfig['credential_id'];
-    const firstModel: OhmModel = {
+    const primaryModel: OhmModel = {
       role: baseModel?.role ?? 'primary',
       binding: form.model.trim(),
       protocol_shape: baseModel?.protocol_shape ?? PROTOCOL,
@@ -304,8 +335,8 @@ function BuilderForm({
     };
     const models =
       existing?.models !== undefined && existing.models.length > 0
-        ? existing.models.map((m, i) => (i === 0 ? firstModel : m))
-        : [firstModel];
+        ? existing.models.map((m, i) => (i === primaryIdx ? primaryModel : m))
+        : [primaryModel];
 
     // Capabilities: keep each entry's config (capability_id pin, credential_mappings from other
     // requirements…) and overlay the form's credential_mappings.
@@ -329,6 +360,13 @@ function BuilderForm({
     if (/^\d+$/.test(form.maxToolCalls)) budget['max_tool_calls'] = Number(form.maxToolCalls);
     if (/^\d+$/.test(form.maxWallTime)) budget['max_wall_time_seconds'] = Number(form.maxWallTime);
 
+    // Materialise the runtime then strip an emptied budget — spreading ...existing.runtime alone
+    // would leave the OLD budget underneath when the form cleared its last key.
+    const runtime: OhmManifest['runtime'] = { ...existing?.runtime, entrypoint };
+    const rt = runtime as { budget?: Record<string, number> };
+    if (Object.keys(budget).length > 0) rt.budget = budget;
+    else delete rt.budget;
+
     return {
       ...existing,
       ohm_version: existing?.ohm_version ?? '1.0',
@@ -336,11 +374,7 @@ function BuilderForm({
       capabilities,
       models,
       prompts: mergePrompts(existing?.prompts, form.prompt),
-      runtime: {
-        ...existing?.runtime,
-        entrypoint,
-        ...(Object.keys(budget).length > 0 ? { budget } : {}),
-      },
+      runtime,
     };
   }
 
@@ -447,9 +481,10 @@ function BuilderForm({
             <input
               type="text"
               value={form.model}
-              onChange={(e) => set({ model: e.target.value })}
+              onChange={(e) => setModelBinding(e.target.value)}
               placeholder={DEFAULT_MODEL}
               style={{ fontFamily: 'var(--font-mono)' }}
+              required
             />
           </label>
           <div className="field">
