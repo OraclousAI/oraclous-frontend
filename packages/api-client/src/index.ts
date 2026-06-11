@@ -169,3 +169,21 @@ export type {
   Execution,
   ExecutionStatus,
 } from './instances';
+
+// Eurail onboarder dev bridge (same-origin /eurail/api/chat; replaced by a gateway endpoint in prod)
+export {
+  streamOnboarder,
+  fetchSessions,
+  fetchSession,
+  getOnboarderIdentity,
+  requestOnboarderCode,
+  verifyOnboarderCode,
+  onboarderLogout,
+} from './eurail-onboarder';
+export type {
+  OnboarderQuestion,
+  ChatTurn,
+  SessionTurn,
+  SessionFile,
+  SessionSummary,
+} from './eurail-onboarder';
