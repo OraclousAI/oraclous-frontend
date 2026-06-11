@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom';
 import { DashProvider } from '../../context/dash.js';
 import { useLogout, useMe, useOrgs } from '../../lib/session.js';
+import { useTokenStore } from '../../lib/token-store.jsx';
 import { TopBar } from './TopBar.js';
 import { Sidebar } from './Sidebar.js';
 import { useDrawerA11y } from './useDrawerA11y.js';
@@ -27,6 +28,9 @@ export function Page({
 
 export function DashLayout({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
   const { principal, isAuthError } = useMe();
+  // The active org follows the token claim (the gateway's source of truth), not /v1/auth/me
+  // which reports the user's default org.
+  const { activeOrgId } = useTokenStore();
   const { orgs, isLoading: orgsLoading } = useOrgs();
   const logout = useLogout();
   const [navOpen, setNavOpen] = useState(false);
@@ -63,6 +67,7 @@ export function DashLayout({ children, padded = true }: { children: ReactNode; p
     <DashProvider
       email={principal?.email ?? ''}
       userId={principal?.id ?? ''}
+      activeOrgId={activeOrgId ?? ''}
       orgs={dashOrgs}
       orgsLoading={orgsLoading}
     >
