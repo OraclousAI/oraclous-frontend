@@ -12,16 +12,56 @@
 //   different row than the one the user clicked.
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import type { OhmCapability, OhmManifest, OhmMetadata, OhmPrompt } from '@oraclous/api-client';
+import type {
+  OhmCapability,
+  OhmManifest,
+  OhmMetadata,
+  OhmModel,
+  OhmPrompt,
+} from '@oraclous/api-client';
 import { Page } from '../components/shell/DashLayout.js';
+import { CredentialSlot } from '../components/CredentialSlot.js';
 import { useMe } from '../lib/session.js';
 import { useTools } from '../lib/tools.js';
+import {
+  MODEL_CREDENTIAL_TOOL_ID,
+  credentialFormForRequirement,
+  useCredentials,
+} from '../lib/credentials.js';
 import { useCreateHarnessAgent, useHarnessAgent, useUpdateHarnessAgent } from '../lib/runs.js';
 import './agent.css';
 
 // Only provider/protocol combination wired in the deployed runtime.
 const DEFAULT_MODEL = 'openrouter/meta-llama/llama-3.1-8b-instruct';
 const PROTOCOL = 'openai-compatible' as const;
+
+// The model's BYOM provider is the binding's first segment: "openrouter/meta-llama/…" → openrouter.
+function modelProviderOf(binding: string): string {
+  const head = binding.split('/')[0]?.trim();
+  return head !== undefined && head !== '' ? head : 'openrouter';
+}
+
+// credential_mappings the manifest stores: requirement type → credential id, per capability.
+type ToolCredMap = Record<string, Record<string, string>>;
+
+function readToolCreds(caps: readonly OhmCapability[]): ToolCredMap {
+  const out: ToolCredMap = {};
+  for (const c of caps) {
+    const m = c.config?.['credential_mappings'];
+    if (m !== null && typeof m === 'object') {
+      const entries = Object.entries(m as Record<string, unknown>).filter(
+        ([, v]) => typeof v === 'string'
+      ) as [string, string][];
+      if (entries.length > 0) out[c.binding] = Object.fromEntries(entries);
+    }
+  }
+  return out;
+}
+
+function modelCredentialOf(m: OhmManifest | null): string | null {
+  const id = m?.models?.[0]?.config?.['credential_id'];
+  return typeof id === 'string' ? id : null;
+}
 
 // "PostgreSQL Reader" -> slug "postgresql-reader", binding "postgresql_reader". Refs resolve by
 // slug-matching the tool name; the capability_id pin makes the match unambiguous.
@@ -58,8 +98,12 @@ interface FormState {
   description: string;
   prompt: string;
   model: string;
+  // The model's BYOM key (a broker credential id); live runs need it (model.config.credential_id).
+  modelCredentialId: string | null;
   // The manifest's capability entries, verbatim — retained entries keep ref/config untouched.
   caps: readonly OhmCapability[];
+  // Per-binding credential_mappings (requirement type → credential id) the form is editing.
+  toolCreds: ToolCredMap;
   entrypoint: string;
   maxToolCalls: string;
   maxWallTime: string;
@@ -71,7 +115,9 @@ function emptyForm(): FormState {
     description: '',
     prompt: '',
     model: DEFAULT_MODEL,
+    modelCredentialId: null,
     caps: [],
+    toolCreds: {},
     entrypoint: '',
     maxToolCalls: '',
     maxWallTime: '',
@@ -84,7 +130,9 @@ function formFromManifest(m: OhmManifest): FormState {
     description: m.metadata.description ?? '',
     prompt: m.prompts?.find((p) => p.role === 'primary')?.body ?? m.prompts?.[0]?.body ?? '',
     model: m.models?.[0]?.binding ?? DEFAULT_MODEL,
+    modelCredentialId: modelCredentialOf(m),
     caps: m.capabilities ?? [],
+    toolCreds: readToolCreds(m.capabilities ?? []),
     entrypoint: m.runtime.entrypoint,
     maxToolCalls: m.runtime.budget?.max_tool_calls?.toString() ?? '',
     maxWallTime: m.runtime.budget?.max_wall_time_seconds?.toString() ?? '',
@@ -145,7 +193,9 @@ function BuilderForm({
 }) {
   const navigate = useNavigate();
   const { principal } = useMe();
+  const userId = principal?.id ?? null;
   const { tools, isLoading: toolsLoading } = useTools();
+  const { credentials } = useCredentials(userId);
   const create = useCreateHarnessAgent();
   const update = useUpdateHarnessAgent(capabilityId ?? '');
   const saving = create.isPending || update.isPending;
@@ -163,6 +213,7 @@ function BuilderForm({
         name: t.name,
         slug: toolSlug(t.name),
         description: t.description,
+        requirements: t.credentialRequirements,
         // Unapproved (e.g. pending_approval) tools can't execute — offered disabled, labelled.
         approved: t.status === null || t.status === 'active',
       })),
@@ -176,6 +227,32 @@ function BuilderForm({
     form.caps.find((c) => capabilityPinId(c) === null && capabilityRefSlug(c) === slug);
 
   const orphanCaps = form.caps.filter((c) => !palette.some((t) => boundCapOf(t.id, t.slug) === c));
+
+  // ── Credential wiring ──────────────────────────────────────────────────────
+  const modelProvider = modelProviderOf(form.model);
+  const modelCredentialCandidates = credentials.filter(
+    (c) => c.provider === modelProvider && c.credType === 'api_key'
+  );
+
+  function setToolCred(binding: string, reqType: string, credentialId: string | null) {
+    setForm((f) => {
+      const forBinding = { ...(f.toolCreds[binding] ?? {}) };
+      if (credentialId === null) delete forBinding[reqType];
+      else forBinding[reqType] = credentialId;
+      const next = { ...f.toolCreds };
+      if (Object.keys(forBinding).length > 0) next[binding] = forBinding;
+      else delete next[binding];
+      return { ...f, toolCreds: next };
+    });
+  }
+
+  // Bound tools that declare credential requirements — each gets a slot per requirement.
+  const toolsNeedingCreds = form.caps
+    .map((c) => ({ cap: c, tool: palette.find((t) => boundCapOf(t.id, t.slug) === c) }))
+    .filter(
+      (x): x is { cap: OhmCapability; tool: (typeof palette)[number] } =>
+        x.tool !== undefined && x.tool.requirements.length > 0
+    );
 
   function toggleTool(toolId: string, slug: string) {
     const bound = boundCapOf(toolId, slug);
@@ -194,7 +271,12 @@ function BuilderForm({
   const bindings = form.caps.map((c) => c.binding);
   const entrypoint = bindings.includes(form.entrypoint) ? form.entrypoint : (bindings[0] ?? '');
 
-  const valid = form.name.trim() !== '' && form.prompt.trim() !== '' && entrypoint !== '';
+  // The model key is required: live runs have no platform fallback (ADR-008) and 502 without it.
+  const valid =
+    form.name.trim() !== '' &&
+    form.prompt.trim() !== '' &&
+    entrypoint !== '' &&
+    form.modelCredentialId !== null;
 
   function buildManifest(principalOrgId: string): OhmManifest {
     // Merge over the saved manifest: only form-managed fields change.
@@ -208,10 +290,35 @@ function BuilderForm({
     if (form.description.trim() !== '') md.description = form.description.trim();
     else delete md.description;
 
+    // Model: keep the saved model's other config keys (temperature, …); the form owns the
+    // binding and the BYOM credential_id.
+    const baseModel = existing?.models?.[0];
+    const modelConfig: Record<string, unknown> = { ...(baseModel?.config ?? {}) };
+    if (form.modelCredentialId !== null) modelConfig['credential_id'] = form.modelCredentialId;
+    else delete modelConfig['credential_id'];
+    const firstModel: OhmModel = {
+      role: baseModel?.role ?? 'primary',
+      binding: form.model.trim(),
+      protocol_shape: baseModel?.protocol_shape ?? PROTOCOL,
+      ...(Object.keys(modelConfig).length > 0 ? { config: modelConfig } : {}),
+    };
     const models =
       existing?.models !== undefined && existing.models.length > 0
-        ? existing.models.map((m, i) => (i === 0 ? { ...m, binding: form.model.trim() } : m))
-        : [{ role: 'primary', binding: form.model.trim(), protocol_shape: PROTOCOL }];
+        ? existing.models.map((m, i) => (i === 0 ? firstModel : m))
+        : [firstModel];
+
+    // Capabilities: keep each entry's config (capability_id pin, credential_mappings from other
+    // requirements…) and overlay the form's credential_mappings.
+    const capabilities: OhmCapability[] = form.caps.map((c) => {
+      const mapping = Object.fromEntries(
+        Object.entries(form.toolCreds[c.binding] ?? {}).filter(([, v]) => v !== '')
+      );
+      const config: Record<string, unknown> = { ...(c.config ?? {}) };
+      if (Object.keys(mapping).length > 0) config['credential_mappings'] = mapping;
+      else delete config['credential_mappings'];
+      const base = { ref: c.ref, binding: c.binding };
+      return Object.keys(config).length > 0 ? { ...base, config } : base;
+    });
 
     // Budget: the two form keys are owned here (set or removed); other keys pass through.
     const budget: Record<string, number> = Object.fromEntries(
@@ -226,7 +333,7 @@ function BuilderForm({
       ...existing,
       ohm_version: existing?.ohm_version ?? '1.0',
       metadata,
-      capabilities: [...form.caps],
+      capabilities,
       models,
       prompts: mergePrompts(existing?.prompts, form.prompt),
       runtime: {
@@ -331,7 +438,10 @@ function BuilderForm({
             <span className="sub">protocol: openai-compatible (the only wired shape)</span>
           </div>
         </div>
-        <div className="sec-body">
+        <div
+          className="sec-body"
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}
+        >
           <label className="field">
             <span>Model binding</span>
             <input
@@ -342,6 +452,26 @@ function BuilderForm({
               style={{ fontFamily: 'var(--font-mono)' }}
             />
           </label>
+          <div className="field">
+            <span>{modelProvider} key (BYOM)</span>
+            <CredentialSlot
+              label={`${modelProvider} API key`}
+              provider={modelProvider}
+              credType="api_key"
+              secretKey="api_key"
+              toolId={MODEL_CREDENTIAL_TOOL_ID}
+              userId={userId ?? ''}
+              candidates={modelCredentialCandidates}
+              value={form.modelCredentialId}
+              onChange={(id) => set({ modelCredentialId: id })}
+            />
+            {form.modelCredentialId === null && (
+              <p className="cred-hint">
+                Runs use your own model key — there’s no platform fallback. Select one or add it
+                above.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
@@ -429,6 +559,54 @@ function BuilderForm({
           </div>
         )}
       </section>
+
+      {toolsNeedingCreds.length > 0 && (
+        <section className="sec" aria-label="Tool credentials">
+          <div className="sec-h">
+            <div className="t">
+              <h2>Tool credentials</h2>
+              <span className="sub">
+                optional — an unconfigured tool simply returns an error step at run time
+              </span>
+            </div>
+          </div>
+          <div
+            className="sec-body"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+          >
+            {toolsNeedingCreds.map(({ cap, tool }) => (
+              <div key={cap.binding} className="cred-tool">
+                <div className="cred-tool-h">{tool.name}</div>
+                {tool.requirements.map((req) => {
+                  const reqForm = credentialFormForRequirement(req.type);
+                  const candidates = credentials.filter(
+                    (c) => c.toolId === tool.id || c.provider === req.provider
+                  );
+                  return (
+                    <div key={req.type} className="field">
+                      <span>
+                        {reqForm.label} · {req.provider}
+                      </span>
+                      <CredentialSlot
+                        label={`${req.provider} ${reqForm.label.toLowerCase()}`}
+                        provider={req.provider}
+                        credType={reqForm.credType}
+                        secretKey={reqForm.secretKey}
+                        toolId={tool.id}
+                        userId={userId ?? ''}
+                        candidates={candidates}
+                        value={form.toolCreds[cap.binding]?.[req.type] ?? null}
+                        onChange={(id) => setToolCred(cap.binding, req.type, id)}
+                        manual={reqForm.manual}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="sec" aria-label="Budget">
         <div className="sec-h">

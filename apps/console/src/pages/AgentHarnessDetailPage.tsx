@@ -195,7 +195,13 @@ function AgentView({
         ))}
       </div>
 
-      {tab === 'runs' && <RunsTab capabilityId={capabilityId} jobs={agentJobs} />}
+      {tab === 'runs' && (
+        <RunsTab
+          capabilityId={capabilityId}
+          jobs={agentJobs}
+          hasModelKey={typeof manifest?.models?.[0]?.config?.['credential_id'] === 'string'}
+        />
+      )}
       {tab === 'prompt' && <PromptTab manifest={manifest} />}
       {tab === 'tools' && <ToolsTab manifest={manifest} />}
       {tab === 'config' && <ConfigTab manifest={manifest} />}
@@ -204,7 +210,15 @@ function AgentView({
 }
 
 // ── Runs: trigger + table + the results/provenance drawer ───────────────────
-function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly Job[] }) {
+function RunsTab({
+  capabilityId,
+  jobs,
+  hasModelKey,
+}: {
+  capabilityId: string;
+  jobs: readonly Job[];
+  hasModelKey: boolean;
+}) {
   const submit = useSubmitJob();
   const [input, setInput] = useState('');
   const [openJobId, setOpenJobId] = useState<string | null>(null);
@@ -230,6 +244,12 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
 
   return (
     <section className="sec" aria-label="Runs">
+      {!hasModelKey && (
+        <p className="run-warn">
+          This agent has no model key, so runs will fail. Add one in the{' '}
+          <Link to={`/app/agents/harness/${capabilityId}/edit`}>manifest editor</Link>.
+        </p>
+      )}
       <div className="run-trigger">
         <input
           type="text"
@@ -504,10 +524,13 @@ function ConfigTab({ manifest }: { manifest: OhmManifest | null }) {
   }
   const model = manifest.models?.[0] ?? null;
   const budget = manifest.runtime.budget;
+  // Never surface the credential id — only whether a model key is wired.
+  const modelKeyWired = typeof model?.config?.['credential_id'] === 'string';
   const cells: Array<{ k: string; v: string }> = [
     { k: 'entrypoint', v: manifest.runtime.entrypoint },
     { k: 'model', v: model !== null ? model.binding : '—' },
     { k: 'protocol', v: model !== null ? model.protocol_shape : '—' },
+    { k: 'model key', v: modelKeyWired ? 'wired' : 'not set' },
     { k: 'owner org', v: manifest.metadata.owner_organization_id },
     { k: 'manifest id', v: manifest.metadata.id },
     { k: 'ohm version', v: manifest.ohm_version },
