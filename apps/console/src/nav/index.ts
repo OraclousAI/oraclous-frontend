@@ -4,6 +4,7 @@ import {
   IconHome,
   IconLayers,
   IconBot,
+  IconActivity,
   IconPlug,
   IconUsers,
   IconCard,
@@ -24,6 +25,7 @@ const OWNER: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' },
   { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
   { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
+  { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
   { id: 'members', label: 'Members', icon: IconUsers, route: '/app/members' },
@@ -35,6 +37,7 @@ const MEMBER: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' },
   { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
   { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
+  { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'd1', label: 'Personal', divider: true },
   { id: 'mind', label: 'Second Mind', icon: IconSparkle, route: '/app/my-space' },
@@ -44,6 +47,7 @@ const STANDALONE: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' },
   { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
   { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
+  { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
@@ -60,6 +64,7 @@ export function activeNavId(pathname: string): string {
   if (pathname === '/app' || pathname === '/app/') return 'dashboard';
   if (pathname.startsWith('/app/workspaces')) return 'workspaces';
   if (pathname.startsWith('/app/agents')) return 'agents';
+  if (pathname.startsWith('/app/jobs')) return 'jobs';
   if (pathname.startsWith('/app/tools')) return 'tools';
   if (pathname.startsWith('/app/recipes')) return 'recipes';
   if (pathname.startsWith('/app/members')) return 'members';

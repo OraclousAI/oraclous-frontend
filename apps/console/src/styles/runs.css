@@ -1,0 +1,150 @@
+/* Run surfaces shared between the agent-detail Runs tab and the standalone Jobs view: the run
+   table (cells, state dots, row buttons), the inline cancel control, and the run-detail drawer
+   (output + per-step provenance timeline). The grid-template-columns is set per page (the two
+   tables have different columns); everything else is common. */
+
+.run-table {
+  display: grid;
+  font-family: var(--font-mono);
+}
+.run-th,
+.run-td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--t-tiny-size);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.run-th {
+  background: var(--paper-soft);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.run-td {
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.run-td.mute {
+  color: var(--mute);
+}
+.run-td .s {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--mute);
+  flex-shrink: 0;
+}
+.run-row-live .s {
+  background: var(--accent);
+}
+.run-row-ok .s {
+  background: var(--success);
+}
+.run-row-warn .s {
+  background: var(--warning);
+}
+.run-row-fail .s {
+  background: var(--error);
+}
+/* Rows are buttons (they open the run drawer) — reset, keep the grid display. */
+.run-row {
+  display: contents;
+}
+.run-row button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+/* all:unset kills the UA focus outline — restore it (the row button is the only path to the
+   results drawer). */
+.run-row button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
+}
+.run-row:hover .run-td {
+  background: var(--paper-soft);
+}
+.run-td .run-cancel {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.run-td .run-cancel:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.run-td .run-cancel:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+
+/* ── Run drawer: output + step timeline ───────────────────────────────────── */
+.run-detail {
+  border-top: 1px solid var(--rule);
+}
+.run-detail .out {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: var(--t-caption-size);
+  line-height: 1.65;
+  padding: 16px 20px;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.step-row {
+  display: grid;
+  grid-template-columns: 26px 64px minmax(0, 1fr) 90px;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+}
+.step-row:last-child {
+  border-bottom: none;
+}
+.step-row .ix {
+  color: var(--mute);
+}
+.step-row .kind {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mute);
+}
+.step-row .nm {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.step-row .nm .detail {
+  display: block;
+  color: var(--mute);
+  margin-top: 2px;
+  white-space: pre-wrap;
+}
+.step-row .st {
+  text-align: right;
+  color: var(--mute);
+}
+.step-row.is-error .st,
+.step-row.is-error .nm .detail {
+  color: var(--error);
+}

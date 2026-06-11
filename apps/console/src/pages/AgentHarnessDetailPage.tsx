@@ -8,28 +8,23 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Job, OhmManifest, OhmModel } from '@oraclous/api-client';
 import { isJobTerminal } from '@oraclous/api-client';
 import { Page } from '../components/shell/DashLayout.js';
+import { RunDetail } from '../components/RunDetail.js';
 import {
   isRunActive,
   isRunEscalated,
   useCancelJob,
   useDeleteHarnessAgent,
-  useExecution,
   useHarnessAgent,
   useJob,
   useJobs,
   useSubmitJob,
 } from '../lib/runs.js';
+import { fmtTime, stateRowClass } from '../lib/jobs-format.js';
+import '../styles/runs.css';
 import './agent.css';
 
 const TABS = ['runs', 'prompt', 'tools', 'config'] as const;
 type Tab = (typeof TABS)[number];
-
-function stateRowClass(state: string): string {
-  if (state === 'SUCCEEDED') return 'run-row-ok';
-  if (state === 'FAILED' || state === 'TIMED_OUT') return 'run-row-fail';
-  if (state === 'ESCALATED' || state === 'CANCELLED') return 'run-row-warn';
-  return 'run-row-live'; // QUEUED | RUNNING
-}
 
 // The role=='primary' model drives the loop (falls back to models[0]); the model key + binding
 // live on that entry, matching the harness's primary_model().
@@ -41,21 +36,6 @@ function primaryModel(manifest: OhmManifest | null): OhmModel | null {
 
 function modelKeyWired(manifest: OhmManifest | null): boolean {
   return typeof primaryModel(manifest)?.config?.['credential_id'] === 'string';
-}
-
-function fmtTime(iso: string | null): string {
-  if (iso === null) return '—';
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return '—';
-  return new Date(t).toLocaleString();
-}
-
-// The engine misclassifies manifest-validation failures as harness_unreachable (backend issue
-// filed) — the message carries the real detail, so it is the only thing worth showing.
-function jobFailureText(job: Job): string | null {
-  if (job.errorMessage !== null && job.errorMessage !== '') return job.errorMessage;
-  if (job.state === 'FAILED' || job.state === 'TIMED_OUT') return job.state;
-  return null;
 }
 
 export default function AgentHarnessDetailPage() {
@@ -300,7 +280,12 @@ function RunsTab({
           <p>No runs yet. Give the agent an input above and run it.</p>
         </div>
       ) : (
-        <div className="run-table" role="table" aria-label="Run history">
+        <div
+          className="run-table"
+          role="table"
+          aria-label="Run history"
+          style={{ gridTemplateColumns: '14px minmax(0, 1fr) 110px 110px 150px' }}
+        >
           <div role="row" style={{ display: 'contents' }}>
             <span className="run-th" role="columnheader" aria-label="Status" />
             <span className="run-th" role="columnheader">
@@ -349,69 +334,6 @@ function RunsTab({
 
       {openJob !== null && <RunDetail job={openJob} />}
     </section>
-  );
-}
-
-// Output + per-step provenance for one run. The engine job carries the outcome; the linked
-// harness execution carries the step trace (llm / tool / gate, in loop order).
-function RunDetail({ job }: { job: Job }) {
-  const { execution, isLoading } = useExecution(job.harnessExecutionId, isRunActive(job));
-  const failure = jobFailureText(job);
-
-  return (
-    <div className="run-detail" id="run-detail">
-      <div className="sec-h">
-        <div className="t">
-          <h2>Run {job.id.slice(0, 8)}</h2>
-          <span className="sub">
-            {job.state}
-            {execution !== null && ` · ${execution.iterations} iterations`}
-            {execution !== null &&
-              execution.totalTokens > 0 &&
-              ` · ${execution.totalTokens} tokens`}
-          </span>
-        </div>
-      </div>
-      {failure !== null && (
-        <p
-          role="alert"
-          className="t-caption"
-          style={{ color: 'var(--error)', padding: '10px 20px', margin: 0 }}
-        >
-          {failure}
-        </p>
-      )}
-      {job.output !== null && job.output !== '' && <pre className="out">{job.output}</pre>}
-      {job.harnessExecutionId === null ? (
-        <p className="t-caption" style={{ color: 'var(--mute)', padding: '10px 20px', margin: 0 }}>
-          {isJobTerminal(job.state)
-            ? 'No execution trace was recorded for this run.'
-            : 'The step trace appears when the run completes.'}
-        </p>
-      ) : isLoading ? (
-        <p className="t-caption" style={{ color: 'var(--mute)', padding: '10px 20px', margin: 0 }}>
-          Loading trace…
-        </p>
-      ) : execution !== null ? (
-        <div role="list" aria-label="Run steps">
-          {execution.steps.map((s) => (
-            <div
-              role="listitem"
-              className={`step-row${s.status === 'error' ? ' is-error' : ''}`}
-              key={s.index}
-            >
-              <span className="ix">{String(s.index).padStart(2, '0')}</span>
-              <span className="kind">{s.kind}</span>
-              <span className="nm">
-                {s.name}
-                {s.detail !== null && s.detail !== '' && <span className="detail">{s.detail}</span>}
-              </span>
-              <span className="st">{s.status}</span>
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
   );
 }
 

@@ -1,0 +1,23 @@
+/* Jobs view — the state-filter chip row. The run table + drawer come from styles/runs.css. */
+
+.jobs-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+/* Chip filter buttons reuse the page.css .chip base. */
+.jobs-filters .chip {
+  cursor: pointer;
+}
+.jobs-filters .chip.on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.jobs-filters .chip.off:hover {
+  border-color: var(--ink);
+}
+.jobs-filters .chip:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
