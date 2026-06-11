@@ -1,6 +1,7 @@
 // Connections — the credentials manager (Settings § "Identity and credentials"). Lists every
 // credential the signed-in user holds (BYOM model keys + tool credentials added in the agent
-// builder) and lets them add a model key or remove any. A model key added here carries the BYOM
+// builder) and lets them add a model connection (OpenRouter/OpenAI presets or a custom
+// OpenAI-compatible endpoint) or remove any. A model connection added here carries the BYOM
 // sentinel tool_id, so it appears in the agent builder's model dropdown for matching providers.
 // The secret is only ever SENT on create — it is never listed, displayed, or read back.
 import { useId, useState, type FormEvent } from 'react';
@@ -13,9 +14,30 @@ import {
 } from '../lib/credentials.js';
 import { SkeletonList } from './ui/Skeleton.js';
 
-// Common openai-compatible model providers (the binding's first segment). Freeform — the field
-// accepts anything; these are just suggestions.
-const PROVIDER_SUGGESTIONS = ['openrouter', 'openai', 'anthropic', 'google', 'mistral', 'groq'];
+// BYOM connection types. The harness has server-side base URLs for the two presets (both
+// openai-compatible); a custom connection carries its own base_url on the credential payload
+// (the harness reads it, behind an SSRF egress guard). Vendors without a wired base URL are
+// deliberately absent — they would 502 at run time, not build time.
+type ConnectionType = 'openrouter' | 'openai' | 'custom';
+const CONNECTION_TYPES: ReadonlyArray<{ value: ConnectionType; label: string }> = [
+  { value: 'openrouter', label: 'OpenRouter' },
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'custom', label: 'Custom (OpenAI-compatible)' },
+];
+
+// A custom label becomes both the credential's provider and the model binding's first segment
+// ("<label>/<model-id>"), so it must be a clean binding segment.
+function labelSlug(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function looksLikeUrl(s: string): boolean {
+  return /^https?:\/\/.+/i.test(s.trim());
+}
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -35,11 +57,15 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
   const create = useCreateCredential();
   const remove = useDeleteCredential();
 
-  const providerId = useId();
+  const typeId = useId();
+  const labelId = useId();
+  const baseUrlId = useId();
   const nameId = useId();
   const secretId = useId();
 
-  const [provider, setProvider] = useState('openrouter');
+  const [connType, setConnType] = useState<ConnectionType>('openrouter');
+  const [customLabel, setCustomLabel] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
   const [name, setName] = useState('');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -49,25 +75,36 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const hasUser = userId !== null && userId !== '';
+  const isCustom = connType === 'custom';
+  // The provider sent + the model-binding prefix: a preset id, or the slugged custom label.
+  const providerValue = isCustom ? labelSlug(customLabel) : connType;
+  const customReady = !isCustom || (providerValue !== '' && looksLikeUrl(baseUrl));
+  const canAdd = hasUser && secret.trim() !== '' && customReady && !create.isPending;
+
+  function dismissBanner() {
+    setSaved(false);
+  }
 
   async function onAdd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSaved(false);
-    const prov = provider.trim().toLowerCase();
-    const key = secret.trim();
-    if (prov === '' || key === '' || !hasUser) return;
+    if (!canAdd) return;
+    const credential: Record<string, string> = { api_key: secret.trim() };
+    if (isCustom) credential['base_url'] = baseUrl.trim();
     try {
       await create.mutateAsync({
         toolId: MODEL_CREDENTIAL_TOOL_ID,
         userId: userId ?? '',
-        name: name.trim() !== '' ? name.trim() : `${prov} key`,
-        provider: prov,
+        name: name.trim() !== '' ? name.trim() : `${providerValue} key`,
+        provider: providerValue,
         credType: 'api_key',
-        credential: { api_key: key },
+        credential,
       });
       setSecret('');
       setName('');
+      setBaseUrl('');
+      setCustomLabel('');
       setSaved(true);
     } catch (cause) {
       setError(messageFor(cause));
@@ -118,7 +155,7 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
         )}
         {saved && (
           <p role="status" className="callout" style={successCallout}>
-            Key added.
+            Connection added.
           </p>
         )}
 
@@ -131,7 +168,7 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
         ) : sorted.length === 0 ? (
           <div className="empty" style={{ border: 'none' }}>
             <span className="t">No credentials yet</span>
-            <span className="s">Add a model key below to run agents.</span>
+            <span className="s">Add a model connection below to run agents.</span>
           </div>
         ) : (
           <div className="table" role="table" aria-label="Credentials">
@@ -192,42 +229,79 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
 
         <form
           onSubmit={onAdd}
-          aria-label="Add a model key"
+          aria-label="Add a model connection"
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}
         >
-          <span className="t-eyebrow">Add a model key (BYOM)</span>
+          <span className="t-eyebrow">Add a model connection (BYOM)</span>
           <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
-            <div className="field" style={{ flex: 1, minWidth: 140 }}>
-              <label htmlFor={providerId}>Provider</label>
-              <input
-                id={providerId}
-                list={`${providerId}-list`}
-                value={provider}
+            <div className="field" style={{ flex: 1, minWidth: 160 }}>
+              <label htmlFor={typeId}>Provider</label>
+              <select
+                id={typeId}
+                value={connType}
                 onChange={(e) => {
-                  setProvider(e.target.value);
-                  setSaved(false);
+                  setConnType(e.target.value as ConnectionType);
+                  dismissBanner();
                 }}
-                placeholder="openrouter"
-              />
-              <datalist id={`${providerId}-list`}>
-                {PROVIDER_SUGGESTIONS.map((p) => (
-                  <option key={p} value={p} />
+              >
+                {CONNECTION_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
                 ))}
-              </datalist>
+              </select>
             </div>
-            <div className="field" style={{ flex: 1, minWidth: 140 }}>
+            <div className="field" style={{ flex: 1, minWidth: 160 }}>
               <label htmlFor={nameId}>Name (optional)</label>
               <input
                 id={nameId}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
-                  setSaved(false);
+                  dismissBanner();
                 }}
                 placeholder="e.g. my OpenRouter key"
               />
             </div>
           </div>
+
+          {isCustom && (
+            <>
+              <div className="field">
+                <label htmlFor={labelId}>Provider label</label>
+                <input
+                  id={labelId}
+                  value={customLabel}
+                  onChange={(e) => {
+                    setCustomLabel(e.target.value);
+                    dismissBanner();
+                  }}
+                  placeholder="my-llm"
+                />
+                {customLabel.trim() !== '' && (
+                  <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
+                    Used as the model binding prefix:{' '}
+                    <span className="mono">{providerValue || '…'}/&lt;model-id&gt;</span>
+                  </p>
+                )}
+              </div>
+              <div className="field">
+                <label htmlFor={baseUrlId}>Base URL</label>
+                <input
+                  id={baseUrlId}
+                  type="url"
+                  inputMode="url"
+                  value={baseUrl}
+                  onChange={(e) => {
+                    setBaseUrl(e.target.value);
+                    dismissBanner();
+                  }}
+                  placeholder="https://my-endpoint/v1"
+                />
+              </div>
+            </>
+          )}
+
           <div className="field">
             <label htmlFor={secretId}>API key</label>
             <input
@@ -237,7 +311,7 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
               value={secret}
               onChange={(e) => {
                 setSecret(e.target.value);
-                setSaved(false);
+                dismissBanner();
               }}
               placeholder="sk-…"
             />
@@ -247,16 +321,15 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
             className="btn"
             data-variant="primary"
             style={{ width: 'fit-content' }}
-            disabled={
-              create.isPending || secret.trim() === '' || provider.trim() === '' || !hasUser
-            }
+            disabled={!canAdd}
             aria-busy={create.isPending}
           >
-            {create.isPending ? 'Adding…' : 'Add key'}
+            {create.isPending ? 'Adding…' : 'Add connection'}
           </button>
           <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
-            Tool credentials (database connections, OAuth) are added when you wire a tool to an
-            agent in the builder.
+            {isCustom
+              ? 'Any OpenAI-compatible endpoint — the base URL is stored with the connection and used at run time.'
+              : 'Tool credentials (database connections, OAuth) are added when you wire a tool to an agent in the builder.'}
           </p>
         </form>
       </div>
