@@ -73,12 +73,57 @@ interface ExecutionListWire {
   readonly total: number;
 }
 
+/** Estimated provider (BYOM) spend for one model — an ESTIMATE of the user's own provider cost,
+ * not a platform charge. `estimatedUsd` is null when the model is `unpriced` (no price card);
+ * `model` is null for executions that predate the metering (token counts unknown). */
+export interface SpendByModel {
+  readonly model: string | null;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly executions: number;
+  readonly estimatedUsd: number | null;
+  readonly priced: boolean;
+}
+
+export interface Spend {
+  /** The ISO8601 lower bound echoed back (null = all time). */
+  readonly since: string | null;
+  readonly currency: string;
+  readonly byModel: readonly SpendByModel[];
+  readonly totalEstimatedUsd: number;
+  readonly totalInputTokens: number;
+  readonly totalOutputTokens: number;
+  /** Model ids seen with no price card — render their tokens, never a fabricated $. */
+  readonly unpricedModels: readonly string[];
+}
+
+interface SpendByModelWire {
+  readonly model: string | null;
+  readonly input_tokens: number;
+  readonly output_tokens: number;
+  readonly executions: number;
+  readonly estimated_usd: number | null;
+  readonly priced: boolean;
+}
+
+interface SpendWire {
+  readonly since: string | null;
+  readonly currency: string;
+  readonly by_model?: readonly SpendByModelWire[];
+  readonly total_estimated_usd: number;
+  readonly total_input_tokens: number;
+  readonly total_output_tokens: number;
+  readonly unpriced_models?: readonly string[];
+}
+
 export interface HarnessesClient {
   /** Synchronous run — blocks until SUCCEEDED/FAILED/ESCALATED. */
   execute(input: ExecuteHarnessInput): Promise<HarnessExecution>;
   /** The org's executions (no pagination on the wire yet). */
   listExecutions(): Promise<HarnessExecution[]>;
   getExecution(executionId: string): Promise<HarnessExecution>;
+  /** Estimated BYOM provider spend, org-scoped; `since` is an ISO8601 lower bound (omit = all time). */
+  spend(sinceIso?: string): Promise<Spend>;
 }
 
 function toExecution(w: HarnessExecutionWire): HarnessExecution {
@@ -133,6 +178,29 @@ export function createHarnessesClient(transport: ApiTransport): HarnessesClient 
         path: `/v1/harnesses/executions/${encodeURIComponent(executionId)}`,
       });
       return toExecution(data);
+    },
+    async spend(sinceIso?: string): Promise<Spend> {
+      const qs = sinceIso !== undefined ? `?since=${encodeURIComponent(sinceIso)}` : '';
+      const { data } = await transport.execute<SpendWire>({
+        method: 'GET',
+        path: `/v1/harnesses/spend${qs}`,
+      });
+      return {
+        since: data.since,
+        currency: data.currency,
+        byModel: (data.by_model ?? []).map((m) => ({
+          model: m.model,
+          inputTokens: m.input_tokens,
+          outputTokens: m.output_tokens,
+          executions: m.executions,
+          estimatedUsd: m.estimated_usd,
+          priced: m.priced,
+        })),
+        totalEstimatedUsd: data.total_estimated_usd,
+        totalInputTokens: data.total_input_tokens,
+        totalOutputTokens: data.total_output_tokens,
+        unpricedModels: data.unpriced_models ?? [],
+      };
     },
   };
 }

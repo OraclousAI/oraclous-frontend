@@ -1,20 +1,21 @@
-// Billing — plan + usage. There is no billing backend yet (ADR-009: the substrate emits usage events
-// — item counts, tokens, bytes — and billing is a separable downstream consumer not yet built). So
-// this page is honest: it shows the current plan from session context and a clear "metering coming,
-// no charges" usage section, rather than fabricating spend/usage figures.
+// Billing — plan + estimated provider spend. The plan comes from session context; spend is the
+// estimated BYOM provider cost from GET /v1/harnesses/spend (an estimate of the user's own model
+// cost, not a platform charge — ADR-009: no platform billing is collected). Unpriced models show
+// tokens only (never a fabricated $); pre-metering runs are noted, not costed.
 // Styled per the handoff billing.html (KPI/plan card + usage table treatment).
 import { useDash } from '../context/dash.js';
+import { bucketSpend, formatUsd, useSpend } from '../lib/spend.js';
 
-const METERED: readonly { readonly label: string; readonly unit: string }[] = [
-  { label: 'Knowledge ingestion', unit: 'documents & tokens processed' },
-  { label: 'Retrieval queries', unit: 'searches & graph traversals' },
-  { label: 'Agent executions', unit: 'tool runs' },
-  { label: 'Storage', unit: 'graph nodes, edges & bytes' },
-];
+const nf = new Intl.NumberFormat('en-US');
+const spendCols = { gridTemplateColumns: 'minmax(0, 1fr) auto auto auto' } as const;
 
 export default function BillingPage() {
   const { tenant } = useDash();
   const plan = tenant.plan.trim() !== '' ? tenant.plan : 'Free';
+  const { spend, isLoading: spendLoading, isError: spendError } = useSpend();
+  const buckets = bucketSpend(spend);
+  // Priced first (they carry $), then unpriced (tokens only).
+  const rows = [...buckets.priced, ...buckets.unpriced];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', maxWidth: 880 }}>
@@ -59,45 +60,111 @@ export default function BillingPage() {
         </div>
       </section>
 
-      <section className="card" aria-label="Usage and metering">
+      <section className="card" aria-label="Estimated provider spend">
         <div className="card-head">
           <div className="h">
-            <h2>Usage</h2>
-            <span className="sub">Metered at the substrate · billing not live yet</span>
+            <h2>Estimated spend · this month</h2>
+            <span className="sub">Your provider (BYOM) cost · not a platform charge</span>
           </div>
+          {!spendLoading && !spendError && rows.length > 0 && (
+            <span className="mono" style={{ fontSize: 'var(--t-h4-size)', fontWeight: 600 }}>
+              {formatUsd(spend?.totalEstimatedUsd ?? 0)}
+            </span>
+          )}
         </div>
         <div
           className="card-body"
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
         >
-          <p className="callout" role="status" style={{ margin: 0 }}>
-            Usage metering is coming. The platform records usage at the substrate (item counts,
-            tokens, and bytes); billing on top of it isn’t live yet, and{' '}
-            <strong>no charges are being collected</strong>.
+          <p className="callout" style={{ margin: 0 }}>
+            <span>
+              These are <strong>estimates</strong> of your own model-provider spend (your BYOM
+              keys), from token usage and public price cards —{' '}
+              <strong>not charges from Oraclous</strong>. No platform charges are collected.
+            </span>
           </p>
-          <div className="table">
-            <div
-              className="table-head"
-              aria-hidden="true"
-              style={{ gridTemplateColumns: '1fr auto' }}
-            >
-              <span>Meter</span>
-              <span>This month</span>
-            </div>
-            {METERED.map((m) => (
-              <div key={m.label} className="table-row" style={{ gridTemplateColumns: '1fr auto' }}>
-                <span style={{ display: 'grid', gap: 1 }}>
-                  <span>{m.label}</span>
-                  <span className="mute" style={{ fontSize: 'var(--t-caption-size)' }}>
-                    {m.unit}
-                  </span>
+
+          {spendError ? (
+            <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+              Couldn’t load spend. Please try again.
+            </p>
+          ) : spendLoading ? (
+            <p className="mute" style={{ margin: 0, fontSize: 'var(--t-caption-size)' }}>
+              Loading…
+            </p>
+          ) : rows.length === 0 ? (
+            <p className="mute" style={{ margin: 0, fontSize: 'var(--t-dense-size)' }}>
+              No costed agent runs this month — no spend to estimate yet.
+            </p>
+          ) : (
+            <div className="table" role="table" aria-label="Estimated spend by model">
+              <div className="table-head" role="row" style={spendCols}>
+                <span role="columnheader">Model</span>
+                <span role="columnheader" style={{ textAlign: 'right' }}>
+                  Runs
                 </span>
-                <span className="mono mute" aria-label="Not yet available">
-                  —
+                <span role="columnheader" style={{ textAlign: 'right' }}>
+                  Tokens
+                </span>
+                <span role="columnheader" style={{ textAlign: 'right' }}>
+                  Est. cost
                 </span>
               </div>
-            ))}
-          </div>
+              {rows.map((m) => (
+                <div key={m.model} className="table-row" role="row" style={spendCols}>
+                  <span role="cell" className="mono" style={{ overflowWrap: 'anywhere' }}>
+                    {m.model}
+                    {!m.priced && (
+                      <span className="chip chip-sm" style={{ marginLeft: 8 }}>
+                        unpriced
+                      </span>
+                    )}
+                  </span>
+                  <span role="cell" className="mono" style={{ textAlign: 'right' }}>
+                    {nf.format(m.executions)}
+                  </span>
+                  <span role="cell" className="mono mute" style={{ textAlign: 'right' }}>
+                    {nf.format(m.inputTokens + m.outputTokens)}
+                  </span>
+                  <span
+                    role="cell"
+                    className="mono"
+                    style={{ textAlign: 'right' }}
+                    aria-label={m.priced ? undefined : 'no price card for this model'}
+                  >
+                    {m.priced && m.estimatedUsd !== null ? formatUsd(m.estimatedUsd) : '—'}
+                  </span>
+                </div>
+              ))}
+              <div className="table-row" role="row" style={{ ...spendCols, fontWeight: 600 }}>
+                <span role="cell">Total</span>
+                <span role="cell" className="mono" style={{ textAlign: 'right' }}>
+                  {nf.format(
+                    rows.reduce((n, m) => n + m.executions, 0) + buckets.preMeteringExecutions
+                  )}
+                </span>
+                <span role="cell" className="mono" style={{ textAlign: 'right' }}>
+                  {nf.format((spend?.totalInputTokens ?? 0) + (spend?.totalOutputTokens ?? 0))}
+                </span>
+                <span role="cell" className="mono" style={{ textAlign: 'right' }}>
+                  {formatUsd(spend?.totalEstimatedUsd ?? 0)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {buckets.preMeteringExecutions > 0 && (
+            <p className="mute" style={{ margin: 0, fontSize: 'var(--t-caption-size)' }}>
+              {nf.format(buckets.preMeteringExecutions)} earlier run
+              {buckets.preMeteringExecutions === 1 ? '' : 's'} predate metering and aren’t costed.
+            </p>
+          )}
+          {buckets.unpriced.length > 0 && (
+            <p className="mute" style={{ margin: 0, fontSize: 'var(--t-caption-size)' }}>
+              Unpriced models have no public price card yet — their tokens are shown, but not a
+              dollar estimate.
+            </p>
+          )}
         </div>
       </section>
     </div>

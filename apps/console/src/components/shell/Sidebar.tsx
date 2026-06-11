@@ -2,6 +2,7 @@ import type { RefObject } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
 import { useGraphs } from '../../lib/graphs.js';
+import { spendHeadline, useSpend } from '../../lib/spend.js';
 import { NAV_BY_PERSONA, activeNavId } from '../../nav/index.js';
 import { Logo, Wordmark } from '../../icons/index.js';
 
@@ -16,6 +17,13 @@ export function Sidebar({
 }) {
   const { persona } = useDash();
   const { graphs } = useGraphs();
+  // Members don't see the spend strip — skip the fetch for them.
+  const {
+    spend,
+    isLoading: spendLoading,
+    isError: spendError,
+  } = useSpend(undefined, persona !== 'member');
+  const spendHead = spendHeadline(spend, spendLoading, spendError);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const nav = NAV_BY_PERSONA[persona];
@@ -106,16 +114,18 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Spend mini — billing not wired yet */}
+      {/* Spend mini — estimated BYOM provider spend, month-to-date (GET /v1/harnesses/spend) */}
       {persona !== 'member' && (
-        <div className="shell-sidebar__spend" aria-label="Monthly spend">
+        <div
+          className="shell-sidebar__spend"
+          role="group"
+          aria-label={`Estimated provider spend this month: ${spendHead.amount}`}
+        >
           <div className="shell-sidebar__spend-label" aria-hidden="true">
-            This month
+            Est. this month
           </div>
-          <div className="shell-sidebar__spend-amount" aria-label="Monthly spend: not available">
-            $—
-          </div>
-          <div className="shell-sidebar__spend-note">Billing coming soon</div>
+          <div className="shell-sidebar__spend-amount">{spendHead.amount}</div>
+          <div className="shell-sidebar__spend-note">{spendHead.note}</div>
         </div>
       )}
     </aside>

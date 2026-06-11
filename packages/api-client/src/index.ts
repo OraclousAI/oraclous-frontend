@@ -190,6 +190,8 @@ export type {
   HarnessExecutionStatus,
   HarnessStep,
   ExecuteHarnessInput,
+  Spend,
+  SpendByModel,
 } from './harnesses';
 
 // ── Execution engine (durable jobs + activity feed) ──────────────────────────
