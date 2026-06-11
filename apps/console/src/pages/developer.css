@@ -1,0 +1,91 @@
+/* Developer surface (integration keys, and — later slices — published agents + webhooks).
+   The page chrome is the shared page.css (.card/.table/.field/.kpi/.status-pill/.callout/.btn);
+   this file carries only the layout wrapper and the few surface-specific bits. */
+
+.dev-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+/* page.css's .page-head/.kpis carry their own bottom margins; the flex gap governs rhythm here. */
+.dev-page .page-head,
+.dev-page .kpis {
+  margin-bottom: 0;
+}
+
+/* ── Mint form ─────────────────────────────────────────────────────────────── */
+.dev-mint .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.dev-binding {
+  display: flex;
+  gap: var(--sp-5);
+  align-items: center;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.dev-binding legend {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mute);
+  padding: 0;
+  margin-right: var(--sp-2);
+  float: left;
+}
+.dev-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--t-dense-size);
+  cursor: pointer;
+}
+.dev-radio input {
+  accent-color: var(--ink);
+}
+
+/* ── List ──────────────────────────────────────────────────────────────────── */
+.dev-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--t-caption-size);
+  color: var(--mute);
+  cursor: pointer;
+}
+.dev-toggle input {
+  accent-color: var(--ink);
+}
+/* The shared .table-head/.table-row are display:grid but column-count is per-surface. */
+.dev-table .table-head,
+.dev-table .table-row {
+  grid-template-columns: 1.5fr 1.3fr 0.6fr 0.9fr 0.8fr;
+}
+.dev-table[data-admin] .table-head,
+.dev-table[data-admin] .table-row {
+  grid-template-columns: 1.5fr 1.3fr 0.6fr 0.9fr 0.8fr auto;
+}
+.dev-actions {
+  display: inline-flex;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .dev-table .table-head {
+    display: none;
+  }
+  .dev-table .table-row,
+  .dev-table[data-admin] .table-row {
+    grid-template-columns: 1fr;
+    gap: var(--sp-1);
+  }
+  .dev-actions {
+    justify-content: flex-start;
+    margin-top: var(--sp-2);
+  }
+}

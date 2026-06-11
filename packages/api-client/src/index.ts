@@ -157,6 +157,10 @@ export type { ToolsClient, Tool, CredentialRequirement } from './tools';
 export { createCredentialsClient } from './credentials';
 export type { CredentialsClient, Credential, CreateCredentialInput, CredType } from './credentials';
 
+// Integration-keys sub-client (developer/embed surface — display-once tokens)
+export { createIntegrationKeysClient } from './integrationKeys';
+export type { IntegrationKeysClient, MintKeyInput, MintedKey, KeySummary } from './integrationKeys';
+
 // Capability-registry instances/executions sub-client (the "use a tool" loop)
 export { createInstancesClient } from './instances';
 export type {

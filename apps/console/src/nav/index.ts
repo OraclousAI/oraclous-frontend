@@ -10,6 +10,7 @@ import {
   IconCard,
   IconCog,
   IconSparkle,
+  IconKey,
   type IconProps,
 } from '../icons/index.js';
 
@@ -28,6 +29,7 @@ const OWNER: NavItem[] = [
   { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
+  { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
   { id: 'members', label: 'Members', icon: IconUsers, route: '/app/members' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
@@ -50,6 +52,7 @@ const STANDALONE: NavItem[] = [
   { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
+  { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
 ];
@@ -67,6 +70,7 @@ export function activeNavId(pathname: string): string {
   if (pathname.startsWith('/app/jobs')) return 'jobs';
   if (pathname.startsWith('/app/tools')) return 'tools';
   if (pathname.startsWith('/app/recipes')) return 'recipes';
+  if (pathname.startsWith('/app/developer')) return 'developer';
   if (pathname.startsWith('/app/members')) return 'members';
   if (pathname.startsWith('/app/billing')) return 'billing';
   if (pathname.startsWith('/app/settings')) return 'settings';

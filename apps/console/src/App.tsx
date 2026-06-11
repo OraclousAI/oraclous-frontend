@@ -4,7 +4,7 @@
 // ProtectedRoute, which redirects unauthenticated visitors to /login.
 
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TenantGate } from './components/auth/TenantGate.js';
 import { AppShell } from './components/shell/AppShell.js';
 import { PlaceholderView } from './components/views/PlaceholderView.js';
@@ -57,6 +57,7 @@ const Jobs = lazy(() => import('./pages/JobsPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
+const IntegrationKeys = lazy(() => import('./pages/IntegrationKeysPage.js'));
 const Billing = lazy(() => import('./pages/BillingPage.js'));
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
@@ -202,6 +203,15 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Members />
+                </Suspense>
+              }
+            />
+            <Route path="developer" element={<Navigate to="/app/developer/keys" replace />} />
+            <Route
+              path="developer/keys"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <IntegrationKeys />
                 </Suspense>
               }
             />

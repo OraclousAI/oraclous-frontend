@@ -91,6 +91,14 @@ export const IconSparkle = (p: IconProps) => (
     <path d="M17.5 18.5h3" />
   </Icon>
 );
+export const IconKey = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="7.5" cy="15.5" r="4.5" />
+    <path d="m10.7 12.3 8.3-8.3" />
+    <path d="m16 5 3 3" />
+    <path d="m18 7 2-2" />
+  </Icon>
+);
 export const IconBell = (p: IconProps) => (
   <Icon {...p}>
     <path d="M6 8a6 6 0 1 1 12 0c0 5 2 6 2 8H4c0-2 2-3 2-8Z" />
