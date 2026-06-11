@@ -79,9 +79,9 @@ export interface DashProviderProps {
   orgs?: Organization[];
   orgsLoading?: boolean;
   /** The org the access token is scoped to (decoded from the token claim — the gateway's
-   * source of truth, not /v1/auth/me which returns the user's default org). It survives reloads
-   * (refresh preserves the org) and a switch re-issues it, so the UI follows it rather than
-   * defaulting to the first org. */
+   * authoritative active org, read directly without a /v1/auth/me round-trip). It survives
+   * reloads (refresh preserves the org) and a switch re-issues it, so the UI follows it rather
+   * than defaulting to the first org. */
   activeOrgId?: string;
 }
 

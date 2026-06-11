@@ -31,8 +31,9 @@ export interface TokenPayload {
 }
 
 // The active organisation is whatever the access token is scoped to — that claim is what the
-// gateway asserts to every upstream, so it (not /v1/auth/me, which reports the user's *default*
-// org) is the source of truth for which org the session is acting as. A switch re-issues the
+// gateway asserts to every upstream, so it is the authoritative active org. We read it directly
+// rather than round-tripping /v1/auth/me (which, since oraclous-backend #253, also returns the
+// active org — but the claim is already in hand and needs no extra call). A switch re-issues the
 // token with the new org and refresh preserves it, so reading the claim survives reloads.
 export function orgIdFromToken(jwt: string): string | null {
   try {
