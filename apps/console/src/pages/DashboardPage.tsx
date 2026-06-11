@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import type { Graph } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import { useGraphs } from '../lib/graphs.js';
+import { spendHeadline, useSpend } from '../lib/spend.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import {
   IconActivity,
@@ -119,6 +120,8 @@ function GraphPreviewArt({ graph }: { graph: Graph }) {
 export default function DashboardPage() {
   const { user, persona, currentOrg, tenant } = useDash();
   const { graphs, isLoading } = useGraphs();
+  const { spend, isLoading: spendLoading, isError: spendError } = useSpend();
+  const spendHead = spendHeadline(spend, spendLoading, spendError);
 
   const sorted = [...graphs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const treeItems = sorted.slice(0, 6);
@@ -208,8 +211,8 @@ export default function DashboardPage() {
         </div>
         <div className="kpi">
           <span className="l">Month-to-date · cost</span>
-          <span className="v is-mute">$—</span>
-          <span className="s">billing coming soon</span>
+          <span className={'v' + (spendHead.muted ? ' is-mute' : '')}>{spendHead.amount}</span>
+          <span className="s">{spendHead.note}</span>
         </div>
       </section>
 
