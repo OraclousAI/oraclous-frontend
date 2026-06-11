@@ -6,6 +6,7 @@ import { ApiClientError } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import { useChangePassword, useMe, useOrg, useUpdateOrg } from '../lib/session.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
+import { ConnectionsSection } from '../components/ConnectionsSection.js';
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -264,6 +265,8 @@ export default function SettingsPage() {
           </form>
         </div>
       </section>
+
+      <ConnectionsSection userId={principal?.id ?? null} />
     </div>
   );
 }

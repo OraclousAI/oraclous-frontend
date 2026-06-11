@@ -76,3 +76,15 @@ export function useCreateCredential() {
     },
   });
 }
+
+export function useDeleteCredential() {
+  const { credentials: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (credentialId: string): Promise<void> => client.remove(credentialId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
+    },
+  });
+}
