@@ -9,3 +9,6 @@ node_modules/
 
 # os
 .DS_Store
+
+# Skill runtime session state (eurail-report / assess) — not source
+.eurail-sessions/
