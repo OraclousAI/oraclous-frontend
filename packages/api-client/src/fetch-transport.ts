@@ -4,7 +4,7 @@
 // envelope, and network/parse failures are synthesised into a conformant envelope so
 // callers always branch on `code`, never on transport internals.
 
-import { ApiClientError, ErrorCode, type ApiErrorEnvelope } from './errors';
+import { ApiClientError, ErrorCode, type ApiErrorDetail, type ApiErrorEnvelope } from './errors';
 import type { ApiTransport, TransportRequest, TransportResponse } from './transport';
 
 export interface FetchTransportOptions {
@@ -31,10 +31,92 @@ function isEnvelope(value: unknown): value is ApiErrorEnvelope {
   );
 }
 
+// HTTP status → ORA-56 code, for error bodies that are NOT the ORA-56 envelope (a raw FastAPI
+// {detail: "..."} from a proxied service, or a 422 validation body). Anything unmapped is INTERNAL_ERROR.
+function codeForStatus(status: number): ErrorCode {
+  switch (status) {
+    case 400:
+      return ErrorCode.MALFORMED_REQUEST;
+    case 401:
+      return ErrorCode.UNAUTHENTICATED;
+    case 403:
+      return ErrorCode.UNAUTHORIZED;
+    case 404:
+      return ErrorCode.NOT_FOUND;
+    case 405:
+      return ErrorCode.METHOD_NOT_ALLOWED;
+    case 409:
+      return ErrorCode.CONFLICT;
+    case 413:
+      return ErrorCode.PAYLOAD_TOO_LARGE;
+    case 415:
+      return ErrorCode.UNSUPPORTED_MEDIA_TYPE;
+    case 422:
+      return ErrorCode.VALIDATION_FAILED;
+    case 429:
+      return ErrorCode.RATE_LIMITED;
+    case 503:
+      return ErrorCode.SERVICE_UNAVAILABLE;
+    case 504:
+      return ErrorCode.GATEWAY_TIMEOUT;
+    default:
+      return ErrorCode.INTERNAL_ERROR;
+  }
+}
+
+// FastAPI request-validation rows: { loc: [...], msg, type }. The gateway does not (yet) map 422
+// onto the ORA-56 envelope (oraclous-backend #281), so the client does it here — otherwise every
+// form 422 (slug/CORS/binding-XOR validation) surfaces as a generic "unexpected error". Drops the
+// leading loc segment ('body'/'query'/'path') so the field reads like the request field.
+function detailRowsToErrorDetails(rows: readonly unknown[]): ApiErrorDetail[] {
+  const out: ApiErrorDetail[] = [];
+  for (const row of rows) {
+    if (typeof row !== 'object' || row === null) continue;
+    const r = row as { loc?: unknown; msg?: unknown };
+    const loc = Array.isArray(r.loc) ? r.loc : [];
+    const segs = (loc[0] === 'body' || loc[0] === 'query' || loc[0] === 'path' ? loc.slice(1) : loc)
+      .map((s) => String(s))
+      .filter((s) => s !== '');
+    const field = segs.length > 0 ? segs.join('.') : '(request)';
+    const issue = typeof r.msg === 'string' && r.msg !== '' ? r.msg : 'invalid value';
+    out.push({ field, issue });
+  }
+  return out;
+}
+
+// Picks the first human-readable issue for the envelope's top-level message (callers branch on
+// `code`, never on `message`, but a real message beats "An unexpected error occurred").
+function messageFromDetails(details: readonly ApiErrorDetail[]): string {
+  const first = details[0];
+  if (first === undefined) return 'The request could not be validated.';
+  return first.field === '(request)' ? first.issue : `${first.field}: ${first.issue}`;
+}
+
 async function envelopeFrom(response: Response): Promise<ApiErrorEnvelope> {
   try {
     const body: unknown = await response.json();
     if (isEnvelope(body)) return body;
+    // FastAPI default error shapes (not the ORA-56 envelope) — a 422 validation list, or a
+    // plain-string detail from a proxied service. Map both onto the envelope so callers still
+    // branch on `code` and get a usable message/details.
+    if (typeof body === 'object' && body !== null && 'detail' in body) {
+      const detail = (body as { detail: unknown }).detail;
+      if (Array.isArray(detail)) {
+        const details = detailRowsToErrorDetails(detail);
+        return {
+          error: {
+            code: codeForStatus(response.status),
+            message: messageFromDetails(details),
+            requestId: 'req_clientsynthetic',
+            retryable: false,
+            details,
+          },
+        };
+      }
+      if (typeof detail === 'string' && detail !== '') {
+        return synthetic(codeForStatus(response.status), detail, false);
+      }
+    }
   } catch {
     // fall through to a synthesised envelope
   }
