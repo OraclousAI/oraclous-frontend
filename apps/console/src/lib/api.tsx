@@ -17,6 +17,7 @@ import {
   createIntegrationKeysClient,
   createInvitationsClient,
   createOrgsClient,
+  createPublishedAgentsClient,
   createRecipesClient,
   createSearchClient,
   createToolsClient,
@@ -31,6 +32,7 @@ import {
   type IntegrationKeysClient,
   type InvitationsClient,
   type OrgsClient,
+  type PublishedAgentsClient,
   type RecipesClient,
   type SearchClient,
   type ToolsClient,
@@ -52,6 +54,7 @@ interface ApiContextValue {
   readonly engine: EngineClient;
   readonly capabilities: CapabilitiesClient;
   readonly integrationKeys: IntegrationKeysClient;
+  readonly publishedAgents: PublishedAgentsClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -87,6 +90,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       explorer: createExplorerClient(transport),
       recipes: createRecipesClient(transport),
       integrationKeys: createIntegrationKeysClient(transport),
+      publishedAgents: createPublishedAgentsClient(transport),
     };
   }, [getToken]);
 

@@ -18,6 +18,7 @@ import {
 } from '../lib/integrationKeys.js';
 import { useToast } from '../lib/toast.jsx';
 import { DisplayOnceSecretModal } from '../components/DisplayOnceSecretModal.js';
+import { DeveloperTabs } from '../components/DeveloperTabs.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { IconKey } from '../icons/index.js';
 import './developer.css';
@@ -235,6 +236,8 @@ export default function IntegrationKeysPage() {
           </p>
         </div>
       </div>
+
+      <DeveloperTabs active="keys" />
 
       <div className="kpis">
         <div className="kpi">
