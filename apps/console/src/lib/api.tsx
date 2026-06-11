@@ -21,6 +21,7 @@ import {
   createRecipesClient,
   createSearchClient,
   createToolsClient,
+  createWebhookSubscriptionsClient,
   type AuthClient,
   type CapabilitiesClient,
   type CredentialsClient,
@@ -36,6 +37,7 @@ import {
   type RecipesClient,
   type SearchClient,
   type ToolsClient,
+  type WebhookSubscriptionsClient,
 } from '@oraclous/api-client';
 import { useTokenStore } from './token-store.jsx';
 
@@ -55,6 +57,7 @@ interface ApiContextValue {
   readonly capabilities: CapabilitiesClient;
   readonly integrationKeys: IntegrationKeysClient;
   readonly publishedAgents: PublishedAgentsClient;
+  readonly webhookSubscriptions: WebhookSubscriptionsClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -91,6 +94,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       recipes: createRecipesClient(transport),
       integrationKeys: createIntegrationKeysClient(transport),
       publishedAgents: createPublishedAgentsClient(transport),
+      webhookSubscriptions: createWebhookSubscriptionsClient(transport),
     };
   }, [getToken]);
 

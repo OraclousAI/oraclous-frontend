@@ -195,6 +195,14 @@
   white-space: pre;
 }
 
+/* ── Webhook subscription rows ─────────────────────────────────────────────── */
+.dev-sub-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+}
+
 /* Visually-hidden live region — announced by AT, takes no layout space. */
 .dev-sr-live {
   position: absolute;
