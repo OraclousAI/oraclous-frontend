@@ -1,0 +1,45 @@
+{
+  "modes": [
+    {
+      "name": "Advisor",
+      "what_it_is": "Advisory + continued security and governance review for new launches; Trust Layer specifications for all four primitives plus reference implementations. No new feature build under the engagement — Eurail's in-house team writes the code.",
+      "best_when": "Eurail has hired the four senior leads early and the in-house team is shipping by Q3 2026, wants to own the entire platform at month 24, and the partnership is a knowledge-transfer + risk-review function.",
+      "worst_when": "Hiring slips past Q3 2026 (leads 1–3 not in seat by month 3). Without the in-house team in place, advisor-only mode produces architecture documents that don't ship."
+    },
+    {
+      "name": "Implementation contractor",
+      "what_it_is": "Vendor-led platform delivery for the first nine months — Oraclous builds the platform and the first customer-facing features. Hand-off complete by month 12; Oraclous recedes to advisory in Phase 2.",
+      "best_when": "Eurail wants the timeline compression and is comfortable with vendor-led platform delivery for the first nine months. The in-house team is sized for ownership at month 12 + ongoing build, not for the initial platform build itself.",
+      "worst_when": "Eurail has a complex internal procurement requirement that makes a single-vendor implementation contract slow to execute — or the in-house team is already sized for the build, in which case Advisor is the right fit."
+    },
+    {
+      "name": "Hybrid",
+      "what_it_is": "Co-build. The four Trust Layer primitives are deployed in Eurail's AWS VPC and operated jointly, with Eurail's AI Product engineers learning the platform on the production code that ships. Phased ownership transfer: Eurail takes platform ownership at month 9, feature ownership at month 12, advisory only by month 18.",
+      "best_when": "Eurail wants to build a permanent in-house AI capability AND hit the competitor-calendar timeline. The hiring shape is real but slower than vendor-led delivery; co-building lets Eurail's engineers learn on production code.",
+      "worst_when": "The lines of ownership are left unclear — if neither side commits to specific ownership transitions at specific milestones, hybrid drifts toward advisor-with-extra-meetings or implementation-with-extra-friction."
+    }
+  ],
+  "trust_primitives": [
+    { "name": "Signed audit log", "what": "Every model call, retrieval, tool invocation, decision, and customer-facing message written to an append-only, cryptographically signed log." },
+    { "name": "Intent guard", "what": "Intent-injection guardrails on AI inputs/outputs so the assistant can't be steered into actions or disclosures outside its remit." },
+    { "name": "Credential governance", "what": "Governed handling of the integration keys, session tokens, and agent credentials the AI features use — never persisted to unconstrained storage." },
+    { "name": "Human-in-the-loop gates", "what": "Meaningful human review on the decisions that matter (refunds, eligibility) so automated-decision regulation is satisfied and trust is preserved." }
+  ],
+  "three_asks": [
+    {
+      "number": 1,
+      "title": "Pick the use case",
+      "detail": "Choose one of the eight opportunities (Doc 03) or any other Eurail-desired application as the target of a contained 6–10 week Proof of Concept. If Eurail wants a recommendation: Opportunity 5 (replace the public chatbot — fastest to ship), Opportunity 3 (the AI-callable interface — most visible win), or Opportunity 2 (the pass-economics calculator — the wedge unique to Eurail)."
+    },
+    {
+      "number": 2,
+      "title": "Choose the data approach",
+      "detail": "(a) Mock data — start now, ~2 weeks to first running prototype on synthetic-but-realistic data; no legal track; re-pointable at real data later (recommended unless there's a reason to wait). (b) Real Eurail data under NDA — more representative from day one but typically 6–10 weeks of paperwork before work begins."
+    },
+    {
+      "number": 3,
+      "title": "Schedule a 60–90 minute scoping session",
+      "detail": "With the relevant Eurail leads (CTO + Head of Product, plus DPO if Ask 2 lands on option b). Output: a written scoping memo with PoC scope, success criteria, timeline, and a fixed-price proposal. A working session to lock the PoC parameters, not a sales presentation. Each ask is a single decision; none commits Eurail to the full programme."
+    }
+  ]
+}

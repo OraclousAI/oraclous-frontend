@@ -1,0 +1,78 @@
+{
+  "ontology_mode": "warn",
+  "entity_types": [
+    {
+      "name": "Finding",
+      "properties": {
+        "claim": "One-sentence claim the evidence supports",
+        "module": "Producing module slug",
+        "label": "DIRECT | INFERRED | ASSUMPTION",
+        "confidence": "HIGH | MEDIUM | LOW",
+        "dimensions": "Array of dimension tags",
+        "raw": "Faithful source quote",
+        "ai_adoption_relevance": "Why it matters",
+        "source_url": "Primary source URL (drives CITES)",
+        "source_type": "Source type",
+        "source_name": "Source name",
+        "source_publication_date": "YYYY-MM-DD or null",
+        "source_fetch_date": "YYYY-MM-DD",
+        "source_language": "Language code",
+        "notes": "Caveats"
+      }
+    },
+    {
+      "name": "Source",
+      "properties": {
+        "url": "Canonical URL (id)",
+        "type": "Source type",
+        "name": "Source name",
+        "publication_date": "YYYY-MM-DD or null",
+        "language": "Language code"
+      }
+    },
+    {
+      "name": "Dimension",
+      "properties": {
+        "name": "Dimension tag (id)"
+      }
+    },
+    {
+      "name": "Question",
+      "properties": {
+        "text": "Open question",
+        "status": "open | resolved",
+        "suggested_module": "Where evidence might exist",
+        "rationale": "Why unresolved"
+      }
+    },
+    {
+      "name": "Conflict",
+      "properties": {
+        "topic": "Short label",
+        "evidence_ids": "Array of finding ids (>=2)",
+        "summary": "What the conflict is",
+        "explanation": "Why it exists, or empty",
+        "resolution": "PENDING | RESOLVED",
+        "synthesis_note": "How synthesis treats it",
+        "addressed_in": "Array of deliverable ids"
+      }
+    },
+    {
+      "name": "Deliverable",
+      "properties": {
+        "module_id": "Owning module id",
+        "kind": "research | analysis | synthesis | gate | exec_summary",
+        "wave": "Wave number",
+        "title": "Document title",
+        "content_markdown": "Full body"
+      }
+    }
+  ],
+  "relationship_types": [
+    {
+      "name": "CITES",
+      "source_type": "Finding",
+      "target_type": "Source"
+    }
+  ]
+}

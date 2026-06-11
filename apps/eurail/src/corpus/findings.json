@@ -1,0 +1,145 @@
+[
+  {
+    "number": 1,
+    "domain": "INT",
+    "headline": "The technology foundation is real. The AI on top of it is one deployment deep.",
+    "detail": "Modern AWS stack, named owners on every piece, one production AI win in customer support (82% satisfaction, half the ticket volume). Above that, no public sign of an AI platform team or the supporting infrastructure (LLM gateway, vector store, evaluation harness).",
+    "page_ref": "Pages 8–11.",
+    "evidence_ids": [
+      { "id": "ev-company-007", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-008", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-009", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 2,
+    "domain": "INT",
+    "headline": "Hiring is the most reliable leading indicator — and it is flat.",
+    "detail": "Three open roles. None in AI, machine learning, or data engineering. The Platform Engineer job description says \"explore AI-assisted tools\" — \"explore,\" not \"build.\" AI capability is being bought from partners, not built. SNCF Group is years ahead, and SNCF is just one Supervisory Board operator.",
+    "page_ref": "Page 11.",
+    "evidence_ids": [
+      { "id": "ev-company-011", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-030", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-tech-stack-009", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 3,
+    "domain": "INT",
+    "headline": "Internal AI works. The customer-facing AI does not. This is the central contradiction.",
+    "detail": "82% customer satisfaction inside Zendesk. \"Poor quality artificial intelligence\" on the public chatbot. Same company. The first proves Eurail can ship AI well; the second proves shipping AI is not the same as shipping AI well.",
+    "page_ref": "Page 10.",
+    "evidence_ids": [
+      { "id": "ev-company-008", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-020", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-021", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 4,
+    "domain": "USR",
+    "headline": "Two cohorts. Two different experiences of the same product.",
+    "detail": "iOS in the US: 2.7 stars. Android in Europe: 4.4 stars. Same app. The cohort that complains loudest buys the highest-margin Global Pass and was hit hardest by the breach. Trustpilot's headline 3.9 hides a 16% one-star tail concentrated after the breach.",
+    "page_ref": "Page 14.",
+    "evidence_ids": [
+      { "id": "ev-tech-stack-016", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-tech-stack-017", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-cust-voice-001", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 5,
+    "domain": "USR",
+    "headline": "Four of eight customer-journey stages are answered first by someone other than Eurail.",
+    "detail": "Discover, Research, Decide, Disrupt are owned today by Conductor Sam, Seat 61, travel blogs, eurailplanner.com, and individual operator AI. Eurail is the fallback. Stages 4–5–6 happen inside Eurail's own app and website — un-augmented by AI today.",
+    "page_ref": "Page 15.",
+    "evidence_ids": [
+      { "id": "ev-company-015", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-032", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-022", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 6,
+    "domain": "USR",
+    "headline": "Zero presence on all four new AI distribution channels.",
+    "detail": "AI search engines (38/100 visibility, with self-blocking configuration). ChatGPT Apps and MCP servers (zero, while SNCF Connect's ChatGPT App ships). Messaging apps (zero, while Romie and GuideGeek own the channel). Agent browsers (Eurail's booking flow is structurally hard for agents).",
+    "page_ref": "Page 17.",
+    "evidence_ids": [
+      { "id": "ev-company-016", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-019", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-010", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 7,
+    "domain": "FED",
+    "headline": "\"Federation\" is three things. Only the legal layer is fully built.",
+    "detail": "Legal contracts: strong (no competitor has them). Real-time technical data integration: partial (about 6 of 35 operators in real time today). AI-exposed surface: zero. The new EU regulation moves layer 2 towards completion; layer 3 remains Eurail's job.",
+    "page_ref": "Page 21.",
+    "evidence_ids": [
+      { "id": "ev-company-004", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-018", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-007", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 8,
+    "domain": "FED",
+    "headline": "Eurail's advantage can be eroded from inside the cooperative, not only from outside.",
+    "detail": "5 of 8 Supervisory Board operators ship their own AI today. SNCF Connect sells the Pass on its website, but deliberately leaves the Pass out of its ChatGPT App. The 2019 BritRail walkout pattern, applied to the AI distribution channel. The European trade body has not put consumer AI on its 2026 priorities.",
+    "page_ref": "Pages 19–20.",
+    "evidence_ids": [
+      { "id": "ev-company-005", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-002", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-004", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 9,
+    "domain": "FED",
+    "headline": "The new EU regulation is the most under-discussed enabler in this document.",
+    "detail": "TEL TSI in force on 2 March 2026. The common cross-operator data platform is operational, with 23 of 35 operators on-board. This compresses the most defensible AI capability (cross-operator disruption rebooking) from \"4–9 months\" to \"3–5 months.\" It does not build the AI surface itself — that remains Eurail's work.",
+    "page_ref": "Page 23.",
+    "evidence_ids": [
+      { "id": "ev-coop-gov-002", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-cust-journey-007", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 10,
+    "domain": "MKT",
+    "headline": "The market is on Eurail's side. The audience is on AI's side.",
+    "detail": "European rail had its best year on record in 2024 (+5.8%). Pass sales are growing faster than the underlying market (+25%). 89% of consumers want AI in their travel planning; 56% have already used it. AI assistants now outrank travel bloggers as a trusted source.",
+    "page_ref": "Page 25.",
+    "evidence_ids": [
+      { "id": "ev-industry-001", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-industry-010", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-industry-016", "label": "INFERRED", "confidence": "MEDIUM" }
+    ]
+  },
+  {
+    "number": 11,
+    "domain": "MKT",
+    "headline": "The disintermediation playbook is no longer hypothetical.",
+    "detail": "TripAdvisor — structurally similar to eurail.com on the discovery side — lost 25% of monthly visits in two years to AI search. The AI-exposed legacy segment is contracting; the AI-native segments are growing. Observable, dated, one peer ahead.",
+    "page_ref": "Page 25.",
+    "evidence_ids": [
+      { "id": "ev-company-023", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-industry-005", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-021", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 12,
+    "domain": "MKT",
+    "headline": "The competitor calendar — not the regulatory calendar — is the urgency clock.",
+    "detail": "Trainline shipped a 1-million-conversation rail agent in June 2025. Four ChatGPT Apps shipped in nine days in April 2026. Conductor Sam continues to compound at $49 per year. The EU AI Act's transparency rules (in force on 2 August 2026) are routine compliance — the real deadline is the calendar above.",
+    "page_ref": "Page 27.",
+    "evidence_ids": [
+      { "id": "ev-company-015", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-013", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-015", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  }
+]
