@@ -1,0 +1,9 @@
+{
+  "name": "oraclous-eurail-api",
+  "private": true,
+  "type": "module",
+  "description": "Eurail API sidecar — standalone install manifest for the VPS deploy (the CI bundle runs `npm install --omit=dev` here so nodemailer ships with the service). Not a pnpm workspace package.",
+  "dependencies": {
+    "nodemailer": "^8.0.11"
+  }
+}
