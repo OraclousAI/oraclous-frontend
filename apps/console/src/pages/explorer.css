@@ -552,6 +552,37 @@
   font-family: var(--font-mono);
   font-size: var(--t-tiny-size);
 }
+/* Entity-resolution aliases (the surface forms merged into a canonical node) — chip cloud. */
+.ge .og-aliases {
+  padding: 0 18px 10px;
+}
+.ge .og-aliases-label {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ge .og-aliases-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+.ge .og-alias {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-1);
+  background: var(--og-bg-2);
+  border: 1px solid var(--og-line);
+  border-radius: 4px;
+  padding: 2px 7px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .ge .og-kvs {
   display: flex;
   flex-direction: column;

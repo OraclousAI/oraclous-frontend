@@ -345,10 +345,23 @@ export function RightInspector(props: {
 
   const nbrs = edges.filter((e) => e.source === node.id || e.target === node.id).slice(0, 14);
   const idMap = new Map(nodes.map((n) => [n.id, n]));
+  // Entity-resolution metadata (KGS #269): a resolved node carries `canonical_name` (the chosen
+  // display form) and an `aliases` set (the surface-form variants merged into it). Surface them
+  // distinctly; they appear only on resolved entities, so render defensively.
+  const canonicalName =
+    typeof rawProperties?.['canonical_name'] === 'string'
+      ? (rawProperties['canonical_name'] as string)
+      : null;
+  const aliasesRaw = rawProperties?.['aliases'];
+  const aliases = Array.isArray(aliasesRaw)
+    ? aliasesRaw.filter((a): a is string => typeof a === 'string')
+    : [];
   const props12 = Object.entries(rawProperties ?? {})
     .filter(
       ([k, v]) =>
         k !== 'embedding' &&
+        k !== 'canonical_name' &&
+        k !== 'aliases' &&
         (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean')
     )
     .slice(0, 12);
@@ -401,6 +414,33 @@ export function RightInspector(props: {
         <p role="alert" className="og-insp-error">
           {expandError}
         </p>
+      )}
+      {(canonicalName !== null || aliases.length > 0) && (
+        <>
+          <div className="og-insp-section">Identity</div>
+          {canonicalName !== null && (
+            <div className="og-kvs">
+              <div>
+                <span>canonical name</span>
+                <b>{canonicalName}</b>
+              </div>
+            </div>
+          )}
+          {aliases.length > 0 && (
+            <div className="og-aliases">
+              <span className="og-aliases-label">
+                aliases <span className="og-count num">{aliases.length}</span>
+              </span>
+              <div className="og-aliases-chips">
+                {aliases.map((a) => (
+                  <span className="og-alias" key={a} title={a}>
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
       <div className="og-insp-section">Properties</div>
       <div className="og-kvs">
