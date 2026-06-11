@@ -5,7 +5,7 @@
 // on this page is computed from real jobs — nothing is fabricated.
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import type { Job, OhmManifest } from '@oraclous/api-client';
+import type { Job, OhmManifest, OhmModel } from '@oraclous/api-client';
 import { isJobTerminal } from '@oraclous/api-client';
 import { Page } from '../components/shell/DashLayout.js';
 import {
@@ -29,6 +29,18 @@ function stateRowClass(state: string): string {
   if (state === 'FAILED' || state === 'TIMED_OUT') return 'run-row-fail';
   if (state === 'ESCALATED' || state === 'CANCELLED') return 'run-row-warn';
   return 'run-row-live'; // QUEUED | RUNNING
+}
+
+// The role=='primary' model drives the loop (falls back to models[0]); the model key + binding
+// live on that entry, matching the harness's primary_model().
+function primaryModel(manifest: OhmManifest | null): OhmModel | null {
+  const models = manifest?.models;
+  if (models === undefined || models.length === 0) return null;
+  return models.find((m) => m.role === 'primary') ?? models[0] ?? null;
+}
+
+function modelKeyWired(manifest: OhmManifest | null): boolean {
+  return typeof primaryModel(manifest)?.config?.['credential_id'] === 'string';
 }
 
 function fmtTime(iso: string | null): string {
@@ -195,7 +207,13 @@ function AgentView({
         ))}
       </div>
 
-      {tab === 'runs' && <RunsTab capabilityId={capabilityId} jobs={agentJobs} />}
+      {tab === 'runs' && (
+        <RunsTab
+          capabilityId={capabilityId}
+          jobs={agentJobs}
+          hasModelKey={modelKeyWired(manifest)}
+        />
+      )}
       {tab === 'prompt' && <PromptTab manifest={manifest} />}
       {tab === 'tools' && <ToolsTab manifest={manifest} />}
       {tab === 'config' && <ConfigTab manifest={manifest} />}
@@ -204,7 +222,15 @@ function AgentView({
 }
 
 // ── Runs: trigger + table + the results/provenance drawer ───────────────────
-function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly Job[] }) {
+function RunsTab({
+  capabilityId,
+  jobs,
+  hasModelKey,
+}: {
+  capabilityId: string;
+  jobs: readonly Job[];
+  hasModelKey: boolean;
+}) {
   const submit = useSubmitJob();
   const [input, setInput] = useState('');
   const [openJobId, setOpenJobId] = useState<string | null>(null);
@@ -230,6 +256,12 @@ function RunsTab({ capabilityId, jobs }: { capabilityId: string; jobs: readonly 
 
   return (
     <section className="sec" aria-label="Runs">
+      {!hasModelKey && (
+        <p className="run-warn">
+          This agent has no model key, so runs will fail. Add one in the{' '}
+          <Link to={`/app/agents/harness/${capabilityId}/edit`}>manifest editor</Link>.
+        </p>
+      )}
       <div className="run-trigger">
         <input
           type="text"
@@ -502,12 +534,14 @@ function ConfigTab({ manifest }: { manifest: OhmManifest | null }) {
       </section>
     );
   }
-  const model = manifest.models?.[0] ?? null;
+  const model = primaryModel(manifest);
   const budget = manifest.runtime.budget;
   const cells: Array<{ k: string; v: string }> = [
     { k: 'entrypoint', v: manifest.runtime.entrypoint },
     { k: 'model', v: model !== null ? model.binding : '—' },
     { k: 'protocol', v: model !== null ? model.protocol_shape : '—' },
+    // Never surface the credential id — only whether a model key is wired.
+    { k: 'model key', v: modelKeyWired(manifest) ? 'wired' : 'not set' },
     { k: 'owner org', v: manifest.metadata.owner_organization_id },
     { k: 'manifest id', v: manifest.metadata.id },
     { k: 'ohm version', v: manifest.ohm_version },

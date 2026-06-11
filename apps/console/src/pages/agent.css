@@ -399,16 +399,19 @@
   background: var(--paper-soft);
 }
 
-/* Label-wrapped .field (the builder's form rows): the caption span styles like the
-   page.css .field label. */
-label.field > span {
+/* .field caption span styled like the page.css .field label — for both the label-wrapped form
+   rows and the div-wrapped credential rows (which can't be a <label>: the slot owns its own
+   labelled controls). */
+label.field > span,
+.field > span {
   font-family: var(--font-mono);
   font-size: var(--t-tiny-size);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mute);
 }
-label.field > span.sr-only {
+label.field > span.sr-only,
+.field > span.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -542,4 +545,73 @@ label.field > span.sr-only {
   .cfg-cell {
     border-right: none;
   }
+}
+
+/* ── Credential slots (agent builder) ─────────────────────────────────────── */
+.cred-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cred-pick {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.cred-pick select {
+  flex: 1;
+  min-width: 0;
+}
+.cred-add {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cred-add input {
+  flex: 1;
+  min-width: 140px;
+  font-family: var(--font-sans);
+  font-size: var(--t-dense-size);
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+.cred-add input:focus-visible {
+  border-color: var(--ink);
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+.cred-note,
+.cred-hint {
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+  margin: 0;
+}
+.cred-error {
+  font-size: var(--t-tiny-size);
+  color: var(--error);
+  margin: 0;
+}
+.cred-tool-h {
+  font-size: var(--t-dense-size);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Run-tab warning banner (e.g. agent has no model key) */
+.run-warn {
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in oklab, var(--warning) 10%, var(--paper));
+  font-size: var(--t-caption-size);
+  color: var(--ink);
+}
+.run-warn a {
+  color: var(--ink);
+  text-decoration: underline;
 }
