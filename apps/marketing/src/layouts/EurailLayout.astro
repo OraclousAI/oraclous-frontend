@@ -1,0 +1,92 @@
+---
+// Standalone shell for the Eurail report + onboarder. Treats /eurail as its OWN app, distinct from
+// the marketing site: a single slim app bar with just the Oraclous lockup (links home) — no tabs, no
+// marketing nav, no footer, no "Eurail × Oraclous" co-branding. People arrive by direct link.
+import '@oraclous/design-system/tokens.css';
+import '@fontsource/sora/400.css';
+import '@fontsource/sora/600.css';
+import '@fontsource/sora/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '../styles/global.css';
+import '../styles/marketing.css';
+import '../styles/identity.css';
+
+import BaseHead from '../components/BaseHead.astro';
+import SchemaJsonLd from '../components/SchemaJsonLd.astro';
+import Logo from '../components/Logo.astro';
+
+interface Props {
+  data: Record<string, any>;
+  url: string;
+  /** Hide the app bar entirely (e.g. while the access gate covers the surface). */
+  chromeless?: boolean;
+}
+
+const { data, url, chromeless = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead
+      title={data.title}
+      description={data.meta_description}
+      url={url}
+      ogType="website"
+      noindex={data.noindex ?? true}
+      image={data.og_image}
+    />
+    <SchemaJsonLd url={url} title={data.title} body="" data={data} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {
+      !chromeless && (
+        <header class="eurail-appbar">
+          <div class="eurail-appbar__inner">
+            <a class="eurail-appbar__brand" href="/" aria-label="Oraclous — home">
+              <Logo variant="lockup" height={20} cursorAr={0.45} />
+            </a>
+          </div>
+        </header>
+      )
+    }
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .eurail-appbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--border-hair);
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(1.6) blur(10px);
+  }
+  .eurail-appbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--sp-4);
+    height: 52px;
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-inline: var(--sp-6);
+  }
+  .eurail-appbar__brand {
+    display: inline-flex;
+    align-items: center;
+    color: var(--ink);
+    text-decoration: none;
+    flex: none;
+  }
+  @media (max-width: 640px) {
+    .eurail-appbar__inner {
+      padding-inline: var(--sp-4);
+    }
+  }
+</style>

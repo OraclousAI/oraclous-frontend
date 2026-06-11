@@ -1,0 +1,7 @@
+[
+  { "id": "01", "title": "Executive Overview", "audience": "Board, senior leadership", "pages": 15, "purpose": "The whole analysis compressed into a 15-minute paginated read-through; 13 one-page sections with pointers to the deeper docs.", "file": "v2/01-executive-overview" },
+  { "id": "02", "title": "Diagnosis Report", "audience": "CTO, DPO, Head of Strategy", "pages": 34, "purpose": "Full current-state assessment — AI maturity scorecard, 12 numbered findings, market trends, customer reality, the inaction trajectory.", "file": "v2/02-diagnosis-report" },
+  { "id": "03", "title": "Strategy & Execution Roadmap", "audience": "CTO, Head of Product, VP Engineering", "pages": 20, "purpose": "The Eurail AI Adoption Ladder, 8 opportunities ranked by leverage, 5 teams, 4-phase phasing, 6 early-warning signals — vendor-agnostic.", "file": "v2/03-strategy-execution-roadmap" },
+  { "id": "04", "title": "Partnership Brief", "audience": "C-suite, procurement", "pages": 11, "purpose": "3 engagement modes, 2 workstreams, the platform mapped to opportunities, the 4 Trust Layer primitives, vendor differentiation, the Three Asks.", "file": "v2/04-partnership-brief" },
+  { "id": "05", "title": "Evidence & Methodology Appendix", "audience": "DPO, due-diligence reviewers", "pages": 15, "purpose": "The audit trail — 600 evidence records, 24 conflicts logged and resolved, the four-pass methodology, source registry, auditor workflow.", "file": "v2/05-evidence-and-methodology-appendix" }
+]

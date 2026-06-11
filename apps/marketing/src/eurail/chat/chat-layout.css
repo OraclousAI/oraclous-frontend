@@ -1,0 +1,142 @@
+/* Eurail onboarder — bounded chat-surface layout. Pairs with the inline-styled island in
+   ChatPage.tsx; only what a media query must own lives here. Token-only, no Tailwind. */
+
+/* Desktop: the history rail is a fixed-width, in-flow column. */
+.eurail-chat-panel > nav {
+  flex: none;
+  width: 264px;
+}
+
+/* The chat column gets comfortable side gutters that tighten on small screens. */
+.eurail-chat-col {
+  padding-inline: clamp(var(--sp-4), 4vw, var(--sp-10));
+}
+
+/* Composer — one rounded input (design-system input pattern) with the send as an embedded icon
+   button. Replaces the old bordered-textarea + separate Send button. */
+.eurail-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-4);
+  background: var(--bg-soft);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.eurail-composer:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ink) 9%, transparent);
+}
+.eurail-composer textarea {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  color: var(--fg);
+  resize: none;
+  padding: 8px 0;
+  max-height: 160px;
+  line-height: 1.45;
+}
+.eurail-composer textarea::placeholder {
+  color: var(--fg-mute);
+}
+.eurail-composer__send {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-3);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  transition: opacity 140ms ease, background 140ms ease;
+}
+.eurail-composer__send:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ink) 88%, var(--accent));
+}
+.eurail-composer__send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Onboarder starter / quick-reply chips — on-brand mint (the accent), not the link blue. */
+.eurail-chip {
+  font: inherit;
+  font-size: var(--t-dense-size, 0.875rem);
+  padding: 6px var(--sp-3);
+  border-radius: var(--r-pill);
+  border: 1px solid color-mix(in oklab, var(--accent) 45%, var(--rule));
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.eurail-chip:hover {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 9%, var(--bg));
+}
+
+@media (max-width: 768px) {
+  /* Off-canvas drawer: slid out by default; slid in when open (HistorySidebar sets aria-hidden
+     only when collapsed, so :not([aria-hidden]) === open). */
+  .eurail-chat-panel > nav {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 3;
+    width: min(82vw, 300px);
+    transform: translateX(-100%);
+    transition: transform 160ms cubic-bezier(0.2, 0, 0.2, 1);
+  }
+  .eurail-chat-panel > nav:not([aria-hidden]) {
+    transform: translateX(0);
+    box-shadow: 0 8px 30px color-mix(in oklab, var(--ink) 22%, transparent);
+  }
+  .eurail-chat-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 0;
+    background: color-mix(in oklab, var(--ink) 38%, transparent);
+    cursor: pointer;
+  }
+  .eurail-chat-col {
+    padding-inline: var(--sp-4);
+  }
+}
+
+/* Dock: the history rail is ALWAYS an off-canvas drawer (the dock is narrow at any viewport width),
+   not the in-flow desktop column. Mirrors the mobile treatment, un-gated by width. */
+.eurail-chat-panel--dock > nav {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 3;
+  width: min(86%, 280px);
+  transform: translateX(-100%);
+  transition: transform 160ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+.eurail-chat-panel--dock > nav:not([aria-hidden]) {
+  transform: translateX(0);
+  box-shadow: 0 8px 30px color-mix(in oklab, var(--ink) 22%, transparent);
+}
+.eurail-chat-panel--dock .eurail-chat-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  background: color-mix(in oklab, var(--ink) 38%, transparent);
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eurail-chat-panel > nav,
+  .eurail-chat-panel--dock > nav {
+    transition: none;
+  }
+}

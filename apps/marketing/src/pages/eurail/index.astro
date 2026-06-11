@@ -1,0 +1,34 @@
+---
+// /eurail — the Eurail AI-adoption report, now a WORKSPACE: a traversable report canvas + a
+// collapsible onboarder dock on one page (Phase 1). The whole surface is one interactive island
+// (hash-routed section nav + the docked chat), so the report is browsed in any order rather than as a
+// static scroll. The access gate overlays it until an @eurail.com email is verified.
+import EurailLayout from '../../layouts/EurailLayout.astro';
+import { EurailGate } from '../../eurail/EurailGate.js';
+import { EurailWorkspace } from '../../eurail/EurailWorkspace.js';
+import '@oraclous/design-system/semantic.css';
+import '../../styles/eurail.css';
+import '../../eurail/chat/chat-layout.css';
+import '../../eurail/workspace.css';
+import { corpusStats } from '../../eurail/corpus/index.js';
+
+const meta = {
+  title: 'Eurail — AI Adoption Analysis',
+  meta_description:
+    'An evidence-backed analysis of Eurail’s AI adoption position. Every claim traces to its source.',
+  noindex: true,
+};
+---
+
+<EurailLayout data={meta} url="/eurail">
+  <EurailGate client:only="react" stats={corpusStats} />
+  <EurailWorkspace client:only="react" />
+</EurailLayout>
+
+<style is:global>
+  /* The workspace owns the full area below the app bar — drop the layout's <main> rhythm so it sits
+     flush and the page itself doesn't gain a phantom scroll under the viewport-height island. */
+  body:has(.eurail-ws) #main {
+    padding: 0;
+  }
+</style>

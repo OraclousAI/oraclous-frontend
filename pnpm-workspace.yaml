@@ -6,3 +6,11 @@ allowBuilds:
   '@swc/core': true
   esbuild: true
   sharp: true
+# Pin React to 18 workspace-wide. A stray React 19 (a peer-satisfied variant of @astrojs/react)
+# otherwise lingers in the store and intermittently poisons Vite's dep optimizer with
+# "jsxDEV is not a function" when the React islands hydrate. Every app here is React 18.
+overrides:
+  react: 18.3.1
+  react-dom: 18.3.1
+  '@types/react': 18.3.30
+  '@types/react-dom': 18.3.7

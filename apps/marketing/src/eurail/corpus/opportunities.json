@@ -1,0 +1,102 @@
+[
+  {
+    "number": 1,
+    "name": "Make Eurail's own pages findable by AI search engines",
+    "layers": ["L1"],
+    "time_to_value": "1 day fixes · 2–6 wk full",
+    "governance": "Eurail alone",
+    "domain": "MKT",
+    "why": "Cheapest opportunity in the set. Closes the AI search visibility gap (38/100), the lowest-scoring dimension in the maturity scorecard. Cost of not doing it is asymmetric — every week without it, third-party services accumulate citation authority on Eurail's brand-defining queries.",
+    "evidence_ids": [
+      { "id": "ev-company-016", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-019", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 2,
+    "name": "A pass-economics calculator that does the math surrogates can't",
+    "layers": ["L3"],
+    "time_to_value": "6–12 wk · 4–6 mo full",
+    "governance": "Eurail alone",
+    "domain": "USR",
+    "why": "The wedge unique to Eurail — answers \"is the pass worth it for my trip?\", the question third-party surrogates approximate badly. Within Eurail's perimeter to ship.",
+    "evidence_ids": [
+      { "id": "ev-company-032", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 3,
+    "name": "An AI-callable interface for pass logic (MCP / ChatGPT App)",
+    "layers": ["L3"],
+    "time_to_value": "4–6 wk MVP · 10–14 wk",
+    "governance": "Eurail alone",
+    "domain": "USR",
+    "why": "The most visible win. Puts Eurail's pass logic on the agent-callable surface (MCP servers, ChatGPT Apps) where SNCF Connect already ships and Eurail is absent.",
+    "evidence_ids": [
+      { "id": "ev-coop-gov-010", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-coop-gov-011", "label": "INFERRED", "confidence": "MEDIUM" }
+    ]
+  },
+  {
+    "number": 4,
+    "name": "A new multi-country trip planner (replaces the May 2026 sunset)",
+    "layers": ["L3", "L4"],
+    "time_to_value": "6–10 wk alpha · 3–5 mo",
+    "governance": "Mostly Eurail alone (regulated feeds)",
+    "domain": "FED",
+    "why": "Replaces what the May 2026 trip-planner sunset took down, before DB Navigator's pan-European launch inherits the use case. TEL TSI regulated feeds reduce the operator dependency.",
+    "evidence_ids": [
+      { "id": "ev-cust-journey-007", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 5,
+    "name": "A retrieval-grounded customer assistant (replaces the public chatbot)",
+    "layers": ["L2", "L3"],
+    "time_to_value": "4–8 wk corpus · 6–10 wk",
+    "governance": "Eurail alone",
+    "domain": "USR",
+    "why": "The lowest-uncertainty win in the set: extend the internal Zendesk AI that already works (82% satisfaction) to the public surface. Closing the contradiction is engineering work, not strategy.",
+    "evidence_ids": [
+      { "id": "ev-company-008", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-020", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 6,
+    "name": "Cross-operator disruption rebooking (the federation moat)",
+    "layers": ["L4"],
+    "time_to_value": "3–5 mo pilot · 9–12 mo broader",
+    "governance": "Eurail alone on regulated feeds + few operators",
+    "domain": "FED",
+    "why": "The highest-moat capability in the diagnosis. Trainline solves disruption within UK rail, DB Navigator within DB, SNCF Connect within SNCF — none touch the cross-operator-with-pass-rules case. Only Eurail is positioned to, and TEL TSI made the data substrate available without 35-way negotiation.",
+    "evidence_ids": [
+      { "id": "ev-coop-gov-002", "label": "DIRECT", "confidence": "HIGH" },
+      { "id": "ev-company-018", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 7,
+    "name": "Post-trip closure (auto delay-comp + recap + did-the-pass-pay-off?)",
+    "layers": ["L3", "L4"],
+    "time_to_value": "8–14 wk per leg · 3–5 mo bundle",
+    "governance": "Eurail alone + operator claim handoff",
+    "domain": "USR",
+    "why": "Moves the post-trip relationship back from third-party recap tools to Eurail — auto delay-compensation, a trip recap, and the \"did the pass pay off?\" close.",
+    "evidence_ids": [
+      { "id": "ev-company-023", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  },
+  {
+    "number": 8,
+    "name": "Federated trust infrastructure (signed audit log + provenance + special-category track)",
+    "layers": ["L1", "L2"],
+    "time_to_value": "6–10 wk core · 6–10 mo full",
+    "governance": "Eurail alone",
+    "domain": "INT",
+    "why": "The gate that unblocks all the others. Every model call, retrieval, tool invocation, and customer-facing message written to an append-only signed log, with verifiable provenance so customers can tell authentic messages from phishing — the trust bar the post-breach environment demands.",
+    "evidence_ids": [
+      { "id": "ev-company-021", "label": "DIRECT", "confidence": "HIGH" }
+    ]
+  }
+]

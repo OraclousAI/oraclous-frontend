@@ -20,11 +20,14 @@ interface Props {
   body?: string;
   url: string;
   kind?: 'home' | 'page' | 'blog';
+  /** Override breadcrumb display. Defaults to on for every page except the home page.
+   *  Bespoke surfaces with their own in-page nav (e.g. /eurail) pass `false`. */
+  breadcrumbs?: boolean;
 }
 
-const { data, body = '', url, kind = 'page' } = Astro.props;
+const { data, body = '', url, kind = 'page', breadcrumbs } = Astro.props;
 const ogType = kind === 'blog' ? 'article' : 'website';
-const showBreadcrumbs = url !== '/';
+const showBreadcrumbs = breadcrumbs ?? url !== '/';
 ---
 
 <!doctype html>

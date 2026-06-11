@@ -1,0 +1,62 @@
+{
+  "domains": [
+    {
+      "code": "INT",
+      "name": "Inside the company",
+      "covers": "Tech, support, DevSecOps, HR — Eurail's own teams, stack, and AI-build capability.",
+      "current_state": "Modern AWS stack with named owners and one production AI win (internal Zendesk, 82% satisfaction), but no AI platform team, no LLM gateway/vector store/eval harness, and zero open AI/ML/data roles.",
+      "key_finding_numbers": [1, 2, 3],
+      "central_risk": "AI capability is bought from partners, not built — leaving Eurail dependent and years behind SNCF Group.",
+      "central_opportunity": "Extend the internal AI that already works (Zendesk) to the public surface; stand up the platform layer the eight opportunities sit on."
+    },
+    {
+      "code": "USR",
+      "name": "The customer side",
+      "covers": "Product, CX, digital, marketing — the traveller experience across the eight-stage journey.",
+      "current_state": "A two-cohort product (US iOS 2.7★ vs EU Android 4.4★), a publicly disliked chatbot, a post-breach trust ceiling, and zero presence on the four new AI distribution channels.",
+      "key_finding_numbers": [4, 5, 6],
+      "central_risk": "Four of eight journey stages are answered first by third parties; the customer relationship erodes by default.",
+      "central_opportunity": "Replace the public chatbot with a retrieval-grounded assistant and ship an AI-callable pass-logic surface before third parties inherit the queries."
+    },
+    {
+      "code": "FED",
+      "name": "The cooperative & federation",
+      "covers": "Cross-operator, DiscoverEU, the Supervisory Board — the 35-operator network and its data-sharing.",
+      "current_state": "Legal federation is strong (no competitor has it); real-time data integration is partial (~6 of 35); the AI-exposed surface is zero. TEL TSI (March 2026) moves the data layer toward completion.",
+      "key_finding_numbers": [7, 8, 9],
+      "central_risk": "The advantage can erode from inside — 5 of 8 board operators already ship their own AI without the cooperative.",
+      "central_opportunity": "Convert the federation moat into AI advantage (cross-operator disruption rebooking) on regulated feeds — the capability no competitor can copy."
+    },
+    {
+      "code": "MKT",
+      "name": "The market & competition",
+      "covers": "The market around Eurail — rail demand, AI adoption, competitors, and the disintermediation precedent.",
+      "current_state": "Rail and pass sales are growing (+5.8% / +25%) and 89% of consumers want AI in travel planning, while competitors (Trainline, SNCF Connect, Conductor Sam) ship and Eurail ships no consumer AI.",
+      "key_finding_numbers": [10, 11, 12],
+      "central_risk": "The TripAdvisor disintermediation playbook (−25% visits to AI search) is observable and one peer ahead; the competitor calendar is the urgency clock.",
+      "central_opportunity": "Capture the growing, AI-ready audience by becoming the canonical AI surface for multi-country rail before competing surfaces inherit the relationship."
+    }
+  ],
+  "module_domain_map": [
+    { "module": "company-intel", "domain": "INT", "rationale": "Internal company structure, stack owners, hiring posture.", "certainty": "clear" },
+    { "module": "tech-stack-forensics", "domain": "INT", "rationale": "Eurail's own technology stack and app-quality forensics.", "certainty": "clear" },
+    { "module": "gap-01-b2b", "domain": "INT", "rationale": "Internal B2B/operations capability gap.", "certainty": "judgment-call" },
+    { "module": "customer-voice", "domain": "USR", "rationale": "Direct customer sentiment, reviews, breach reactions.", "certainty": "clear" },
+    { "module": "cust-journey", "domain": "USR", "rationale": "The eight-stage customer journey ownership.", "certainty": "clear" },
+    { "module": "breach-aftermath", "domain": "USR", "rationale": "Post-breach customer trust and friction.", "certainty": "clear" },
+    { "module": "trip-planner-sunset", "domain": "USR", "rationale": "Customer-facing trip-planner gap after the May 2026 sunset.", "certainty": "clear" },
+    { "module": "geo-aeo-state", "domain": "USR", "rationale": "AI-search/answer-engine findability of Eurail's customer-facing surface; presence on AI distribution channels.", "certainty": "judgment-call" },
+    { "module": "mcp-ecosystem", "domain": "USR", "rationale": "Agent-callable customer distribution channel (MCP/ChatGPT Apps).", "certainty": "judgment-call" },
+    { "module": "cooperative-governance", "domain": "FED", "rationale": "Supervisory Board, cooperative decision-making.", "certainty": "clear" },
+    { "module": "federation-moat", "domain": "FED", "rationale": "The 35-operator network advantage itself.", "certainty": "clear" },
+    { "module": "regulatory-landscape", "domain": "FED", "rationale": "TEL TSI and cross-operator data-sharing obligations drive the federation layer.", "certainty": "judgment-call" },
+    { "module": "disruption-resilience", "domain": "FED", "rationale": "Cross-operator disruption rebooking — the federation capability.", "certainty": "judgment-call" },
+    { "module": "gap-silent-operators", "domain": "FED", "rationale": "Operators acting outside the cooperative.", "certainty": "clear" },
+    { "module": "gap-05-silent-pilots", "domain": "FED", "rationale": "Operator-level AI pilots running silently within the federation.", "certainty": "clear" },
+    { "module": "industry-market", "domain": "MKT", "rationale": "Rail-market growth and demand context.", "certainty": "clear" },
+    { "module": "competitor-ai-benchmark", "domain": "MKT", "rationale": "Competitor AI shipping cadence.", "certainty": "clear" },
+    { "module": "distribution-disruption", "domain": "MKT", "rationale": "Market-level disintermediation of distribution.", "certainty": "clear" },
+    { "module": "third-party-surrogates", "domain": "MKT", "rationale": "Third-party services capturing Eurail's brand queries in-market.", "certainty": "clear" },
+    { "module": "adoption-scenario", "domain": "MKT", "rationale": "Forward market-position scenarios (cross-cutting, anchored to market outcome).", "certainty": "judgment-call" }
+  ]
+}

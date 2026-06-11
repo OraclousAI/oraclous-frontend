@@ -1,0 +1,220 @@
+/* The Eurail workspace: [ report canvas | collapsible onboarder dock ], filling the viewport below
+   the app bar. Layout + collapse transitions + responsive (desktop side-dock → mobile sheet). */
+
+.eurail-ws {
+  display: flex;
+  height: calc(100dvh - var(--eurail-appbar-h, 53px));
+  overflow: hidden;
+}
+
+/* ── Canvas (the report) ───────────────────────────────────────────────────── */
+.eurail-ws__canvas {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.eurail-ws__nav {
+  flex: none;
+  display: flex;
+  gap: var(--sp-1);
+  align-items: center;
+  padding: var(--sp-2) var(--sp-6);
+  border-bottom: 1px solid var(--border-hair);
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(8px);
+  /* Right-edge fade — signals there are more sections to scroll to (the strip hides its scrollbar). */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+}
+.eurail-ws__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.eurail-ws__tab {
+  flex: none;
+  font: inherit;
+  font-size: var(--t-dense-size, 0.875rem);
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--fg-mute);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-2);
+  padding: 6px var(--sp-3);
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease;
+}
+.eurail-ws__tab:hover {
+  color: var(--fg);
+  background: var(--bg-soft);
+}
+/* Active section: a quiet underline (matches the app bar's own current-tab treatment) rather than a
+   heavy ink pill among ghost tabs. */
+.eurail-ws__tab.is-active {
+  color: var(--fg);
+  font-weight: 600;
+  background: transparent;
+  box-shadow: inset 0 -2px 0 0 var(--fg);
+  border-radius: 0;
+}
+.eurail-ws__tab.is-active:hover {
+  background: transparent;
+}
+
+.eurail-ws__view {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-8) var(--sp-6) var(--sp-16);
+}
+.eurail-ws__view-inner {
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+/* ── Dock (the onboarder) ──────────────────────────────────────────────────── */
+.eurail-ws__dock {
+  flex: none;
+  width: 410px;
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  transition: width 220ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+.eurail-ws__dock[data-open='false'] {
+  width: 56px;
+}
+
+/* Collapsed rail — just the Oraclous mark, with a tooltip on hover/focus. */
+.eurail-ws__rail {
+  position: relative;
+  width: 56px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sp-4) 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.eurail-ws__rail:hover {
+  background: var(--bg-soft);
+}
+.eurail-ws__rail-tip {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: var(--sp-5);
+  white-space: nowrap;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 5px 10px;
+  border-radius: var(--r-2);
+  font-size: var(--t-dense-size, 0.875rem);
+  font-weight: 500;
+  box-shadow: var(--shadow-2, 0 6px 18px color-mix(in oklab, var(--ink) 22%, transparent));
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.eurail-ws__rail:hover .eurail-ws__rail-tip,
+.eurail-ws__rail:focus-visible .eurail-ws__rail-tip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.eurail-ws__scrim {
+  display: none;
+}
+
+/* Floating "Ask about this" on a text selection (issue #6) — pinned above the selection. */
+.eurail-ws__ask-sel {
+  position: fixed;
+  z-index: 70;
+  transform: translate(-50%, calc(-100% - 8px));
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 12px 6px 7px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-size: var(--t-dense-size, 0.875rem);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow-2, 0 8px 24px color-mix(in oklab, var(--ink) 28%, transparent));
+}
+.eurail-ws__ask-sel:hover {
+  background: color-mix(in oklab, var(--ink) 88%, var(--accent));
+}
+
+/* Mobile FAB to summon the dock. */
+.eurail-ws__fab {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-2, 0 8px 24px color-mix(in oklab, var(--ink) 28%, transparent));
+}
+
+/* Mobile: tighten the canvas gutters to match the app bar, and reserve bottom room so the FAB
+   never overlaps the last rows of a section. */
+@media (max-width: 640px) {
+  .eurail-ws__nav {
+    padding-inline: var(--sp-4);
+  }
+  .eurail-ws__view {
+    padding: var(--sp-6) var(--sp-4) var(--sp-24);
+  }
+}
+
+/* ── Mobile: the dock becomes an off-canvas sheet ──────────────────────────── */
+@media (max-width: 900px) {
+  .eurail-ws__dock {
+    position: fixed;
+    top: var(--eurail-appbar-h, 53px);
+    right: 0;
+    bottom: 0;
+    width: min(440px, 92vw) !important;
+    z-index: 60;
+    border-left: 1px solid var(--rule);
+    box-shadow: var(--shadow-3, -16px 0 40px color-mix(in oklab, var(--ink) 18%, transparent));
+    transform: translateX(100%);
+    transition: transform 240ms cubic-bezier(0.2, 0, 0.2, 1);
+  }
+  .eurail-ws__dock[data-open='true'] {
+    transform: translateX(0);
+  }
+  .eurail-ws__scrim {
+    display: block;
+    position: fixed;
+    inset: var(--eurail-appbar-h, 53px) 0 0 0;
+    z-index: 56;
+    background: color-mix(in oklab, var(--ink) 32%, transparent);
+    border: none;
+    cursor: pointer;
+  }
+}

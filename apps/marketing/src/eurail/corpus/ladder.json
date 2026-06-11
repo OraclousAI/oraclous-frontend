@@ -1,0 +1,57 @@
+{
+  "layers": [
+    {
+      "level": 1,
+      "name": "Data foundation",
+      "tagline": "Make your content readable, your data structured, your behaviour observable.",
+      "description": "Before AI can answer questions about your product, the product has to be legible — to AI engines, to retrieval systems, to your own analytics. AI search visibility fixes (the 38/100 score), the Xebia data lake to production, a graph layer for federation queries, and a signed audit log of every AI action. Configuration and engineering work, not strategy.",
+      "in_window": true
+    },
+    {
+      "level": 2,
+      "name": "Internal AI",
+      "tagline": "Make your own teams faster before making customer AI better.",
+      "description": "Eurail already has one production AI win on this layer — the internal Zendesk tool, 82% satisfaction with half the ticket volume. Layer 2 extends that posture and sets up the AI gateway, vector store, and prompt versioning Layer 3 sits on.",
+      "in_window": true
+    },
+    {
+      "level": 3,
+      "name": "Customer-facing AI",
+      "tagline": "Where most of the eight opportunities live.",
+      "description": "Five of the eight opportunities sit primarily on Layer 3: the chatbot replacement, the pass-economics calculator, the AI-callable interface, the multi-country trip planner, and post-trip closure. Each depends on Layer 1 + Layer 2 being in place and is risky to ship without them.",
+      "in_window": true
+    },
+    {
+      "level": 4,
+      "name": "Federation AI (cross-operator)",
+      "tagline": "Where the 35-operator advantage converts into AI moat.",
+      "description": "The layer no competitor can copy without operator contracts. Cross-operator disruption rebooking, multi-country itinerary across 35 operators, post-trip closure across operators — the highest-moat AI capabilities. TEL TSI (March 2026) shifted some of this from \"all 35 must agree\" to \"Eurail can do it on its own on regulated feeds.\" The most under-discussed lever in the analysis.",
+      "in_window": true
+    },
+    {
+      "level": 5,
+      "name": "Model ownership",
+      "tagline": "Out of scope for the 24-month window — on purpose.",
+      "description": "Training a rail-domain model is a real long-term lever, but expensive, slow, and only worthwhile after the four layers below it are in production. Defer until the foundations mature (typically months 24+). General-purpose models handle every opportunity in this plan.",
+      "in_window": false
+    }
+  ],
+  "order_rationale": "Each layer assumes the one below it is built. Customer-facing AI built without the foundations below it produces a specific set of failures — ungrounded answers, hallucinated pass rules, automated refund decisions with no audit trail or human-in-the-loop — and after the January 2026 breach Eurail has the least margin of any European travel company to absorb those failures. Skipping layers is the single most common cause of stalled programs; the order is the message.",
+  "failure_modes": [
+    {
+      "shortcut": "\"Just ship the chatbot.\" Skip Layer 1 & 2.",
+      "what_fails": "Chatbot answers from un-grounded content, hallucinates pass rules. Refund-eligibility decisions made without HITL trigger automated-decision regulation. The internal Zendesk metric doesn't generalise because the public surface lacks retrieval-grounding.",
+      "instead": "Build Layer 1 + 2 first so the chatbot ships with grounded answers, an audit trail, and HITL on the decisions that matter."
+    },
+    {
+      "shortcut": "\"Just use ChatGPT for everything.\" Treat AI as one off-the-shelf product.",
+      "what_fails": "Every decision goes through one provider with no logging, no cost control, no failover. Provider outages take every AI feature down. Model changes alter behaviour silently. A breach in integration leaks customer data outside Eurail's control.",
+      "instead": "Add an AI gateway in Layer 2 so model calls are observable, cost-controlled, and provider-portable. Switch providers per use case without rebuilding."
+    },
+    {
+      "shortcut": "\"Just train a Eurail-specific model.\" Skip layers 1–4, aim for L5 directly.",
+      "what_fails": "12–18 months and hundreds of thousands of euros training on an un-structured corpus. The model embeds existing gaps. The public chatbot still says \"poor quality artificial intelligence\" because its real problem was no structured pass-rules data behind it.",
+      "instead": "Defer L5 to month 24+. General-purpose models on a structured-rules Layer 1; the differentiation is in the data and the orchestration, not in the weights."
+    }
+  ]
+}
