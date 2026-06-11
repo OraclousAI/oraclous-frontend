@@ -30,6 +30,9 @@ export interface OGEdge {
   target: string;
   rel: string;
   weight: number;
+  // Resolver-written relationship strength on SIMILAR_TO/SAME_AS_CANDIDATE edges (#277); null when
+  // the edge carries no score.
+  score?: number | null;
 }
 
 export interface OGType {

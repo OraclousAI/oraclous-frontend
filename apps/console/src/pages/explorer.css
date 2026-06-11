@@ -878,3 +878,64 @@
     transition: none;
   }
 }
+
+/* ── SAME_AS_CANDIDATE review panel (read-only) + relationship score ──────── */
+.ge .og-rel-score {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  color: var(--og-accent-ink, var(--og-accent));
+  background: color-mix(in oklab, var(--og-accent) 14%, transparent);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+.ge-panel--candidates {
+  top: 56px;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  max-height: calc(100% - 70px);
+}
+.ge-candidates-note {
+  margin: 0;
+  font-size: var(--t-tiny-size);
+  color: var(--ge-fg-3, var(--og-fg-3));
+  line-height: 1.5;
+}
+.ge-candidate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--og-line);
+  font-size: var(--t-tiny-size);
+}
+.ge-candidate-node {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--og-fg-1);
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ge-candidate-node:hover {
+  color: var(--og-fg-0);
+  text-decoration: underline;
+}
+.ge-candidate-node:focus-visible {
+  outline: 2px solid var(--og-fg-0);
+  outline-offset: 1px;
+}
+.ge-candidate-sep {
+  color: var(--og-fg-3);
+  flex-shrink: 0;
+}
+.ge-candidate-score {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  color: var(--og-accent-ink, var(--og-accent));
+}
