@@ -22,6 +22,7 @@ import type {
 import { Page } from '../components/shell/DashLayout.js';
 import { CredentialSlot } from '../components/CredentialSlot.js';
 import { useMe } from '../lib/session.js';
+import { useTokenStore } from '../lib/token-store.jsx';
 import { useTools } from '../lib/tools.js';
 import {
   MODEL_CREDENTIAL_TOOL_ID,
@@ -210,6 +211,9 @@ function BuilderForm({
 }) {
   const navigate = useNavigate();
   const { principal } = useMe();
+  // The manifest's owner_organization_id is the ReBAC/tenancy anchor — it must be the ACTIVE org
+  // (the token claim), not /v1/auth/me's organisationId which always reports the user's default.
+  const { activeOrgId } = useTokenStore();
   const userId = principal?.id ?? null;
   const { tools, isLoading: toolsLoading } = useTools();
   const { credentials } = useCredentials(userId);
@@ -382,11 +386,11 @@ function BuilderForm({
     if (!valid || saving) return;
     setError(null);
     try {
-      if (principal === null) {
+      if (principal === null || activeOrgId === null) {
         setError('Your session isn’t ready yet — try again in a moment.');
         return;
       }
-      const manifest = buildManifest(principal.organisationId);
+      const manifest = buildManifest(activeOrgId);
       if (capabilityId !== null) {
         await update.mutateAsync(manifest);
         navigate(`/app/agents/harness/${capabilityId}`);

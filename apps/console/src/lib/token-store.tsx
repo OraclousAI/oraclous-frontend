@@ -30,6 +30,24 @@ export interface TokenPayload {
   expiresAt: number;
 }
 
+// The active organisation is whatever the access token is scoped to — that claim is what the
+// gateway asserts to every upstream, so it (not /v1/auth/me, which reports the user's *default*
+// org) is the source of truth for which org the session is acting as. A switch re-issues the
+// token with the new org and refresh preserves it, so reading the claim survives reloads.
+export function orgIdFromToken(jwt: string): string | null {
+  try {
+    const part = jwt.split('.')[1];
+    if (part === undefined) return null;
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=');
+    const json = JSON.parse(atob(padded)) as Record<string, unknown>;
+    const org = json['organisation_id'] ?? json['org_id'] ?? json['org'];
+    return typeof org === 'string' && org !== '' ? org : null;
+  } catch {
+    return null;
+  }
+}
+
 // Monotonic session epoch — bumped by EVERY setToken. Async session work (refresh, vault sync)
 // captures it at the start and discards itself if the world moved on.
 let epoch = 0;
@@ -49,6 +67,9 @@ export interface SetTokenOptions {
 
 interface TokenStoreValue {
   tokenPayload: TokenPayload | null;
+  // The active organisation id, decoded from the access-token claim (the authoritative active
+  // org — see orgIdFromToken). null when signed out.
+  activeOrgId: string | null;
   // Resolves when the vault sync has committed — await it before a navigation that could tear
   // the page down (login/OAuth), so an immediate reload still finds the credential on disk.
   setToken: (payload: TokenPayload | null, options?: SetTokenOptions) => Promise<void>;
@@ -65,6 +86,7 @@ interface TokenStoreValue {
 
 const TokenCtx = createContext<TokenStoreValue>({
   tokenPayload: null,
+  activeOrgId: null,
   setToken: () => Promise.resolve(),
   getToken: () => null,
   isAuthenticated: false,
@@ -142,6 +164,7 @@ export function TokenStoreProvider({
   const value = useMemo<TokenStoreValue>(
     () => ({
       tokenPayload,
+      activeOrgId: tokenPayload !== null ? orgIdFromToken(tokenPayload.token) : null,
       setToken,
       getToken,
       isAuthenticated: tokenPayload !== null,

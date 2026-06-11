@@ -78,6 +78,11 @@ export interface DashProviderProps {
   userId?: string;
   orgs?: Organization[];
   orgsLoading?: boolean;
+  /** The org the access token is scoped to (decoded from the token claim — the gateway's
+   * source of truth, not /v1/auth/me which returns the user's default org). It survives reloads
+   * (refresh preserves the org) and a switch re-issues it, so the UI follows it rather than
+   * defaulting to the first org. */
+  activeOrgId?: string;
 }
 
 export function DashProvider({
@@ -86,12 +91,19 @@ export function DashProvider({
   userId = '',
   orgs = [],
   orgsLoading = false,
+  activeOrgId = '',
 }: DashProviderProps) {
+  // An optimistic local override for the moment between a switch and the token catching up; null
+  // the rest of the time, when the active org comes from the token (activeOrgId).
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
 
   const currentOrg = useMemo<Organization | null>(
-    () => orgs.find((o) => o.id === currentOrgId) ?? orgs[0] ?? null,
-    [orgs, currentOrgId]
+    () =>
+      orgs.find((o) => o.id === currentOrgId) ??
+      orgs.find((o) => o.id === activeOrgId) ??
+      orgs[0] ??
+      null,
+    [orgs, currentOrgId, activeOrgId]
   );
 
   const setCurrentOrg = useCallback((orgId: string) => {
