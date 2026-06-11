@@ -1,0 +1,32 @@
+# systemd unit for the Eurail API sidecar (auth gate / grounded chat / history).
+# Install: sudo cp deploy/oraclous-eurail.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#          sudo systemctl enable --now oraclous-eurail
+# Adjust User/Group to the deploy user that owns /opt/oraclous-eurail.
+[Unit]
+Description=Oraclous Eurail API sidecar (/eurail/api)
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/oraclous-eurail/app
+ExecStart=/usr/bin/node /opt/oraclous-eurail/app/server/index.mjs
+# Secrets + config — created once by hand at /opt/oraclous-eurail/.env (never in git):
+#   EURAIL_ONBOARDER_API_KEY=…   (OpenRouter)
+#   SMTP_HOST/SMTP_PORT/SMTP_USERNAME/SMTP_PASSWORD/SMTP_FROM   (Gmail app password)
+#   EURAIL_AUTH_SECRET=…         (stable 64-hex; sessions survive restarts)
+# The service also re-reads the same file itself, so EnvironmentFile is belt-and-braces.
+EnvironmentFile=-/opt/oraclous-eurail/.env
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=2
+# Hardening (the service only needs to read app/ + write the session store):
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/oraclous-eurail/.eurail-sessions
+
+[Install]
+WantedBy=multi-user.target

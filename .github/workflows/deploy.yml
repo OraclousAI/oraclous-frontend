@@ -1,0 +1,75 @@
+# Deploy the marketing site (+ the Eurail workspace) to the VPS — the same rsync-over-SSH model the
+# legacy frontend used, plus the Eurail API sidecar (auth gate / grounded chat / history) that nginx
+# proxies at /eurail/api/. One-time server setup lives in deploy/DEPLOY.md.
+#
+# Repo secrets (same names as the legacy repo): HOST · USERNAME · SSH_PRIVATE_KEY · SSH_PORT (opt).
+name: Deploy — marketing + Eurail
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-marketing
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the marketing app (with its workspace deps)
+        run: pnpm --filter @oraclous/marketing... build
+
+      - name: Assemble the Eurail API sidecar bundle
+        run: |
+          set -euo pipefail
+          mkdir -p bundle/server bundle/src/eurail/chat/diagram
+          cp -R apps/marketing/server/. bundle/server/
+          # Runtime data the API reads at the deployed relative paths (../src/eurail/ from server/):
+          cp -R apps/marketing/src/eurail/corpus bundle/src/eurail/corpus
+          cp apps/marketing/src/eurail/onboarder.system.md bundle/src/eurail/
+          cp apps/marketing/src/eurail/cartographer.system.md bundle/src/eurail/
+          cp apps/marketing/src/eurail/chat/diagram/verifier.mjs bundle/src/eurail/chat/diagram/
+          # nodemailer (dependency-free) vendored into the bundle so the VPS needs no npm step.
+          cd bundle/server && npm install --omit=dev --no-audit --no-fund
+
+      - name: Deploy to VPS
+        run: |
+          set -euo pipefail
+          PORT="${{ secrets.SSH_PORT || 22 }}"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$PORT" -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          SSH="ssh -i ~/.ssh/deploy_key -p $PORT"
+
+          # 1) The static site — atomic rsync, exactly like the legacy deploy.
+          rsync -az --delete -e "$SSH" \
+            apps/marketing/dist/ \
+            "${{ secrets.USERNAME }}@${{ secrets.HOST }}:/var/www/oraclous-marketing/"
+
+          # 2) The sidecar — app/ is fully managed (--delete); secrets (.env) and the session
+          #    store live one level up at /opt/oraclous-eurail/, untouched by the sync.
+          rsync -az --delete -e "$SSH" \
+            bundle/ \
+            "${{ secrets.USERNAME }}@${{ secrets.HOST }}:/opt/oraclous-eurail/app/"
+
+          # 3) Restart the service (sudoers rule for this exact command — see deploy/DEPLOY.md).
+          $SSH "${{ secrets.USERNAME }}@${{ secrets.HOST }}" \
+            'sudo /bin/systemctl restart oraclous-eurail && sudo /bin/systemctl --no-pager --lines=5 status oraclous-eurail'
