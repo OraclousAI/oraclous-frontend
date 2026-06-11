@@ -26,6 +26,7 @@ const PAGES = [
   '/honest-roadmap', // utility / trust page
   '/blog', // blog index
   '/blog/what-is-a-second-mind', // article
+  '/eurail', // Eurail workspace (report canvas + onboarder dock behind the access gate)
 ];
 
 for (const path of PAGES) {
