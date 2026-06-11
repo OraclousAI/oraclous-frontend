@@ -28,8 +28,8 @@ export function Page({
 
 export function DashLayout({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
   const { principal, isAuthError } = useMe();
-  // The active org follows the token claim (the gateway's source of truth), not /v1/auth/me
-  // which reports the user's default org.
+  // The active org follows the access-token claim — the gateway's authoritative active org, read
+  // directly without a /v1/auth/me round-trip.
   const { activeOrgId } = useTokenStore();
   const { orgs, isLoading: orgsLoading } = useOrgs();
   const logout = useLogout();
