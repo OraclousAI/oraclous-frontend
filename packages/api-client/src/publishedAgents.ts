@@ -2,8 +2,8 @@
 // An admin publishes an agent under a caller-chosen slug bound to a capability/harness descriptor;
 // the agent is then invocable from outside the console at /v1/agents/{slug}/invoke using an
 // integration key bound to that slug (the key-public plane — not called from here). This client
-// covers only the member-JWT management plane: publish + list. There is no unpublish endpoint yet
-// (oraclous-backend #280), so status is read-only in the UI.
+// covers the member-JWT management plane: publish + list + unpublish (a terminal soft tombstone —
+// the slug stays reserved, so re-publishing it 409s).
 import type { ApiTransport } from './transport';
 
 export interface PublishAgentInput {
@@ -50,6 +50,9 @@ export interface PublishedAgentsClient {
   publish(input: PublishAgentInput): Promise<PublishedAgent>;
   // List the org's published agents (member). Bare array.
   list(): Promise<PublishedAgent[]>;
+  // Unpublish an agent (admin). Soft tombstone → status 'unpublished'; the invoke/get paths then
+  // 404 it. Terminal — the slug stays reserved, so re-publishing it 409s (no re-publish affordance).
+  unpublish(slug: string): Promise<void>;
 }
 
 export function createPublishedAgentsClient(transport: ApiTransport): PublishedAgentsClient {
@@ -74,6 +77,12 @@ export function createPublishedAgentsClient(transport: ApiTransport): PublishedA
         path: '/v1/agents',
       });
       return (Array.isArray(data) ? data : []).map(toPublishedAgent);
+    },
+    async unpublish(slug: string): Promise<void> {
+      await transport.execute<void>({
+        method: 'DELETE',
+        path: `/v1/agents/${encodeURIComponent(slug)}`,
+      });
     },
   };
 }
