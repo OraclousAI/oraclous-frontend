@@ -50,8 +50,22 @@ interface CapabilityListResponseWire {
   readonly total: number;
 }
 
+interface ImportMcpResponseWire {
+  readonly imported: CapabilityOutWire[];
+}
+
+export interface ImportMcpInput {
+  readonly serverUrl: string;
+  readonly label: string;
+}
+
 export interface ToolsClient {
   list(): Promise<Tool[]>;
+  // Import an external MCP server's tools (admin). Each lands status='pending_approval' until an
+  // admin approves it (the supply-chain HITL gate). Returns the newly-imported tools.
+  importMcp(input: ImportMcpInput): Promise<Tool[]>;
+  // Approve a pending tool (admin) → status flips to 'active'. 204, no body; refetch the list.
+  approve(toolId: string): Promise<void>;
 }
 
 function toTool(wire: CapabilityOutWire): Tool {
@@ -83,6 +97,21 @@ export function createToolsClient(transport: ApiTransport): ToolsClient {
       // Defensive: a malformed/empty payload yields an empty catalogue, never a thrown query.
       const capabilities = Array.isArray(data?.capabilities) ? data.capabilities : [];
       return capabilities.map(toTool);
+    },
+    async importMcp(input: ImportMcpInput): Promise<Tool[]> {
+      const { data } = await transport.execute<ImportMcpResponseWire>({
+        method: 'POST',
+        path: '/api/v1/tools/import-mcp',
+        body: { server_url: input.serverUrl, label: input.label },
+      });
+      const imported = Array.isArray(data?.imported) ? data.imported : [];
+      return imported.map(toTool);
+    },
+    async approve(toolId: string): Promise<void> {
+      await transport.execute<void>({
+        method: 'POST',
+        path: `/api/v1/tools/${encodeURIComponent(toolId)}/approve`,
+      });
     },
   };
 }
