@@ -1,11 +1,11 @@
 // Tools — the organisation's visible tool catalogue (platform built-in connectors unioned with any
 // org-registered tools), from GET /api/v1/tools. Admins can import an external MCP server's tools,
 // which land in a pending-approval queue (the supply-chain HITL gate, #57 / Wave 3): an imported
-// tool can't run until an admin approves it. There is no reject route yet (oraclous-backend #314).
+// tool can't run until an admin approves it — or rejects it (terminal, kept as an audit record).
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { ApiClientError } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
-import { useApproveTool, useImportMcp, useTools } from '../lib/tools.js';
+import { useApproveTool, useImportMcp, useRejectTool, useTools } from '../lib/tools.js';
 import { useToast } from '../lib/toast.jsx';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { IconPlug } from '../icons/index.js';
@@ -28,17 +28,24 @@ export default function ToolsPage() {
   const { tools, isLoading, isError } = useTools();
   const importMcp = useImportMcp();
   const approveTool = useApproveTool();
+  const rejectTool = useRejectTool();
   const toast = useToast();
 
   const pending = useMemo(() => tools.filter((t) => t.status === 'pending_approval'), [tools]);
-  const active = useMemo(() => tools.filter((t) => t.status !== 'pending_approval'), [tools]);
+  // The runnable catalogue: active + built-ins (null status). Rejected tools are kept server-side
+  // as an audit record but are not shown as usable tools.
+  const active = useMemo(
+    () => tools.filter((t) => t.status !== 'pending_approval' && t.status !== 'rejected'),
+    [tools]
+  );
 
   const [importOpen, setImportOpen] = useState(false);
   const [serverUrl, setServerUrl] = useState('');
   const [label, setLabel] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
+  // One row action at a time (approve OR reject); busyKind drives which button shows progress.
+  const [busy, setBusy] = useState<{ id: string; kind: 'approve' | 'reject' } | null>(null);
   const urlId = useId();
   const labelId = useId();
   const errId = useId();
@@ -76,16 +83,30 @@ export default function ToolsPage() {
   }
 
   async function onApprove(toolId: string) {
-    if (approvingId !== null) return;
+    if (busy !== null) return;
     setListError(null);
-    setApprovingId(toolId);
+    setBusy({ id: toolId, kind: 'approve' });
     try {
       await approveTool.mutateAsync(toolId);
       toast.success('Tool approved.');
     } catch (cause) {
       setListError(messageFor(cause));
     } finally {
-      setApprovingId(null);
+      setBusy(null);
+    }
+  }
+
+  async function onReject(toolId: string) {
+    if (busy !== null) return;
+    setListError(null);
+    setBusy({ id: toolId, kind: 'reject' });
+    try {
+      await rejectTool.mutateAsync(toolId);
+      toast.success('Tool rejected.');
+    } catch (cause) {
+      setListError(messageFor(cause));
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -224,17 +245,34 @@ export default function ToolsPage() {
                           pending
                         </span>
                         {isAdmin && (
-                          <button
-                            type="button"
-                            className="btn"
-                            data-variant="primary"
-                            data-size="sm"
-                            disabled={approvingId !== null}
-                            aria-label={`Approve ${t.name}`}
-                            onClick={() => onApprove(t.id)}
-                          >
-                            {approvingId === t.id ? 'Approving…' : 'Approve'}
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              className="btn"
+                              data-variant="primary"
+                              data-size="sm"
+                              disabled={busy !== null}
+                              aria-label={`Approve ${t.name}`}
+                              onClick={() => onApprove(t.id)}
+                            >
+                              {busy?.id === t.id && busy.kind === 'approve'
+                                ? 'Approving…'
+                                : 'Approve'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn"
+                              data-variant="danger"
+                              data-size="sm"
+                              disabled={busy !== null}
+                              aria-label={`Reject ${t.name}`}
+                              onClick={() => onReject(t.id)}
+                            >
+                              {busy?.id === t.id && busy.kind === 'reject'
+                                ? 'Rejecting…'
+                                : 'Reject'}
+                            </button>
+                          </>
                         )}
                       </span>
                     </div>
