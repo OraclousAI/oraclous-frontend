@@ -100,12 +100,15 @@ re-verified live against the running gateway. The FE follow-ups they unblocked:
   panel is now actionable: Merge (a two-step survivor chooser that disambiguates duplicate names by
   node id) + Not-a-match. `candidate_id = sha256("{min}|{max}")` is computed FE-side to match the
   backend's order-independent formula (verified byte-for-byte).
-- [BE] **unpublish button is CORS-blocked** ([oraclous-backend#289](https://github.com/OraclousAI/oraclous-backend/issues/289))
-  — the backend shipped the member-plane `DELETE /v1/agents/{slug}` (#280/#284), but the gateway's
-  CORS preflight for that path returns `Allow-Methods: GET, POST, OPTIONS` (the public-plane
-  `AgentCorsMiddleware` owns it) — **DELETE is omitted**, so the browser can't call it (`curl` works
-  because it doesn't preflight). The unpublish client + UI are built and held; they ship the moment
-  the preflight allows DELETE. The published-agents page renders `status` read-only meanwhile.
+- [BE→resolved] **unpublish button was CORS-blocked** ([oraclous-backend#289](https://github.com/OraclousAI/oraclous-backend/issues/289))
+  — the member-plane `DELETE /v1/agents/{slug}` (#280/#284) was unreachable from the browser because
+  the public-plane `AgentCorsMiddleware` owns that path. Fixed in **two phases**: first the `OPTIONS`
+  preflight omitted DELETE from `Allow-Methods`; then (caught on re-verification) the **actual** DELETE
+  204 was missing `Access-Control-Allow-Origin` while only the preflight had it — browsers enforce ACAO
+  on both. The middleware now defers the actual member-plane DELETE response so the gateway-wide ACAO
+  survives. Both headers verified live; the **Unpublish button shipped** (admin, two-step confirm,
+  terminal → `status: 'unpublished'`). Lesson logged: verify the actual response's CORS headers, not
+  just the preflight.
 - [INT] **#281 422 envelope landed** — the gateway now emits the ORA-56 `{error:…}` envelope for its
   own 422s (verified: a binding-XOR violation returns `VALIDATION_FAILED`). The client's defensive
   `{detail:[…]}` parser (PR #81) stays as coverage for any raw-FastAPI service but is no longer
