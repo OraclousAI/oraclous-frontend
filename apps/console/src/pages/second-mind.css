@@ -319,3 +319,44 @@
     min-height: 60vh;
   }
 }
+
+/* ── Per-message feedback (thumbs up/down, #313) ─────────────────────────────── */
+.chat-feedback {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.chat-fb {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-3);
+  padding: 1px 6px;
+  font-size: var(--t-caption-size);
+  line-height: 1.4;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity var(--motion-hover-dur) var(--motion-hover-ease);
+}
+.chat-fb:hover {
+  opacity: 1;
+  background: var(--paper-soft);
+}
+.chat-fb[data-active] {
+  opacity: 1;
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--rule));
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+.chat-fb:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+.chat-fb:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+.chat-fb:disabled:hover {
+  background: transparent;
+}
+.chat-fb[data-active]:disabled {
+  opacity: 1;
+}

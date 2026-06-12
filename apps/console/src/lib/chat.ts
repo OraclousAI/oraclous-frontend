@@ -1,6 +1,6 @@
 // Chat hooks (Second Mind). Threads + transcript are member-scoped queries; sending a message is a
-// synchronous mutation that returns the whole turn (the page branches on its status). No streaming,
-// no feedback endpoint yet (oraclous-backend #313).
+// synchronous mutation that returns the whole turn (the page branches on its status). No streaming;
+// per-message thumbs up/down feedback via setFeedback (#313).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ChatThread, ChatMessage, ChatTurn } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
@@ -79,6 +79,21 @@ export function useDeleteThread() {
     mutationFn: (threadId: string): Promise<void> => chat.deleteThread(threadId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['chat', 'threads'] });
+    },
+  });
+}
+
+export function useSetFeedback(threadId: string) {
+  const { chat } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { messageId: string; rating: 'up' | 'down' }): Promise<ChatMessage> =>
+      chat.setFeedback(threadId, p.messageId, p.rating),
+    // Patch the rated message in place so the thumb highlights immediately (no transcript refetch).
+    onSuccess: (updated) => {
+      queryClient.setQueryData<ChatMessage[]>(['chat', 'messages', threadId], (old) =>
+        old ? old.map((m) => (m.id === updated.id ? updated : m)) : old
+      );
     },
   });
 }
