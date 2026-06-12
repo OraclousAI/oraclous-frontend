@@ -29,8 +29,7 @@ export interface MintedKey {
   readonly status: string;
 }
 
-// The redacted view returned by list/get — never the secret. (`rate_window_seconds` is stored but
-// not surfaced by the gateway — oraclous-backend #282 — so it is absent here.)
+// The redacted view returned by list/get — never the secret.
 export interface KeySummary {
   readonly id: string;
   readonly keyPrefix: string;
@@ -39,6 +38,9 @@ export interface KeySummary {
   readonly capabilityAllowList: readonly string[] | null;
   readonly corsOrigins: readonly string[] | null;
   readonly rateLimit: number | null;
+  // The window (seconds) the rate limit applies over — surfaced by the gateway since #282; null
+  // when the key has no rate cap.
+  readonly rateWindowSeconds: number | null;
   readonly status: string; // 'active' | 'revoked'
   readonly expiresAt: string | null;
   readonly createdAt: string | null;
@@ -62,6 +64,7 @@ interface KeyOutWire {
   capability_allow_list: string[] | null;
   cors_origins: string[] | null;
   rate_limit: number | null;
+  rate_window_seconds: number | null;
   status: string;
   expires_at: string | null;
   created_at: string | null;
@@ -88,6 +91,7 @@ function toKeySummary(w: KeyOutWire): KeySummary {
     capabilityAllowList: w.capability_allow_list,
     corsOrigins: w.cors_origins,
     rateLimit: w.rate_limit,
+    rateWindowSeconds: w.rate_window_seconds ?? null,
     status: w.status,
     expiresAt: w.expires_at,
     createdAt: w.created_at,
