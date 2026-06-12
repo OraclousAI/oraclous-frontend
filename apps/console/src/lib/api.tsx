@@ -19,6 +19,7 @@ import {
   createOrgsClient,
   createPublishedAgentsClient,
   createRecipesClient,
+  createResolutionClient,
   createSearchClient,
   createToolsClient,
   createWebhookSubscriptionsClient,
@@ -35,6 +36,7 @@ import {
   type OrgsClient,
   type PublishedAgentsClient,
   type RecipesClient,
+  type ResolutionClient,
   type SearchClient,
   type ToolsClient,
   type WebhookSubscriptionsClient,
@@ -51,6 +53,7 @@ interface ApiContextValue {
   readonly instances: InstancesClient;
   readonly credentials: CredentialsClient;
   readonly explorer: ExplorerClient;
+  readonly resolution: ResolutionClient;
   readonly recipes: RecipesClient;
   readonly harnesses: HarnessesClient;
   readonly engine: EngineClient;
@@ -91,6 +94,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       instances: createInstancesClient(transport),
       credentials: createCredentialsClient(transport),
       explorer: createExplorerClient(transport),
+      resolution: createResolutionClient(transport),
       recipes: createRecipesClient(transport),
       integrationKeys: createIntegrationKeysClient(transport),
       publishedAgents: createPublishedAgentsClient(transport),
