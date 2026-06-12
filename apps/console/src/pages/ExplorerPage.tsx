@@ -130,6 +130,21 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
     [merged.nodes]
   );
 
+  // Entity-resolution candidates (KGS #269): SAME_AS_CANDIDATE edges flag pairs in the 0.85–0.92
+  // similarity band — NOT auto-merged. Surfaced read-only for review; approve/reject (HITL) needs
+  // a backend resolution endpoint (a follow-on), so there's no action here yet.
+  const candidates = useMemo(() => {
+    const byId = new Map(og.nodes.map((n) => [n.id, n]));
+    return og.edges
+      .filter((e) => e.rel === 'SAME_AS_CANDIDATE')
+      .map((e) => ({ id: e.id, a: byId.get(e.source), b: byId.get(e.target), score: e.score }))
+      .filter(
+        (c): c is { id: string; a: OGNode; b: OGNode; score: number | null | undefined } =>
+          c.a !== undefined && c.b !== undefined
+      )
+      .sort((x, y) => (y.score ?? 0) - (x.score ?? 0));
+  }, [og]);
+
   // ── Simulation — rebuilt when the data set changes (expand), carrying positions AND pins;
   // static layouts use deterministic per-id placement, so re-applying the current layout to the
   // rebuilt sim leaves existing nodes where they were. ─
@@ -175,6 +190,7 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
   const [geoEnabled, setGeoEnabled] = useState(false);
   // Open by default: this panel is the keyboard/AT path to node selection (Gate 3).
   const [showList, setShowList] = useState(true);
+  const [showCandidates, setShowCandidates] = useState(false);
   const [temporalOn, setTemporalOn] = useState(false);
   const [asOf, setAsOf] = useState('');
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -293,6 +309,8 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
             source: nodeId,
             target: m.id,
             type: typeof rel === 'string' && rel !== '' ? rel : 'RELATED',
+            // /neighbors carries no edge-level data; the synthesized edge has no score/weight.
+            properties: {},
           };
           // First-seen wins — a synthesized direction never replaces an earlier expand's edge.
           const k = edgeKey(e);
@@ -342,6 +360,16 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
         >
           Nodes
         </button>
+        {candidates.length > 0 && (
+          <button
+            type="button"
+            className={'og-chip ' + (showCandidates ? 'on' : 'off')}
+            aria-pressed={showCandidates}
+            onClick={() => setShowCandidates((v) => !v)}
+          >
+            Candidates <span className="og-count num">{candidates.length}</span>
+          </button>
+        )}
         <label className={'og-chip ' + (temporalOn ? 'on' : 'off')}>
           <input
             type="checkbox"
@@ -413,6 +441,15 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
             selectedId={selectedNode?.id ?? null}
             onSelect={(id) => setSelected(new Set([id]))}
             onClose={() => setShowList(false)}
+          />
+        )}
+
+        {/* SAME_AS_CANDIDATE review (read-only) — the entity-resolution queue. */}
+        {showCandidates && candidates.length > 0 && (
+          <CandidatesPanel
+            candidates={candidates}
+            onSelect={(id) => setSelected(new Set([id]))}
+            onClose={() => setShowCandidates(false)}
           />
         )}
       </div>
@@ -495,6 +532,73 @@ function NodeListPanel({
           );
         })}
         {filtered.length === 0 && <li className="ge-list-empty">No matching nodes.</li>}
+      </ul>
+    </aside>
+  );
+}
+
+interface Candidate {
+  id: string;
+  a: OGNode;
+  b: OGNode;
+  score: number | null | undefined;
+}
+
+// Read-only entity-resolution review: the SAME_AS_CANDIDATE pairs the resolver flagged but did
+// not merge (0.85–0.92 band). Each side jumps to that node; approve/reject awaits a backend HITL
+// endpoint (a follow-on), so there's no merge action here yet.
+function CandidatesPanel({
+  candidates,
+  onSelect,
+  onClose,
+}: {
+  candidates: readonly Candidate[];
+  onSelect: (id: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <aside className="ge-panel ge-panel--candidates" aria-label="Resolution candidates">
+      <div className="head">
+        <span className="eyebrow">Candidates ({candidates.length})</span>
+        <button type="button" onClick={onClose} className="close" aria-label="Close candidates">
+          ×
+        </button>
+      </div>
+      <p className="ge-candidates-note">
+        Possible duplicate entities (similarity 0.85–0.92) — flagged, not merged. Review here;
+        approve/reject is coming.
+      </p>
+      <ul className="ge-list">
+        {candidates.map((c) => (
+          <li key={c.id}>
+            <div className="ge-candidate">
+              <button
+                type="button"
+                className="ge-candidate-node"
+                onClick={() => onSelect(c.a.id)}
+                title={c.a.name}
+              >
+                {c.a.name}
+              </button>
+              <span className="ge-candidate-sep" aria-hidden="true">
+                ≈
+              </span>
+              <button
+                type="button"
+                className="ge-candidate-node"
+                onClick={() => onSelect(c.b.id)}
+                title={c.b.name}
+              >
+                {c.b.name}
+              </button>
+              {c.score != null && (
+                <span className="ge-candidate-score num" title={`similarity ${c.score.toFixed(2)}`}>
+                  {c.score.toFixed(2)}
+                </span>
+              )}
+            </div>
+          </li>
+        ))}
       </ul>
     </aside>
   );
