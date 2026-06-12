@@ -481,7 +481,16 @@ export default function IntegrationKeysPage() {
                   </span>
                   <span role="cell">{bindingLabel(k)}</span>
                   <span role="cell" className="mono">
-                    {k.rateLimit !== null ? k.rateLimit : <span className="mute">—</span>}
+                    {k.rateLimit !== null ? (
+                      <>
+                        {k.rateLimit}
+                        {k.rateWindowSeconds !== null && (
+                          <span className="mute">/{k.rateWindowSeconds}s</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="mute">—</span>
+                    )}
                   </span>
                   <span role="cell">
                     <span
