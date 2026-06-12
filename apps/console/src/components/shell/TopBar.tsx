@@ -21,7 +21,7 @@ const CRUMB_LABELS: Record<string, string> = {
   '/app/members': 'members',
   '/app/billing': 'billing',
   '/app/settings': 'settings',
-  '/app/my-space': 'second mind',
+  '/app/my-space': 'ask',
 };
 
 function RouteCrumb({ pathname }: { pathname: string }) {

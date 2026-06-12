@@ -1,4 +1,5 @@
-/* Second Mind chat console. Clone-and-refactor of the chat half of the handoff second-mind.html
+/* Ask chat console (labelled "Second Mind" before that name moved to the tenant/org). Clone-and-
+   refactor of the chat half of the handoff second-mind.html
    (the unbacked "memory feed" rail is dropped — no endpoint backs it, §8). Two panes: a thread rail
    and a message stream + composer. All values bind to design-system tokens. */
 

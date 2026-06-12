@@ -1,8 +1,10 @@
-// Second Mind — the member chat console (issue #57 / Wave 3). A thread is a conversation bound to a
-// published agent; sending a message runs the agent SYNCHRONOUSLY (no streaming) and returns a turn
-// whose `status` we branch on. The mockup's right "memory feed" rail is dropped — no endpoint backs
-// it (§8); the layout is a thread rail + a message stream + a composer. Assistant content is
-// rendered as plain text — never as raw/injected HTML (Gate 5; model output is untrusted).
+// Ask — the member chat console (issue #57 / Wave 3). "Second Mind" now names the tenant/org, so this
+// surface is labelled "Ask"; the route (/app/my-space) and filenames are unchanged. A thread is a
+// conversation bound to a published agent; sending a message runs the agent SYNCHRONOUSLY (no
+// streaming) and returns a turn whose `status` we branch on. The mockup's right "memory feed" rail is
+// dropped — no endpoint backs it (§8); the layout is a thread rail + a message stream + a composer.
+// Assistant content is rendered as plain text — never as raw/injected HTML (Gate 5; model output is
+// untrusted).
 import {
   useEffect,
   useId,
@@ -105,7 +107,7 @@ export default function SecondMindPage() {
         <div className="chat-rail-head">
           <span className="eyebrow">
             <span className="dot" aria-hidden="true" />
-            Second Mind
+            Ask
           </span>
           <button
             type="button"
@@ -189,7 +191,7 @@ export default function SecondMindPage() {
             <span className="chat-empty-icon" aria-hidden="true">
               <IconSparkle size={24} />
             </span>
-            <span className="t">Your Second Mind</span>
+            <span className="t">Ask your agents</span>
             <span className="s">
               Pick a conversation, or start a new one to chat with one of your published agents.
             </span>

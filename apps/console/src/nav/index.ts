@@ -30,7 +30,7 @@ const OWNER: NavItem[] = [
   { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
-  { id: 'mind', label: 'Second Mind', icon: IconMessage, route: '/app/my-space' },
+  { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
   { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
   { id: 'members', label: 'Members', icon: IconUsers, route: '/app/members' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
@@ -44,7 +44,7 @@ const MEMBER: NavItem[] = [
   { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'd1', label: 'Personal', divider: true },
-  { id: 'mind', label: 'Second Mind', icon: IconMessage, route: '/app/my-space' },
+  { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
 ];
 
 const STANDALONE: NavItem[] = [
@@ -54,7 +54,7 @@ const STANDALONE: NavItem[] = [
   { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
-  { id: 'mind', label: 'Second Mind', icon: IconMessage, route: '/app/my-space' },
+  { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
   { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
