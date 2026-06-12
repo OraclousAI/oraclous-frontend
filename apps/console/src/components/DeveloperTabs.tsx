@@ -13,6 +13,7 @@ interface DeveloperTab {
 const TABS: readonly DeveloperTab[] = [
   { id: 'keys', label: 'Integration keys', route: '/app/developer/keys' },
   { id: 'agents', label: 'Published agents', route: '/app/developer/agents' },
+  { id: 'webhooks', label: 'Webhooks', route: '/app/developer/webhooks' },
 ];
 
 export function DeveloperTabs({ active }: { active: string }) {

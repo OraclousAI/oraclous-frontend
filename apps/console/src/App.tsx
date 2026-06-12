@@ -59,6 +59,7 @@ const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
 const IntegrationKeys = lazy(() => import('./pages/IntegrationKeysPage.js'));
 const PublishedAgents = lazy(() => import('./pages/PublishedAgentsPage.js'));
+const WebhookSubscriptions = lazy(() => import('./pages/WebhookSubscriptionsPage.js'));
 const Billing = lazy(() => import('./pages/BillingPage.js'));
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
@@ -221,6 +222,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <PublishedAgents />
+                </Suspense>
+              }
+            />
+            <Route
+              path="developer/webhooks"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <WebhookSubscriptions />
                 </Suspense>
               }
             />

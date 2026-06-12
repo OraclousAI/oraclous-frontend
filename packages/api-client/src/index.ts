@@ -165,6 +165,16 @@ export type { IntegrationKeysClient, MintKeyInput, MintedKey, KeySummary } from 
 export { createPublishedAgentsClient } from './publishedAgents';
 export type { PublishedAgentsClient, PublishAgentInput, PublishedAgent } from './publishedAgents';
 
+// Webhook-subscriptions sub-client (developer/embed surface — display-once signing secret)
+export { createWebhookSubscriptionsClient } from './webhookSubscriptions';
+export type {
+  WebhookSubscriptionsClient,
+  SignatureScheme,
+  CreateSubscriptionInput,
+  CreatedSubscription,
+  Subscription,
+} from './webhookSubscriptions';
+
 // Capability-registry instances/executions sub-client (the "use a tool" loop)
 export { createInstancesClient } from './instances';
 export type {
