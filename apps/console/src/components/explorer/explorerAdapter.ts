@@ -94,13 +94,21 @@ export function adaptSubgraph(nodes: readonly GraphNode[], edges: readonly Graph
     };
   });
 
-  const ogEdges: OGEdge[] = [...byKey.entries()].map(([k, e]) => ({
-    id: k,
-    source: e.source,
-    target: e.target,
-    rel: e.type || 'RELATED',
-    weight: 1,
-  }));
+  const ogEdges: OGEdge[] = [...byKey.entries()].map(([k, e]) => {
+    const rawScore = e.properties['score'];
+    const score = typeof rawScore === 'number' && Number.isFinite(rawScore) ? rawScore : null;
+    const weight = numericProp(e.properties, 'weight');
+    return {
+      id: k,
+      source: e.source,
+      target: e.target,
+      rel: e.type || 'RELATED',
+      // Real edge weight when the resolver wrote one; default 1 (the renderer's neutral weight).
+      weight: weight > 0 ? weight : 1,
+      // Score only when the edge carries one (SIMILAR_TO/SAME_AS_CANDIDATE); null otherwise.
+      score,
+    };
+  });
 
   const types: OGType[] = typeNames.map((t) => ({ id: t, label: t, glyph: '◇' }));
   const communities: OGCommunity[] = typeNames.map((t, i) => ({ id: i, label: t, hue: 0 }));

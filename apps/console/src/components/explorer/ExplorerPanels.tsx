@@ -496,6 +496,18 @@ export function RightInspector(props: {
               </span>
               <span className="og-rel-rel og-mono" title={e.rel}>
                 {e.rel}
+                {e.score != null && (
+                  <span
+                    className="og-rel-score num"
+                    title={`${
+                      e.rel === 'SIMILAR_TO' || e.rel === 'SAME_AS_CANDIDATE'
+                        ? 'similarity'
+                        : 'relationship strength'
+                    } ${e.score.toFixed(2)}`}
+                  >
+                    {e.score.toFixed(2)}
+                  </span>
+                )}
               </span>
               <span className="og-rel-other">
                 <span
