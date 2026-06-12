@@ -154,3 +154,26 @@ Chat: real thread create/list/delete (`204`) + send routing all work; the agent 
 non-runnable bound capability (a backend/env matter, as in Wave 2's invoke). UI: succeeded reply,
 pending notice, graceful 502 + unsent-text restore, no failed-turn double-show. MCP: import → 2 tools
 land pending → approve → moves to active. Zero browser console errors.
+
+### Wave-3 follow-ups resolved (2026-06-12)
+
+Backend shipped the two endpoints the Wave-3 surfaces were waiting on, and the FE follow-ups landed:
+
+- **Chat message feedback** ([oraclous-backend#313](https://github.com/OraclousAI/oraclous-backend/issues/313)
+  resolved) — `MessageOut` gained `rating` and `POST /v1/chat/threads/{tid}/messages/{mid}/feedback`
+  (member, idempotent — re-rating replaces) now exists. The console renders 👍/👎 on assistant bubbles,
+  highlights the chosen rating in place, surfaces a failed POST as a toast, and disables both thumbs
+  while a rating is in flight.
+- **MCP reject** ([oraclous-backend#314](https://github.com/OraclousAI/oraclous-backend/issues/314)
+  resolved) — `POST /api/v1/tools/{id}/reject` (admin, `204`) moves a pending tool to a terminal
+  `rejected` state (retained as an audit record). The pending-approval queue now ships a Reject button
+  beside Approve; rejected tools are hidden from both the queue and the runnable catalogue. The
+  supply-chain gate is now complete (approve **or** reject).
+
+New low-priority follow-up surfaced building the above:
+
+- [BE] wave-3 — **no per-message "ratable" signal** — the backend persists a generic assistant message
+  on a `failed` turn, which the transcript renders as a normal assistant bubble carrying 👍/👎, but
+  rating it `404`s ("not a ratable assistant turn"). The FE now surfaces that 404 as a toast, but the
+  thumbs shouldn't be offered at all on a non-ratable turn. A `ratable: bool` (or equivalent) on
+  `MessageOut` would let the FE hide the affordance. Cosmetic at current volume; filed for polish.
