@@ -76,14 +76,14 @@ export type {
 export type { CursorPage, FeedbackRating } from './types/common';
 
 // Client factory
+// NOTE: the legacy createApiClient scaffold's chat types (ChatClient/ConversationsClient/
+// MessageFeedbackClient) are intentionally NOT re-exported — they target non-existent /api/v1/chat
+// paths and are unwired. The live chat surface is `createChatClient` (./chat, /v1/chat/threads).
 export { createApiClient } from './client';
 export type {
   ApiClient,
   ApiClientOptions,
   DocumentsClient,
-  ChatClient,
-  ConversationsClient,
-  MessageFeedbackClient,
   AgentsClient,
   LlmConfigClient,
   CommunitiesClient,
@@ -148,6 +148,10 @@ export type { ExplorerClient, Subgraph, GraphNode, GraphEdge } from './explorer'
 // Entity-resolution HITL sub-client (approve/reject SAME_AS_CANDIDATE pairs)
 export { createResolutionClient } from './resolution';
 export type { ResolutionClient, ApproveResult, RejectResult } from './resolution';
+
+// Chat sub-client (member chat threads — synchronous turns, /v1/chat/threads)
+export { createChatClient } from './chat';
+export type { ChatClient, ChatThread, ChatMessage, ChatTurn, ChatTurnStatus } from './chat';
 
 // Recipe library sub-client
 export { createRecipesClient } from './recipes';

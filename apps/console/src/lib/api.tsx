@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import {
   createAuthClient,
   createCapabilitiesClient,
+  createChatClient,
   createCredentialsClient,
   createEngineClient,
   createExplorerClient,
@@ -25,6 +26,7 @@ import {
   createWebhookSubscriptionsClient,
   type AuthClient,
   type CapabilitiesClient,
+  type ChatClient,
   type CredentialsClient,
   type EngineClient,
   type ExplorerClient,
@@ -54,6 +56,7 @@ interface ApiContextValue {
   readonly credentials: CredentialsClient;
   readonly explorer: ExplorerClient;
   readonly resolution: ResolutionClient;
+  readonly chat: ChatClient;
   readonly recipes: RecipesClient;
   readonly harnesses: HarnessesClient;
   readonly engine: EngineClient;
@@ -95,6 +98,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       credentials: createCredentialsClient(transport),
       explorer: createExplorerClient(transport),
       resolution: createResolutionClient(transport),
+      chat: createChatClient(transport),
       recipes: createRecipesClient(transport),
       integrationKeys: createIntegrationKeysClient(transport),
       publishedAgents: createPublishedAgentsClient(transport),
