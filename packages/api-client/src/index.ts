@@ -145,6 +145,10 @@ export type { SearchClient, SearchMode, SearchInput, SearchResult } from './sear
 export { createExplorerClient } from './explorer';
 export type { ExplorerClient, Subgraph, GraphNode, GraphEdge } from './explorer';
 
+// Entity-resolution HITL sub-client (approve/reject SAME_AS_CANDIDATE pairs)
+export { createResolutionClient } from './resolution';
+export type { ResolutionClient, ApproveResult, RejectResult } from './resolution';
+
 // Recipe library sub-client
 export { createRecipesClient } from './recipes';
 export type { RecipesClient, Recipe, RecipeDetail } from './recipes';

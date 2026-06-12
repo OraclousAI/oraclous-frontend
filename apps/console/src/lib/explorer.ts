@@ -1,7 +1,7 @@
 // Explorer hooks: load a bounded subgraph (capped nodes + edges) for the explorer visualisation,
-// and expand a node's 1-hop neighbourhood on demand.
-import { useMutation, useQuery } from '@tanstack/react-query';
-import type { GraphNode, Subgraph } from '@oraclous/api-client';
+// expand a node's 1-hop neighbourhood on demand, and action the SAME_AS_CANDIDATE review queue.
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ApproveResult, GraphNode, RejectResult, Subgraph } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -37,5 +37,33 @@ export function useExpandNeighbors(graphId: string) {
   const { explorer } = useApi();
   return useMutation({
     mutationFn: (nodeId: string): Promise<GraphNode[]> => explorer.neighbors(graphId, nodeId, 25),
+  });
+}
+
+// Approve (merge) a SAME_AS_CANDIDATE pair: `canonicalNodeId` survives, the other folds in. On
+// success the subgraph is refetched so the merged node + dropped candidate edge are reflected.
+export function useApproveCandidate(graphId: string) {
+  const { resolution } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { canonicalNodeId: string; otherNodeId: string }): Promise<ApproveResult> =>
+      resolution.approve(graphId, p.canonicalNodeId, p.otherNodeId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['subgraph', graphId] });
+    },
+  });
+}
+
+// Reject (not-a-duplicate) a SAME_AS_CANDIDATE pair: drops the candidate edge so it stops
+// resurfacing. Refetches the subgraph so the candidate disappears from the review queue.
+export function useRejectCandidate(graphId: string) {
+  const { resolution } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { nodeIdA: string; nodeIdB: string }): Promise<RejectResult> =>
+      resolution.reject(graphId, p.nodeIdA, p.nodeIdB),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['subgraph', graphId] });
+    },
   });
 }

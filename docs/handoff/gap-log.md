@@ -85,3 +85,34 @@ held in memory for one reveal and never persisted/cached (mutations use `gcTime:
   admin). A non-owner _admin_ would be treated as a read-only member by the console here. The
   Developer nav + mutations are gated to owner/standalone; revisit if the console gains an explicit
   admin tier. Read endpoints are member-accessible, so the lists work for everyone.
+
+## Post-Wave-2 follow-ups (2026-06-12, backend #279–#283 shipped)
+
+The five backend issues from the Wave-2 build all landed (oraclous-backend #284–#288) and were
+re-verified live against the running gateway. The FE follow-ups they unblocked:
+
+- [FE] **rate window shown** ([#86](https://github.com/OraclousAI/oraclous-frontend/pull/86)) — the
+  gateway now returns `rate_window_seconds` in `KeyOut` (#282), so the integration-keys list shows
+  `100/60s`, not just the count.
+- [FE] **entity-resolution approve/reject** ([#87](https://github.com/OraclousAI/oraclous-frontend/pull/87),
+  closes #77) — the knowledge-graph HITL endpoint shipped (#279/#288:
+  `POST /api/v1/graphs/{id}/resolution/{candidate_id}/{approve,reject}`). The explorer's candidate
+  panel is now actionable: Merge (a two-step survivor chooser that disambiguates duplicate names by
+  node id) + Not-a-match. `candidate_id = sha256("{min}|{max}")` is computed FE-side to match the
+  backend's order-independent formula (verified byte-for-byte).
+- [BE] **unpublish button is CORS-blocked** ([oraclous-backend#289](https://github.com/OraclousAI/oraclous-backend/issues/289))
+  — the backend shipped the member-plane `DELETE /v1/agents/{slug}` (#280/#284), but the gateway's
+  CORS preflight for that path returns `Allow-Methods: GET, POST, OPTIONS` (the public-plane
+  `AgentCorsMiddleware` owns it) — **DELETE is omitted**, so the browser can't call it (`curl` works
+  because it doesn't preflight). The unpublish client + UI are built and held; they ship the moment
+  the preflight allows DELETE. The published-agents page renders `status` read-only meanwhile.
+- [INT] **#281 422 envelope landed** — the gateway now emits the ORA-56 `{error:…}` envelope for its
+  own 422s (verified: a binding-XOR violation returns `VALIDATION_FAILED`). The client's defensive
+  `{detail:[…]}` parser (PR #81) stays as coverage for any raw-FastAPI service but is no longer
+  load-bearing for the gateway's own validation.
+- [BE→done] **#283 invoke is non-retryable now** — invoking an agent whose bound capability isn't
+  runnable returns a non-retryable `422` (was a retryable `502`). No FE change (the console doesn't
+  call invoke).
+- [BE→done] **#282 member-plane agent read** — added at `GET /v1/agents/{slug}/details` (not
+  `/v1/agents/{slug}`, which stays the bound-key public projection). The published-agents page works
+  off the list, so no FE change is required yet.
