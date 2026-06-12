@@ -14,6 +14,7 @@ import {
   createGraphsClient,
   createHarnessesClient,
   createInstancesClient,
+  createIntegrationKeysClient,
   createInvitationsClient,
   createOrgsClient,
   createRecipesClient,
@@ -27,6 +28,7 @@ import {
   type GraphsClient,
   type HarnessesClient,
   type InstancesClient,
+  type IntegrationKeysClient,
   type InvitationsClient,
   type OrgsClient,
   type RecipesClient,
@@ -49,6 +51,7 @@ interface ApiContextValue {
   readonly harnesses: HarnessesClient;
   readonly engine: EngineClient;
   readonly capabilities: CapabilitiesClient;
+  readonly integrationKeys: IntegrationKeysClient;
 }
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -83,6 +86,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       credentials: createCredentialsClient(transport),
       explorer: createExplorerClient(transport),
       recipes: createRecipesClient(transport),
+      integrationKeys: createIntegrationKeysClient(transport),
     };
   }, [getToken]);
 
