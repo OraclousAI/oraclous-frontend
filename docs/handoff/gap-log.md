@@ -119,3 +119,38 @@ re-verified live against the running gateway. The FE follow-ups they unblocked:
 - [BE→done] **#282 member-plane agent read** — added at `GET /v1/agents/{slug}/details` (not
   `/v1/agents/{slug}`, which stays the bound-key public projection). The published-agents page works
   off the list, so no FE change is required yet.
+
+## Wave-3 findings (2026-06-12, the final wave — chat console + MCP supply-chain HITL)
+
+Two surfaces built against the live gateway: the member **chat console** (Second Mind,
+`/v1/chat/threads`) and **MCP import + approval** (capability-registry, proxied at `/api/v1/tools`).
+Contracts verified in source + smoked end-to-end before any UI.
+
+- [FE] wave-3 — **`second-mind.html` "memory feed" rail dropped** — the mockup's right column (a
+  "what I know + how I learned it" feed with inline citations + live sources) has **no backing
+  endpoint** (`MessageOut` carries no citations; there is no memory/sources route). Building it would
+  invent gateway shapes (§8), so the chat console is a **single-pane** thread-rail + message-stream +
+  composer. The mockup's own `@media (max-width:1100px)` already collapses to single-column.
+- [FE] wave-3 — **chat send is synchronous, not streaming** — `POST /v1/chat/threads/{id}/messages`
+  returns a full `ChatTurnOut` at HTTP 200 (`status: succeeded|pending|failed`); there is no SSE /
+  token stream. The composer is honest about this (optimistic user bubble + a "thinking" placeholder,
+  no fake typewriter). If token streaming becomes a product requirement it's a gateway/harness change.
+- [BE] wave-3 — **no chat message feedback** ([oraclous-backend#313](https://github.com/OraclousAI/oraclous-backend/issues/313))
+  — the roadmap wants thumbs up/down, but `MessageOut` has no rating field and there's no feedback
+  route (the legacy `MessageFeedbackClient` scaffold targets non-existent paths and is now unexported).
+  Maintainer-approved to ship Wave 3 without it; the affordance lands when the endpoint exists.
+- [BE] wave-3 — **no MCP reject/decline route** ([oraclous-backend#314](https://github.com/OraclousAI/oraclous-backend/issues/314))
+  — `tool_routes.py` has only `/approve`; a pending imported tool can only be approved or left pending.
+  The console's pending-approval queue ships **Approve-only** (maintainer-approved); reject lands when
+  the route exists. A supply-chain gate that can only approve isn't a complete gate.
+- [BE] wave-3 — **scaling follow-ups (low priority):** `GET /v1/chat/threads` + `…/messages` are bare
+  arrays with no pagination; there's no thread-rename (`PATCH`); `GET /api/v1/tools` has no status
+  filter (the FE filters `pending_approval` client-side). All fine at current volume; flagged for when
+  transcripts / catalogues grow.
+
+### Wave-3 smoke (2026-06-12, gateway @ localhost:8006)
+
+Chat: real thread create/list/delete (`204`) + send routing all work; the agent run `502`s only on a
+non-runnable bound capability (a backend/env matter, as in Wave 2's invoke). UI: succeeded reply,
+pending notice, graceful 502 + unsent-text restore, no failed-turn double-show. MCP: import → 2 tools
+land pending → approve → moves to active. Zero browser console errors.
