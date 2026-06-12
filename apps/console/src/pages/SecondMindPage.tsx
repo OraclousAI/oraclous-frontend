@@ -19,6 +19,7 @@ import {
   useDeleteThread,
   useMessages,
   useSendMessage,
+  useSetFeedback,
   useStartThread,
   useThreads,
 } from '../lib/chat.js';
@@ -241,6 +242,15 @@ function ThreadRow({
 function Conversation({ thread, userName }: { thread: ChatThread; userName: string }) {
   const { messages, isLoading } = useMessages(thread.id);
   const send = useSendMessage(thread.id);
+  const feedback = useSetFeedback(thread.id);
+  const toast = useToast();
+
+  function onRate(messageId: string, rating: 'up' | 'down') {
+    // Surface a failed feedback POST (e.g. a 404 on a non-ratable turn) rather than swallowing it —
+    // without this the thumb click would do nothing visible. A second rating just replaces the first
+    // server-side, so there's nothing to roll back on success.
+    feedback.mutate({ messageId, rating }, { onError: (cause) => toast.error(messageFor(cause)) });
+  }
   const [text, setText] = useState('');
   const [pendingText, setPendingText] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ status: ChatTurnStatus; text: string } | null>(null);
@@ -318,6 +328,13 @@ function Conversation({ thread, userName }: { thread: ChatThread; userName: stri
                 role={m.role}
                 name={m.role === 'assistant' ? thread.boundAgentSlug : userName}
                 content={m.content}
+                {...(m.role === 'assistant'
+                  ? {
+                      rating: m.rating,
+                      onRate: (r: 'up' | 'down') => onRate(m.id, r),
+                      rateDisabled: feedback.isPending,
+                    }
+                  : {})}
               />
             ))}
             {pendingText !== null && (
@@ -391,10 +408,16 @@ function ChatBubble({
   role,
   name,
   content,
+  rating,
+  onRate,
+  rateDisabled = false,
 }: {
   role: 'user' | 'assistant';
   name: string;
   content: string;
+  rating?: 'up' | 'down' | null;
+  onRate?: (rating: 'up' | 'down') => void;
+  rateDisabled?: boolean;
 }) {
   return (
     <div className="chat-msg" data-role={role}>
@@ -405,6 +428,32 @@ function ChatBubble({
         <span className="chat-msg-name mono">{role === 'assistant' ? `/${name}` : name}</span>
         {/* Plain text only — model/user content is never injected as raw HTML (Gate 5). */}
         <p className="chat-msg-text">{content}</p>
+        {role === 'assistant' && onRate !== undefined && (
+          <div className="chat-feedback">
+            <button
+              type="button"
+              className="chat-fb"
+              data-active={rating === 'up' || undefined}
+              aria-label="Good response"
+              aria-pressed={rating === 'up'}
+              disabled={rateDisabled}
+              onClick={() => onRate('up')}
+            >
+              👍
+            </button>
+            <button
+              type="button"
+              className="chat-fb"
+              data-active={rating === 'down' || undefined}
+              aria-label="Bad response"
+              aria-pressed={rating === 'down'}
+              disabled={rateDisabled}
+              onClick={() => onRate('down')}
+            >
+              👎
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

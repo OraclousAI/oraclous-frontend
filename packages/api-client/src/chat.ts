@@ -19,8 +19,12 @@ export interface ChatMessage {
   readonly content: string;
   readonly executionId: string | null;
   readonly totalTokens: number | null;
+  // The member's thumbs up/down on an assistant message; null until rated (#313).
+  readonly rating: 'up' | 'down' | null;
   readonly createdAt: string | null;
 }
+
+export type FeedbackRating = 'up' | 'down';
 
 export type ChatTurnStatus = 'succeeded' | 'pending' | 'failed';
 
@@ -44,6 +48,7 @@ interface MessageWire {
   content: string;
   execution_id: string | null;
   total_tokens: number | null;
+  rating: string | null;
   created_at: string | null;
 }
 
@@ -70,6 +75,7 @@ function toMessage(w: MessageWire): ChatMessage {
     content: w.content,
     executionId: w.execution_id,
     totalTokens: w.total_tokens,
+    rating: w.rating === 'up' || w.rating === 'down' ? w.rating : null,
     createdAt: w.created_at,
   };
 }
@@ -95,6 +101,9 @@ export interface ChatClient {
   sendMessage(threadId: string, content: string): Promise<ChatTurn>;
   // The thread's transcript, oldest → newest. Bare array.
   listMessages(threadId: string): Promise<ChatMessage[]>;
+  // Thumbs up/down an assistant message (member, idempotent — re-rating replaces). Returns the
+  // updated message. 404 if the thread isn't the member's or the message isn't a ratable assistant turn.
+  setFeedback(threadId: string, messageId: string, rating: FeedbackRating): Promise<ChatMessage>;
   // Soft-delete a thread. 204; a second delete 404s.
   deleteThread(threadId: string): Promise<void>;
 }
@@ -132,6 +141,20 @@ export function createChatClient(transport: ApiTransport): ChatClient {
         path: `/v1/chat/threads/${encodeURIComponent(threadId)}/messages`,
       });
       return (Array.isArray(data) ? data : []).map(toMessage);
+    },
+    async setFeedback(
+      threadId: string,
+      messageId: string,
+      rating: FeedbackRating
+    ): Promise<ChatMessage> {
+      const { data } = await transport.execute<MessageWire>({
+        method: 'POST',
+        path: `/v1/chat/threads/${encodeURIComponent(threadId)}/messages/${encodeURIComponent(
+          messageId
+        )}/feedback`,
+        body: { rating },
+      });
+      return toMessage(data);
     },
     async deleteThread(threadId: string): Promise<void> {
       await transport.execute<void>({
