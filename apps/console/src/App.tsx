@@ -58,6 +58,7 @@ const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
 const IntegrationKeys = lazy(() => import('./pages/IntegrationKeysPage.js'));
+const PublishedAgents = lazy(() => import('./pages/PublishedAgentsPage.js'));
 const Billing = lazy(() => import('./pages/BillingPage.js'));
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
 const SecondMind = lazyPlaceholder('Second Mind');
@@ -212,6 +213,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <IntegrationKeys />
+                </Suspense>
+              }
+            />
+            <Route
+              path="developer/agents"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <PublishedAgents />
                 </Suspense>
               }
             />

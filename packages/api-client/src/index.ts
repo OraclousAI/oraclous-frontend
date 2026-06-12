@@ -161,6 +161,10 @@ export type { CredentialsClient, Credential, CreateCredentialInput, CredType } f
 export { createIntegrationKeysClient } from './integrationKeys';
 export type { IntegrationKeysClient, MintKeyInput, MintedKey, KeySummary } from './integrationKeys';
 
+// Published-agents sub-client (developer/embed surface — the public invoke plane's management side)
+export { createPublishedAgentsClient } from './publishedAgents';
+export type { PublishedAgentsClient, PublishAgentInput, PublishedAgent } from './publishedAgents';
+
 // Capability-registry instances/executions sub-client (the "use a tool" loop)
 export { createInstancesClient } from './instances';
 export type {
