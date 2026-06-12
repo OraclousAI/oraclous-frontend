@@ -40,3 +40,48 @@ through the gateway before any UI was built. Gaps found on the way:
 - [BE] wave-1 — **per-step audit provenance has no read endpoint** — the harness writes `llm.complete`/`capability.invoke`/`governance.gate` rows to `harness_provenance`, but the only API-visible per-step record is `steps[]` on the execution (sufficient for the Wave-1 results screen) plus the org-level `GET /v1/engine/activity` feed. Audit-grade step trails need a backend read surface.
 - [INT] wave-1 — **gateway OpenAPI is incomplete vs live routing** — `GET /v1/harnesses/executions/{id}`, `/v1/engine/activity`, `/v1/engine/usage`, schedules and task routes all proxy fine but are undocumented, and success bodies are typed as opaque passthrough. `packages/api-client` is curated from the upstream service DTOs instead (shapes live-verified); the OpenAPI doc should catch up.
 - [INT] wave-1 — **`GET /v1/agents` returns a bare array** (every other list returns `{items/total}`-style envelopes). Publish/invoke (the public agent surface) is Wave-2; the client should normalise when added.
+
+## Wave-2 findings (2026-06-12, developer/embed surfaces — integration keys, published agents, webhooks)
+
+The three developer surfaces were built against the live `application-gateway-service` contracts
+(verified in source + smoked end-to-end): integration keys (`/v1/integration-keys`), published
+agents (`/v1/agents`), and webhook subscriptions (`/v1/webhook-subscriptions`). The full embed
+spine was proven live: **publish an agent → mint a bound integration key → external `/invoke`
+(auth verified) → create a webhook subscription → a github-signed delivery to `/v1/webhooks/{id}`
+is accepted (202)**. All three display-once secrets (`oak-…` key, `whsec_…` signing secret) are
+held in memory for one reveal and never persisted/cached (mutations use `gcTime: 0` + `reset()`).
+
+- [FE] wave-2 — **the named mockup `access.html` is a mismatch.** The roadmap (§4) maps Wave 2 to
+  `04-redesigned-screens/access.html`, but that screen is the **ReBAC access-control** surface
+  (subjects/resources/relations/grant-explanation + audit log), not the developer/embed surfaces
+  the issue (#57) actually enumerates (integration keys, published agents, webhooks). There is no
+  developer-keys/agents/webhooks mockup in the handoff. Built **greenfield from the verified
+  contracts**, reusing the existing `styles/page.css` system; behavioural precedent is the legacy
+  `dash/views/Settings.tsx` keys tab (display-once `IssuedKeyModal`) and `AgentStudio` publish flow.
+  `access.html` itself belongs to a future **access/ReBAC** surface, not this wave.
+- [BE] wave-2 — **no unpublish endpoint** ([oraclous-backend#280](https://github.com/OraclousAI/oraclous-backend/issues/280)).
+  `published_agent_routes.py` has only publish/list/get/invoke; the model honours `status='unpublished'`
+  on read/invoke but nothing can flip it. The console publishes but cannot unpublish — `status` is
+  rendered read-only with a "not callable" note for non-active agents. Non-blocking.
+- [INT] wave-2 — **gateway 422 validation isn't the ORA-56 envelope** ([oraclous-backend#281](https://github.com/OraclousAI/oraclous-backend/issues/281)).
+  Request-validation 422s come back as FastAPI `{detail:[{loc,msg,type}]}`, not `{error:{code,…}}`.
+  The mint/publish forms hit 422 by design (slug/CORS/binding-XOR). The typed client now maps both
+  the `{detail:[…]}` list and a `{detail:"…"}` string onto the envelope (PR #81) so forms show
+  field-level errors; the parser retires when the gateway emits the envelope itself.
+- [BE] wave-2 — **developer-surface read gaps** ([oraclous-backend#282](https://github.com/OraclousAI/oraclous-backend/issues/282)):
+  no member-plane `GET /v1/agents/{slug}` (only the bound-key public projection), so an agent detail
+  view hydrates by filtering the list client-side; and `rate_window_seconds` is write-only (accepted
+  and enforced but absent from `KeyOut`), so the keys list shows the limit without its window. Low
+  priority; worked around client-side.
+- [BE] wave-2 — **invoke returns 502-retryable for an unrunnable bound capability**
+  ([oraclous-backend#283](https://github.com/OraclousAI/oraclous-backend/issues/283)). `POST /v1/agents`
+  accepts any non-empty `bound_capability_ref` without checking it resolves; invoking an agent bound
+  to a non-runnable ref returns `502 SERVICE_UNAVAILABLE` with `retryable: true` (an external caller
+  would retry a permanent failure forever). Auth + routing are correct (no-auth/wrong-key → 401, bound
+  key → past auth); only the harness execution 502s. Likely tied to the deployed harness-runtime
+  state (Wave-1 #246). Non-blocking for the FE — it does not make the invoke call.
+- [FE] wave-2 — **member vs admin granularity.** The console models org authority as owner (or a
+  standalone personal org) vs member; the gateway's developer mutations are `AdminDep` (owner **or**
+  admin). A non-owner _admin_ would be treated as a read-only member by the console here. The
+  Developer nav + mutations are gated to owner/standalone; revisit if the console gains an explicit
+  admin tier. Read endpoints are member-accessible, so the lists work for everyone.
