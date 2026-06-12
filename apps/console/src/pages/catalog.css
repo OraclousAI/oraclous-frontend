@@ -100,3 +100,24 @@
   max-height: 460px;
   overflow-y: auto;
 }
+
+/* ── MCP import + pending-approval queue (Wave 3) ────────────────────────────── */
+.cat-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.cat-page .page-head {
+  margin-bottom: 0;
+}
+.cat-import .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.cat-pending-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+}
