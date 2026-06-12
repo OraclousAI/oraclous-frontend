@@ -2,11 +2,12 @@
 // Wave 2). An admin publishes an agent under a slug bound to a capability/harness descriptor; the
 // agent is then invocable at POST /v1/agents/{slug}/invoke with an integration key bound to that
 // slug. Each agent shows its public endpoint, a ready-to-run curl, and the keys bound to it (with a
-// one-click "mint invoke key" that reuses the display-once flow). Unpublish awaits backend #280.
+// one-click "mint invoke key" that reuses the display-once flow). Admins can unpublish (a terminal
+// soft tombstone — the slug stays reserved, so re-publishing it 409s).
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { ApiClientError, type PublishAgentInput, type MintedKey } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
-import { usePublishAgent, usePublishedAgents } from '../lib/publishedAgents.js';
+import { usePublishAgent, usePublishedAgents, useUnpublishAgent } from '../lib/publishedAgents.js';
 import { useIntegrationKeys, useMintKey } from '../lib/integrationKeys.js';
 import { useToast } from '../lib/toast.jsx';
 import { DisplayOnceSecretModal } from '../components/DisplayOnceSecretModal.js';
@@ -44,6 +45,7 @@ export default function PublishedAgentsPage() {
   const { agents, isLoading, isError } = usePublishedAgents(orgId);
   const { keys, isLoading: keysLoading, isError: keysError } = useIntegrationKeys(orgId);
   const publish = usePublishAgent(orgId);
+  const unpublish = useUnpublishAgent(orgId);
   const mint = useMintKey(orgId);
   const toast = useToast();
 
@@ -57,6 +59,8 @@ export default function PublishedAgentsPage() {
   const [listError, setListError] = useState<string | null>(null);
   const [mintingFor, setMintingFor] = useState<string | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [confirmUnpublish, setConfirmUnpublish] = useState<string | null>(null);
+  const [unpublishingFor, setUnpublishingFor] = useState<string | null>(null);
 
   const slugId = useId();
   const capId = useId();
@@ -136,6 +140,24 @@ export default function PublishedAgentsPage() {
       window.setTimeout(() => setCopiedSlug((s) => (s === agentSlug ? null : s)), 1500);
     } catch {
       // Clipboard may be unavailable; the snippet stays selectable.
+    }
+  }
+
+  // Unpublish is terminal (the slug stays reserved — no re-publish), so it goes through an inline
+  // two-step confirm, like the other destructive actions in the console.
+  async function onUnpublish(agentSlug: string) {
+    setListError(null);
+    setUnpublishingFor(agentSlug);
+    try {
+      await unpublish.mutateAsync(agentSlug);
+      // Dismiss the confirm only on success — on failure it stays open so the error + retry are
+      // co-located with the row (matching GraphDetailPage's destructive two-step).
+      setConfirmUnpublish(null);
+      toast.success('Agent unpublished.');
+    } catch (cause) {
+      setListError(messageFor(cause));
+    } finally {
+      setUnpublishingFor(null);
     }
   }
 
@@ -301,13 +323,52 @@ export default function PublishedAgentsPage() {
                       <span className="dev-agent-name">{a.displayName ?? a.slug}</span>
                       <span className="dev-agent-slug mono">/{a.slug}</span>
                     </div>
-                    <span
-                      className="status-pill"
-                      data-state={a.status === 'active' ? 'active' : 'paused'}
-                    >
-                      <span className="dot" aria-hidden="true" />
-                      {a.status}
-                    </span>
+                    <div className="dev-sub-right">
+                      <span
+                        className="status-pill"
+                        data-state={a.status === 'active' ? 'active' : 'paused'}
+                      >
+                        <span className="dot" aria-hidden="true" />
+                        {a.status}
+                      </span>
+                      {isAdmin &&
+                        a.status === 'active' &&
+                        (confirmUnpublish === a.slug ? (
+                          <span className="dev-confirm" role="group" aria-label="Confirm unpublish">
+                            <span className="dev-confirm-q">Unpublish?</span>
+                            <button
+                              type="button"
+                              className="btn"
+                              data-variant="danger"
+                              data-size="sm"
+                              disabled={unpublishingFor !== null}
+                              onClick={() => onUnpublish(a.slug)}
+                            >
+                              {unpublishingFor === a.slug ? 'Unpublishing…' : 'Confirm'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn"
+                              data-variant="ghost"
+                              data-size="sm"
+                              onClick={() => setConfirmUnpublish(null)}
+                            >
+                              Cancel
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn"
+                            data-variant="secondary"
+                            data-size="sm"
+                            disabled={unpublishingFor !== null}
+                            onClick={() => setConfirmUnpublish(a.slug)}
+                          >
+                            Unpublish
+                          </button>
+                        ))}
+                    </div>
                   </div>
                   {a.description !== null && a.description !== '' && (
                     <p className="dev-agent-desc">{a.description}</p>

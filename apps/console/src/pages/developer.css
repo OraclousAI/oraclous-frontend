@@ -215,3 +215,14 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Inline confirm (e.g. unpublish) — a small two-step row beside the status pill. */
+.dev-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.dev-confirm-q {
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
