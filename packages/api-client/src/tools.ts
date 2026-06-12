@@ -66,6 +66,9 @@ export interface ToolsClient {
   importMcp(input: ImportMcpInput): Promise<Tool[]>;
   // Approve a pending tool (admin) → status flips to 'active'. 204, no body; refetch the list.
   approve(toolId: string): Promise<void>;
+  // Reject a pending tool (admin) → terminal 'rejected' status (kept as an audit record, not run).
+  // 204, no body; 404 if not still pending. Refetch the list.
+  reject(toolId: string): Promise<void>;
 }
 
 function toTool(wire: CapabilityOutWire): Tool {
@@ -111,6 +114,12 @@ export function createToolsClient(transport: ApiTransport): ToolsClient {
       await transport.execute<void>({
         method: 'POST',
         path: `/api/v1/tools/${encodeURIComponent(toolId)}/approve`,
+      });
+    },
+    async reject(toolId: string): Promise<void> {
+      await transport.execute<void>({
+        method: 'POST',
+        path: `/api/v1/tools/${encodeURIComponent(toolId)}/reject`,
       });
     },
   };

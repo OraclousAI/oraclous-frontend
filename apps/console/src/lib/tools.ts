@@ -46,3 +46,14 @@ export function useApproveTool() {
     },
   });
 }
+
+export function useRejectTool() {
+  const { tools: client } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (toolId: string): Promise<void> => client.reject(toolId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tools'] });
+    },
+  });
+}
