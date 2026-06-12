@@ -1,6 +1,7 @@
 // Graph-read sub-client for the Explorer (knowledge-retriever): GET /v1/graph/{id}/subgraph.
 // Returns a bounded {nodes, edges} slice (capped, org+graph scoped) for the sphere visualisation.
-// Nodes are NodeResult envelopes — modality data lives inside `properties`; edges are {source, target, type}.
+// Both nodes and edges carry a `properties` bag — node modality data, and edge-level data such as
+// the `score` on SIMILAR_TO/SAME_AS_CANDIDATE edges (knowledge-retriever #277).
 import type { ApiTransport } from './transport';
 
 export interface GraphNode {
@@ -13,6 +14,9 @@ export interface GraphEdge {
   readonly source: string;
   readonly target: string;
   readonly type: string;
+  // Edge-level data — e.g. `score` on SIMILAR_TO/SAME_AS_CANDIDATE, `weight` — mirroring node
+  // properties (#277). Empty {} for edges the resolver doesn't annotate.
+  readonly properties: Readonly<Record<string, unknown>>;
 }
 
 export interface Subgraph {
@@ -22,7 +26,12 @@ export interface Subgraph {
 
 interface SubgraphWire {
   readonly nodes: { id: string; type: string; properties: Record<string, unknown> }[];
-  readonly edges: { source: string; target: string; type: string }[];
+  readonly edges: {
+    source: string;
+    target: string;
+    type: string;
+    properties?: Record<string, unknown>;
+  }[];
 }
 
 export interface ExplorerClient {
@@ -52,6 +61,7 @@ export function createExplorerClient(transport: ApiTransport): ExplorerClient {
           source: e.source,
           target: e.target,
           type: e.type,
+          properties: e.properties ?? {},
         })),
       };
     },
