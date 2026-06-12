@@ -1,13 +1,11 @@
 // Console app routing skeleton.
-// Feature views are lazy() + Suspense, each rendering PlaceholderView until its slice lands.
-// Auth is live: /login signs in against the gateway, and the /app subtree is wrapped in
-// ProtectedRoute, which redirects unauthenticated visitors to /login.
+// Feature views are lazy() + Suspense. Auth is live: /login signs in against the gateway, and the
+// /app subtree is wrapped in ProtectedRoute, which redirects unauthenticated visitors to /login.
 
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TenantGate } from './components/auth/TenantGate.js';
 import { AppShell } from './components/shell/AppShell.js';
-import { PlaceholderView } from './components/views/PlaceholderView.js';
 import { useSessionHydration, useSilentRefresh } from './lib/session.js';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.js'));
@@ -37,16 +35,6 @@ function PageLoader() {
   );
 }
 
-function lazyPlaceholder(title: string) {
-  function PlaceholderPage() {
-    return <PlaceholderView title={title} />;
-  }
-  return lazy(
-    (): Promise<{ default: typeof PlaceholderPage }> =>
-      Promise.resolve({ default: PlaceholderPage })
-  );
-}
-
 const Dashboard = lazy(() => import('./pages/DashboardPage.js'));
 const Workspaces = lazy(() => import('./pages/WorkspacesPage.js'));
 const Agents = lazy(() => import('./pages/AgentsPage.js'));
@@ -62,7 +50,7 @@ const PublishedAgents = lazy(() => import('./pages/PublishedAgentsPage.js'));
 const WebhookSubscriptions = lazy(() => import('./pages/WebhookSubscriptionsPage.js'));
 const Billing = lazy(() => import('./pages/BillingPage.js'));
 const Settings = lazy(() => import('./pages/SettingsPage.js'));
-const SecondMind = lazyPlaceholder('Second Mind');
+const SecondMind = lazy(() => import('./pages/SecondMindPage.js'));
 const Explorer = lazy(() => import('./pages/ExplorerPage.js'));
 const AcceptInvite = lazy(() => import('./pages/AcceptInvitePage.js'));
 

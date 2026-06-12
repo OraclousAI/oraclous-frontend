@@ -99,6 +99,11 @@ export const IconKey = (p: IconProps) => (
     <path d="m18 7 2-2" />
   </Icon>
 );
+export const IconMessage = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-1L3 20l1-4.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z" />
+  </Icon>
+);
 export const IconBell = (p: IconProps) => (
   <Icon {...p}>
     <path d="M6 8a6 6 0 1 1 12 0c0 5 2 6 2 8H4c0-2 2-3 2-8Z" />
