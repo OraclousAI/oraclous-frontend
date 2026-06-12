@@ -1,4 +1,4 @@
-// Chat hooks (Second Mind). Threads + transcript are member-scoped queries; sending a message is a
+// Chat hooks (the Ask console). Threads + transcript are member-scoped queries; sending a message is a
 // synchronous mutation that returns the whole turn (the page branches on its status). No streaming;
 // per-message thumbs up/down feedback via setFeedback (#313).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
