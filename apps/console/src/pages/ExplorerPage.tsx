@@ -6,9 +6,14 @@
 // it is the keyboard path to node selection (Gate 3).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { GraphEdge, GraphNode } from '@oraclous/api-client';
+import { ApiClientError, type GraphEdge, type GraphNode } from '@oraclous/api-client';
 import { useGraph } from '../lib/graphs.js';
-import { useExpandNeighbors, useSubgraph } from '../lib/explorer.js';
+import {
+  useApproveCandidate,
+  useExpandNeighbors,
+  useRejectCandidate,
+  useSubgraph,
+} from '../lib/explorer.js';
 import { ExplorerCanvas } from '../components/explorer/ExplorerCanvas.js';
 import {
   ContextMenu,
@@ -18,6 +23,7 @@ import {
   type CtxItem,
 } from '../components/explorer/ExplorerPanels.js';
 import { adaptSubgraph, edgeKey } from '../components/explorer/explorerAdapter.js';
+import { useToast } from '../lib/toast.jsx';
 import { createSim, type LayoutName, type OGSim } from '../components/explorer/explorerForces.js';
 import type { OGData, OGNode } from '../components/explorer/explorerTypes.js';
 import './explorer.css';
@@ -117,12 +123,33 @@ export default function ExplorerPage() {
   );
 }
 
+function resolveMessage(cause: unknown): string {
+  if (ApiClientError.is(cause)) {
+    // A concurrent reviewer already resolved this pair, or it no longer exists.
+    if (cause.code === 'CONFLICT') return 'Another reviewer already resolved this pair.';
+    if (cause.code === 'NOT_FOUND') return 'This candidate is no longer available.';
+    return cause.message;
+  }
+  return 'Couldn’t resolve this candidate. Please try again.';
+}
+
 function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
   const expand = useExpandNeighbors(graphId);
+  const approveCandidate = useApproveCandidate(graphId);
+  const rejectCandidate = useRejectCandidate(graphId);
+  const toast = useToast();
 
   // ── Data: base subgraph + expanded neighbours, deduped, adapted to OGData ──
   const [extra, setExtra] = useState<RawGraph>({ nodes: [], edges: [] });
   const [expandError, setExpandError] = useState<string | null>(null);
+  // Resolution review state: which row's merge chooser is open, which action is in flight (so the
+  // pressed button — not its sibling — shows progress), and any error.
+  const [confirmMergeId, setConfirmMergeId] = useState<string | null>(null);
+  const [resolveBusy, setResolveBusy] = useState<{
+    rowId: string;
+    kind: 'a' | 'b' | 'reject';
+  } | null>(null);
+  const [resolveError, setResolveError] = useState<string | null>(null);
   const merged = useMemo(() => mergeGraph(base, extra), [base, extra]);
   const og: OGData = useMemo(() => adaptSubgraph(merged.nodes, merged.edges), [merged]);
   const rawProps = useMemo(
@@ -131,8 +158,8 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
   );
 
   // Entity-resolution candidates (KGS #269): SAME_AS_CANDIDATE edges flag pairs in the 0.85–0.92
-  // similarity band — NOT auto-merged. Surfaced read-only for review; approve/reject (HITL) needs
-  // a backend resolution endpoint (a follow-on), so there's no action here yet.
+  // similarity band — NOT auto-merged. The review queue: approve merges the pair (you pick the
+  // survivor), reject records "not a duplicate" (#279). Both refetch the subgraph on success.
   const candidates = useMemo(() => {
     const byId = new Map(og.nodes.map((n) => [n.id, n]));
     return og.edges
@@ -323,6 +350,72 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
     }
   }
 
+  // A resolved pair must leave the queue for good: the success path invalidates the base subgraph,
+  // but a candidate endpoint pulled in by click-to-expand also lives in `extra` (and /neighbors can
+  // synthesize a SAME_AS_CANDIDATE edge), which would otherwise re-add the row. Prune both: the
+  // candidate edge always, and the merged-away node on an approve.
+  function pruneResolved(idA: string, idB: string, mergedAwayId: string | null) {
+    const key = edgeKey({ source: idA, target: idB, type: 'SAME_AS_CANDIDATE', properties: {} });
+    setExtra((prev) => ({
+      nodes: mergedAwayId === null ? prev.nodes : prev.nodes.filter((n) => n.id !== mergedAwayId),
+      edges: prev.edges.filter((e) => edgeKey(e) !== key),
+    }));
+  }
+
+  // Approve a candidate pair (merge): `keepId` survives, `dropId` folds into it. Refreshes the
+  // queue, prunes any expand copy, drops a now-merged selection, and confirms via a toast.
+  async function onApproveCandidate(
+    keepId: string,
+    dropId: string,
+    candidateRowId: string,
+    kind: 'a' | 'b'
+  ) {
+    if (resolveBusy !== null) return;
+    setResolveError(null);
+    setResolveBusy({ rowId: candidateRowId, kind });
+    try {
+      const res = await approveCandidate.mutateAsync({
+        canonicalNodeId: keepId,
+        otherNodeId: dropId,
+      });
+      pruneResolved(keepId, dropId, res.mergedId);
+      setConfirmMergeId(null);
+      setSelected((prev) => {
+        if (!prev.has(res.mergedId)) return prev;
+        const next = new Set(prev);
+        next.delete(res.mergedId);
+        return next;
+      });
+      toast.success(
+        res.repointedEdges > 0
+          ? `Merged — kept one entity, moved ${res.repointedEdges} relationship${
+              res.repointedEdges === 1 ? '' : 's'
+            }.`
+          : 'Entities merged.'
+      );
+    } catch (cause) {
+      setResolveError(resolveMessage(cause));
+    } finally {
+      setResolveBusy(null);
+    }
+  }
+
+  // Reject a candidate pair (not a duplicate): drops the candidate edge so it stops resurfacing.
+  async function onRejectCandidate(idA: string, idB: string, candidateRowId: string) {
+    if (resolveBusy !== null) return;
+    setResolveError(null);
+    setResolveBusy({ rowId: candidateRowId, kind: 'reject' });
+    try {
+      await rejectCandidate.mutateAsync({ nodeIdA: idA, nodeIdB: idB });
+      pruneResolved(idA, idB, null);
+      toast.success('Marked as not a match.');
+    } catch (cause) {
+      setResolveError(resolveMessage(cause));
+    } finally {
+      setResolveBusy(null);
+    }
+  }
+
   const ctxItems = (): CtxItem[] => [
     { label: 'Reset view', onClick: onResetView },
     { divider: true },
@@ -444,12 +537,26 @@ function ExplorerView({ graphId, base }: { graphId: string; base: RawGraph }) {
           />
         )}
 
-        {/* SAME_AS_CANDIDATE review (read-only) — the entity-resolution queue. */}
+        {/* SAME_AS_CANDIDATE review queue — the entity-resolution HITL surface (#279). */}
         {showCandidates && candidates.length > 0 && (
           <CandidatesPanel
             candidates={candidates}
+            busy={resolveBusy}
+            error={resolveError}
+            confirmMergeId={confirmMergeId}
             onSelect={(id) => setSelected(new Set([id]))}
-            onClose={() => setShowCandidates(false)}
+            onStartMerge={(rowId) => {
+              setResolveError(null);
+              setConfirmMergeId(rowId);
+            }}
+            onCancelMerge={() => setConfirmMergeId(null)}
+            onApprove={onApproveCandidate}
+            onReject={onRejectCandidate}
+            onClose={() => {
+              setShowCandidates(false);
+              setConfirmMergeId(null);
+              setResolveError(null);
+            }}
           />
         )}
       </div>
@@ -544,20 +651,49 @@ interface Candidate {
   score: number | null | undefined;
 }
 
-// Read-only entity-resolution review: the SAME_AS_CANDIDATE pairs the resolver flagged but did
-// not merge (0.85–0.92 band). Each side jumps to that node; approve/reject awaits a backend HITL
-// endpoint (a follow-on), so there's no merge action here yet.
+type ResolveBusy = { rowId: string; kind: 'a' | 'b' | 'reject' } | null;
+
+// A short, stable disambiguator for a node id (the last 6 hex of the deterministic id) — duplicate
+// display names are the COMMON case for a candidate pair, so the survivor choice must distinguish
+// the two by more than their (identical) name.
+const idTag = (id: string): string => id.slice(-6);
+
+// Entity-resolution review queue: the SAME_AS_CANDIDATE pairs the resolver flagged but did not
+// merge (0.85–0.92 band). Each name jumps to that node. "Merge" opens a survivor chooser (the
+// merge is irreversible, so it's a deliberate two-step, like unpublish); "Not a match" rejects the
+// pair (#279). Resolved pairs leave the queue.
 function CandidatesPanel({
   candidates,
+  busy,
+  error,
+  confirmMergeId,
   onSelect,
+  onStartMerge,
+  onCancelMerge,
+  onApprove,
+  onReject,
   onClose,
 }: {
   candidates: readonly Candidate[];
+  busy: ResolveBusy;
+  error: string | null;
+  confirmMergeId: string | null;
   onSelect: (id: string) => void;
+  onStartMerge: (rowId: string) => void;
+  onCancelMerge: () => void;
+  onApprove: (keepId: string, dropId: string, candidateRowId: string, kind: 'a' | 'b') => void;
+  onReject: (idA: string, idB: string, candidateRowId: string) => void;
   onClose: () => void;
 }) {
+  const anyBusy = busy !== null;
+  const liveLabel =
+    busy === null ? '' : busy.kind === 'reject' ? 'Removing candidate…' : 'Merging entities…';
   return (
-    <aside className="ge-panel ge-panel--candidates" aria-label="Resolution candidates">
+    <aside
+      className="ge-panel ge-panel--candidates"
+      aria-label="Resolution candidates"
+      aria-busy={anyBusy}
+    >
       <div className="head">
         <span className="eyebrow">Candidates ({candidates.length})</span>
         <button type="button" onClick={onClose} className="close" aria-label="Close candidates">
@@ -565,40 +701,106 @@ function CandidatesPanel({
         </button>
       </div>
       <p className="ge-candidates-note">
-        Possible duplicate entities (similarity 0.85–0.92) — flagged, not merged. Review here;
-        approve/reject is coming.
+        Possible duplicate entities (similarity 0.85–0.92) — flagged, not merged. Merge them
+        (keeping the entity you choose), or mark them as not a match.
       </p>
+      {error !== null && (
+        <p className="ge-candidates-error" role="alert">
+          {error}
+        </p>
+      )}
+      <span className="ge-sr-live" role="status" aria-live="polite">
+        {liveLabel}
+      </span>
       <ul className="ge-list">
-        {candidates.map((c) => (
-          <li key={c.id}>
-            <div className="ge-candidate">
-              <button
-                type="button"
-                className="ge-candidate-node"
-                onClick={() => onSelect(c.a.id)}
-                title={c.a.name}
-              >
-                {c.a.name}
-              </button>
-              <span className="ge-candidate-sep" aria-hidden="true">
-                ≈
-              </span>
-              <button
-                type="button"
-                className="ge-candidate-node"
-                onClick={() => onSelect(c.b.id)}
-                title={c.b.name}
-              >
-                {c.b.name}
-              </button>
-              {c.score != null && (
-                <span className="ge-candidate-score num" title={`similarity ${c.score.toFixed(2)}`}>
-                  {c.score.toFixed(2)}
+        {candidates.map((c) => {
+          const choosing = confirmMergeId === c.id;
+          const rowBusy = busy?.rowId === c.id;
+          return (
+            <li key={c.id}>
+              <div className="ge-candidate">
+                <button
+                  type="button"
+                  className="ge-candidate-node"
+                  onClick={() => onSelect(c.a.id)}
+                  title={`${c.a.name} · ${c.a.type} · #${idTag(c.a.id)}`}
+                >
+                  {c.a.name}
+                </button>
+                <span className="ge-candidate-sep" aria-hidden="true">
+                  ≈
                 </span>
+                <button
+                  type="button"
+                  className="ge-candidate-node"
+                  onClick={() => onSelect(c.b.id)}
+                  title={`${c.b.name} · ${c.b.type} · #${idTag(c.b.id)}`}
+                >
+                  {c.b.name}
+                </button>
+                {c.score != null && (
+                  <span
+                    className="ge-candidate-score num"
+                    title={`similarity ${c.score.toFixed(2)}`}
+                  >
+                    {c.score.toFixed(2)}
+                  </span>
+                )}
+              </div>
+
+              {choosing ? (
+                <div className="ge-candidate-actions" role="group" aria-label="Keep which entity?">
+                  <span className="ge-cand-q">Keep which?</span>
+                  <button
+                    type="button"
+                    className="ge-cand-btn"
+                    disabled={anyBusy}
+                    onClick={() => onApprove(c.a.id, c.b.id, c.id, 'a')}
+                  >
+                    {rowBusy && busy?.kind === 'a' ? '…' : `${c.a.name} `}
+                    <span className="ge-cand-id">#{idTag(c.a.id)}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="ge-cand-btn"
+                    disabled={anyBusy}
+                    onClick={() => onApprove(c.b.id, c.a.id, c.id, 'b')}
+                  >
+                    {rowBusy && busy?.kind === 'b' ? '…' : `${c.b.name} `}
+                    <span className="ge-cand-id">#{idTag(c.b.id)}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="ge-cand-btn ge-cand-btn--ghost"
+                    disabled={anyBusy}
+                    onClick={onCancelMerge}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="ge-candidate-actions">
+                  <button
+                    type="button"
+                    className="ge-cand-btn"
+                    disabled={anyBusy}
+                    onClick={() => onStartMerge(c.id)}
+                  >
+                    Merge…
+                  </button>
+                  <button
+                    type="button"
+                    className="ge-cand-btn ge-cand-btn--reject"
+                    disabled={anyBusy}
+                    onClick={() => onReject(c.a.id, c.b.id, c.id)}
+                  >
+                    {rowBusy && busy?.kind === 'reject' ? '…' : 'Not a match'}
+                  </button>
+                </div>
               )}
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
     </aside>
   );

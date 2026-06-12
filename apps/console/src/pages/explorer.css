@@ -939,3 +939,75 @@
   font-family: var(--font-mono);
   color: var(--og-accent-ink, var(--og-accent));
 }
+
+/* ── Candidate review actions (entity-resolution HITL, #279) ─────────────────── */
+.ge .ge-candidates-error {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--t-tiny-size);
+  color: var(--ge-error);
+}
+/* Visually-hidden live region — announces merge/remove progress to assistive tech. */
+.ge .ge-sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ge .ge-candidate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+.ge .ge-cand-q {
+  font-size: var(--t-tiny-size);
+  color: var(--og-fg-3);
+}
+.ge .ge-cand-btn {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  padding: 4px 8px;
+  font-size: var(--t-tiny-size);
+  font-family: inherit;
+  color: var(--og-fg-1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--og-line-2);
+  border-radius: 5px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ge .ge-cand-btn:hover:not(:disabled) {
+  color: var(--og-fg-0);
+  border-color: var(--og-accent);
+}
+.ge .ge-cand-btn:focus-visible {
+  outline: 2px solid var(--og-fg-0);
+  outline-offset: 1px;
+}
+.ge .ge-cand-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ge .ge-cand-id {
+  color: var(--og-fg-3);
+  font-family: var(--font-mono);
+}
+.ge .ge-cand-btn--ghost {
+  color: var(--og-fg-3);
+}
+.ge .ge-cand-btn--reject {
+  color: var(--og-fg-3);
+}
+.ge .ge-cand-btn--reject:hover:not(:disabled) {
+  color: var(--ge-error);
+  border-color: var(--ge-error);
+}
