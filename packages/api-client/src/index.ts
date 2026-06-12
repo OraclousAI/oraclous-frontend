@@ -155,7 +155,7 @@ export type { RecipesClient, Recipe, RecipeDetail } from './recipes';
 
 // Capability-registry tools sub-client
 export { createToolsClient } from './tools';
-export type { ToolsClient, Tool, CredentialRequirement } from './tools';
+export type { ToolsClient, Tool, CredentialRequirement, ImportMcpInput } from './tools';
 
 // Credential-broker sub-client
 export { createCredentialsClient } from './credentials';
