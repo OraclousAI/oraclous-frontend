@@ -43,6 +43,7 @@ const AgentHarnessDetail = lazy(() => import('./pages/AgentHarnessDetailPage.js'
 const AgentBuilder = lazy(() => import('./pages/AgentBuilderPage.js'));
 const Jobs = lazy(() => import('./pages/JobsPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
+const Connections = lazy(() => import('./pages/ConnectionsPage.js'));
 const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
 const IntegrationKeys = lazy(() => import('./pages/IntegrationKeysPage.js'));
@@ -177,6 +178,14 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Tools />
+                </Suspense>
+              }
+            />
+            <Route
+              path="connections"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <Connections />
                 </Suspense>
               }
             />
