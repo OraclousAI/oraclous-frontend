@@ -1,7 +1,7 @@
-// Accessibility for the mobile navigation drawer. While `open`, it traps Tab focus inside the
-// drawer, closes on Escape, locks body scroll behind the drawer, and restores focus to the trigger
-// (the hamburger) on close. It is a no-op while closed. `open` is only ever true on mobile — the
-// trigger is display:none ≥768px — so no media-query guard is needed.
+// Accessibility for a modal dialog or sliding panel — the mobile navigation drawer, and the Tools /
+// Connections sheets. While `open`, it traps Tab focus inside the drawer/panel, closes on Escape,
+// locks body scroll behind it, and restores focus to the trigger on close. It is a no-op while
+// closed; callers that are always-mounted-when-open pass `open: true`.
 import { useEffect, type RefObject } from 'react';
 
 const FOCUSABLE =

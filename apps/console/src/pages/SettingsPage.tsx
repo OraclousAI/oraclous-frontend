@@ -266,7 +266,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <ConnectionsSection userId={principal?.id ?? null} />
+      <ConnectionsSection />
     </div>
   );
 }
