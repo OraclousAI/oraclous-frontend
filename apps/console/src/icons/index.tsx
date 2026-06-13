@@ -132,6 +132,12 @@ export const IconCheck = (p: IconProps) => (
     <path d="M5 13l4 4L19 7" />
   </Icon>
 );
+export const IconX = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </Icon>
+);
 export const IconSearch = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="11" cy="11" r="7" />

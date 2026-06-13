@@ -11,6 +11,13 @@ export interface CredentialRequirement {
   readonly required: boolean;
 }
 
+// One operation a tool exposes (descriptor.spec.capabilities[]) — what the tool can do. The
+// descriptor also carries each capability's parameters/schemas; only the display fields are surfaced.
+export interface ToolCapability {
+  readonly name: string;
+  readonly description: string | null;
+}
+
 export interface Tool {
   readonly id: string;
   readonly kind: string;
@@ -20,6 +27,7 @@ export interface Tool {
   readonly category: string | null;
   readonly description: string | null;
   readonly documentationUrl: string | null;
+  readonly capabilities: readonly ToolCapability[];
   readonly credentialRequirements: readonly CredentialRequirement[];
 }
 
@@ -36,6 +44,10 @@ interface CapabilityOutWire {
       readonly documentation_url?: string | null;
     };
     readonly spec?: {
+      readonly capabilities?: ReadonlyArray<{
+        readonly name?: string | null;
+        readonly description?: string | null;
+      }> | null;
       readonly credential_requirements?: ReadonlyArray<{
         readonly type?: string | null;
         readonly provider?: string | null;
@@ -73,6 +85,7 @@ export interface ToolsClient {
 
 function toTool(wire: CapabilityOutWire): Tool {
   const md = wire.descriptor?.metadata;
+  const caps = wire.descriptor?.spec?.capabilities;
   const reqs = wire.descriptor?.spec?.credential_requirements;
   return {
     id: wire.id,
@@ -82,6 +95,11 @@ function toTool(wire: CapabilityOutWire): Tool {
     category: md?.category ?? null,
     description: md?.description ?? null,
     documentationUrl: md?.documentation_url ?? null,
+    capabilities: (Array.isArray(caps) ? caps : [])
+      .filter((c): c is { name: string; description?: string | null } =>
+        Boolean(c && typeof c.name === 'string')
+      )
+      .map((c) => ({ name: c.name, description: c.description ?? null })),
     credentialRequirements: (Array.isArray(reqs) ? reqs : [])
       .filter((r): r is { type: string; provider: string; required?: boolean | null } =>
         Boolean(r && typeof r.type === 'string' && typeof r.provider === 'string')
