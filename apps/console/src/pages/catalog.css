@@ -434,19 +434,99 @@
 }
 .tool-inst {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
+  flex-direction: column;
+  gap: var(--sp-3);
   padding: var(--sp-3) 14px;
   background: var(--paper-soft);
   border: 1px solid var(--rule);
   border-radius: var(--r-3);
+}
+.tool-inst__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
 }
 .tool-inst__name {
   min-width: 0;
   font-size: var(--t-mono-size);
   color: var(--ink);
   overflow-wrap: anywhere;
+}
+.tool-inst__creds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.tool-inst__cred {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tool-inst__cred-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.tool-inst__cred-label {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: var(--t-tiny-track);
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* CredentialSlot styles (mirrors agent.css) — the Tools surface loads catalog.css, not agent.css, so
+   the credential picker reused in the instance rows needs them scoped to this surface too. */
+.cat-page .cred-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cat-page .cred-pick {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.cat-page .cred-pick select {
+  flex: 1;
+  min-width: 0;
+}
+.cat-page .cred-add {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cat-page .cred-add input {
+  flex: 1;
+  min-width: 140px;
+  font-family: var(--font-sans);
+  font-size: var(--t-dense-size);
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+.cat-page .cred-add input:focus-visible {
+  border-color: var(--ink);
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+.cat-page .cred-note {
+  margin: 0;
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
+.cat-page .cred-error {
+  margin: 0;
+  font-size: var(--t-tiny-size);
+  color: var(--error);
 }
 .tool-inst-form {
   display: flex;
