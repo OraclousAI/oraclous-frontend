@@ -478,6 +478,28 @@
   text-transform: uppercase;
   color: var(--mute);
 }
+/* "Test connection" (increment 5) — the button + its readiness result. Mint lives only on the
+   healthy status-pill dot (data-state='active'), never on the button. */
+.tool-inst__test {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  align-items: flex-start;
+}
+.tool-inst__test-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tool-inst__test-result:empty {
+  display: none;
+}
+.tool-inst__test-reason {
+  font-size: var(--t-caption-size);
+  line-height: var(--t-caption-lh);
+  color: var(--mute);
+  overflow-wrap: anywhere;
+}
 
 /* CredentialSlot styles (mirrors agent.css) — the Tools surface loads catalog.css, not agent.css, so
    the credential picker reused in the instance rows needs them scoped to this surface too. */
