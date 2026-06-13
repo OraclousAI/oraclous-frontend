@@ -11,6 +11,7 @@ import {
   IconCog,
   IconSparkle,
   IconKey,
+  IconGlobe,
   IconMessage,
   type IconProps,
 } from '../icons/index.js';
@@ -34,6 +35,7 @@ const OWNER: NavItem[] = [
   { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
   { id: 'members', label: 'Members', icon: IconUsers, route: '/app/members' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
+  { id: 'connections', label: 'Connections', icon: IconGlobe, route: '/app/connections' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
 ];
 
@@ -45,6 +47,7 @@ const MEMBER: NavItem[] = [
   { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
   { id: 'd1', label: 'Personal', divider: true },
   { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
+  { id: 'connections', label: 'Connections', icon: IconGlobe, route: '/app/connections' },
 ];
 
 const STANDALONE: NavItem[] = [
@@ -57,6 +60,7 @@ const STANDALONE: NavItem[] = [
   { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
   { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
   { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
+  { id: 'connections', label: 'Connections', icon: IconGlobe, route: '/app/connections' },
   { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
 ];
 
@@ -72,6 +76,7 @@ export function activeNavId(pathname: string): string {
   if (pathname.startsWith('/app/agents')) return 'agents';
   if (pathname.startsWith('/app/jobs')) return 'jobs';
   if (pathname.startsWith('/app/tools')) return 'tools';
+  if (pathname.startsWith('/app/connections')) return 'connections';
   if (pathname.startsWith('/app/recipes')) return 'recipes';
   if (pathname.startsWith('/app/developer')) return 'developer';
   if (pathname.startsWith('/app/members')) return 'members';

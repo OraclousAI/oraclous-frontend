@@ -1,18 +1,13 @@
-// Connections — the credentials manager (Settings § "Identity and credentials"). Lists every
-// credential the signed-in user holds (BYOM model keys + tool credentials added in the agent
-// builder) and lets them add a model connection (OpenRouter/OpenAI presets or a custom
-// OpenAI-compatible endpoint) or remove any. A model connection added here carries the BYOM
-// sentinel tool_id, so it appears in the agent builder's model dropdown for matching providers.
-// The secret is only ever SENT on create — it is never listed, displayed, or read back.
+// Connections (Settings § "Identity and credentials") — add a model connection (OpenRouter/OpenAI
+// presets or a custom OpenAI-compatible endpoint). A model connection added here carries the BYOM
+// sentinel tool_id, so it appears in the agent builder's model dropdown for matching providers. The
+// full roster (every credential + remove) lives on the dedicated Connections page (/app/connections,
+// linked below); this section is the BYOM add form. The secret is only ever SENT on create — it is
+// never listed, displayed, or read back.
 import { useId, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { ApiClientError } from '@oraclous/api-client';
-import {
-  MODEL_CREDENTIAL_TOOL_ID,
-  useCredentials,
-  useCreateCredential,
-  useDeleteCredential,
-} from '../lib/credentials.js';
-import { SkeletonList } from './ui/Skeleton.js';
+import { MODEL_CREDENTIAL_TOOL_ID, useCreateCredential } from '../lib/credentials.js';
 
 // BYOM connection types. The harness has server-side base URLs for the two presets (both
 // openai-compatible); a custom connection carries its own base_url on the credential payload
@@ -50,12 +45,8 @@ const successCallout = {
   borderColor: 'var(--success)',
 } as const;
 
-const cols = { gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1.4fr) auto' } as const;
-
 export function ConnectionsSection({ userId }: { userId: string | null }) {
-  const { credentials, isLoading, isError } = useCredentials(userId);
   const create = useCreateCredential();
-  const remove = useDeleteCredential();
 
   const typeId = useId();
   const labelId = useId();
@@ -70,9 +61,6 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [removingId, setRemovingId] = useState<string | null>(null);
-  // Two-step destructive confirm: first click on a row arms it, second deletes.
-  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const hasUser = userId !== null && userId !== '';
   const isCustom = connType === 'custom';
@@ -111,36 +99,14 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
     }
   }
 
-  async function onRemove(id: string) {
-    setError(null);
-    setSaved(false);
-    setRemovingId(id);
-    try {
-      await remove.mutateAsync(id);
-    } catch (cause) {
-      setError(messageFor(cause));
-    } finally {
-      setRemovingId(null);
-      setConfirmId(null);
-    }
-  }
-
-  // Model keys first, then tool credentials; stable by name within each group.
-  const sorted = [...credentials].sort((a, b) => {
-    const am = a.toolId === MODEL_CREDENTIAL_TOOL_ID ? 0 : 1;
-    const bm = b.toolId === MODEL_CREDENTIAL_TOOL_ID ? 0 : 1;
-    if (am !== bm) return am - bm;
-    return (a.name ?? a.provider).localeCompare(b.name ?? b.provider);
-  });
-
   return (
     <section className="card" aria-label="Connections">
       <div className="card-head">
         <div className="h">
           <h2>Connections</h2>
           <span className="sub">
-            Your model keys (BYOM) and tool credentials — secrets are stored encrypted and never
-            shown again
+            Add a model key (BYOM) to run agents — secrets are stored encrypted and never shown
+            again
           </span>
         </div>
       </div>
@@ -159,73 +125,10 @@ export function ConnectionsSection({ userId }: { userId: string | null }) {
           </p>
         )}
 
-        {isLoading ? (
-          <SkeletonList rows={2} />
-        ) : isError ? (
-          <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
-            Couldn’t load your credentials. Please try again.
-          </p>
-        ) : sorted.length === 0 ? (
-          <div className="empty" style={{ border: 'none' }}>
-            <span className="t">No credentials yet</span>
-            <span className="s">Add a model connection below to run agents.</span>
-          </div>
-        ) : (
-          <div className="table" role="table" aria-label="Credentials">
-            <div className="table-head" style={cols} role="row">
-              <span role="columnheader">Provider</span>
-              <span role="columnheader">Type</span>
-              <span role="columnheader">Name</span>
-              <span role="columnheader" style={{ textAlign: 'right' }}>
-                Manage
-              </span>
-            </div>
-            {sorted.map((c) => {
-              const isModel = c.toolId === MODEL_CREDENTIAL_TOOL_ID;
-              const kind = isModel ? 'model key' : 'tool credential';
-              const arming = confirmId === c.id;
-              return (
-                <div className="table-row" style={cols} role="row" key={c.id}>
-                  <span role="cell" className="mono">
-                    {c.provider}
-                  </span>
-                  <span role="cell" className="chip chip-sm">
-                    {isModel ? 'model key' : 'tool'}
-                  </span>
-                  <span role="cell" style={{ overflowWrap: 'break-word' }}>
-                    {c.name ?? '—'}
-                  </span>
-                  <span role="cell" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      className="btn"
-                      data-variant="danger"
-                      data-size="sm"
-                      aria-label={
-                        arming
-                          ? `Confirm removing the ${c.name ?? c.provider} ${kind}`
-                          : `Remove the ${c.name ?? c.provider} ${kind}`
-                      }
-                      onClick={() => {
-                        if (removingId === c.id) return;
-                        if (arming) void onRemove(c.id);
-                        else setConfirmId(c.id);
-                      }}
-                      disabled={removingId === c.id}
-                    >
-                      {removingId === c.id ? 'Removing…' : arming ? 'Confirm' : 'Remove'}
-                    </button>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {!isLoading && !isError && sorted.length > 0 && (
-          <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
-            Removing a credential breaks any agent or tool that uses it.
-          </p>
-        )}
+        <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
+          View and remove all your credentials on the{' '}
+          <Link to="/app/connections">Connections page</Link>.
+        </p>
 
         <form
           onSubmit={onAdd}
