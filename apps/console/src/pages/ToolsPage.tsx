@@ -9,7 +9,8 @@ import { useApproveTool, useImportMcp, useRejectTool, useTools } from '../lib/to
 import { useToast } from '../lib/toast.jsx';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { ToolDetailDrawer } from '../components/ToolDetailDrawer.js';
-import { IconPlug } from '../icons/index.js';
+import { AddToolDrawer } from '../components/AddToolDrawer.js';
+import { IconPlug, IconPlus } from '../icons/index.js';
 import './catalog.css';
 
 function messageFor(cause: unknown): string {
@@ -41,6 +42,10 @@ export default function ToolsPage() {
     () => (openToolId === null ? null : (active.find((t) => t.id === openToolId) ?? null)),
     [active, openToolId]
   );
+
+  // The admin "Add a tool" form drawer, and the button that opened it (focus returns there on close).
+  const [addOpen, setAddOpen] = useState(false);
+  const addTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const [importOpen, setImportOpen] = useState(false);
   const [serverUrl, setServerUrl] = useState('');
@@ -123,6 +128,17 @@ export default function ToolsPage() {
         </div>
         {isAdmin && (
           <div className="page-head-actions">
+            <button
+              type="button"
+              className="btn"
+              data-variant="primary"
+              ref={addTriggerRef}
+              aria-haspopup="dialog"
+              onClick={() => setAddOpen(true)}
+            >
+              <IconPlus size={16} />
+              Add a tool
+            </button>
             <button
               type="button"
               className="btn"
@@ -320,6 +336,8 @@ export default function ToolsPage() {
           onClose={() => setOpenToolId(null)}
         />
       )}
+
+      {addOpen && <AddToolDrawer triggerRef={addTriggerRef} onClose={() => setAddOpen(false)} />}
     </div>
   );
 }

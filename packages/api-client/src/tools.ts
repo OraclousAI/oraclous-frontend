@@ -71,11 +71,26 @@ export interface ImportMcpInput {
   readonly label: string;
 }
 
+// Register an org tool descriptor (admin). The clean FE shape; the client maps it to the snake_case
+// OHM descriptor the gateway expects. The id is server-derived (UUIDv5 from name/version/category),
+// so callers never supply one; a non-MCP descriptor lands status='active' (immediately catalogued).
+export interface RegisterToolInput {
+  readonly name: string;
+  readonly category: string | null;
+  readonly description: string | null;
+  readonly documentationUrl: string | null;
+  readonly capabilities: readonly ToolCapability[];
+  readonly credentialRequirements: readonly CredentialRequirement[];
+}
+
 export interface ToolsClient {
   list(): Promise<Tool[]>;
   // Import an external MCP server's tools (admin). Each lands status='pending_approval' until an
   // admin approves it (the supply-chain HITL gate). Returns the newly-imported tools.
   importMcp(input: ImportMcpInput): Promise<Tool[]>;
+  // Register an org tool descriptor (admin) → POST /api/v1/tools. Returns the registered tool
+  // (status='active'). Re-registering the same name/version/category is idempotent (same id).
+  register(input: RegisterToolInput): Promise<Tool>;
   // Approve a pending tool (admin) → status flips to 'active'. 204, no body; refetch the list.
   approve(toolId: string): Promise<void>;
   // Reject a pending tool (admin) → terminal 'rejected' status (kept as an audit record, not run).
@@ -127,6 +142,37 @@ export function createToolsClient(transport: ApiTransport): ToolsClient {
       });
       const imported = Array.isArray(data?.imported) ? data.imported : [];
       return imported.map(toTool);
+    },
+    async register(input: RegisterToolInput): Promise<Tool> {
+      // The gateway proxies this body to the registry unmutated, so it must be the snake_case OHM
+      // descriptor. The id is derived server-side from name/version/category — never sent.
+      const descriptor = {
+        kind: 'tool',
+        version: { semver: '1.0.0', tags: [] as string[] },
+        metadata: {
+          name: input.name,
+          description: input.description,
+          category: input.category,
+          documentation_url: input.documentationUrl,
+        },
+        spec: {
+          capabilities: input.capabilities.map((c) => ({
+            name: c.name,
+            description: c.description,
+          })),
+          credential_requirements: input.credentialRequirements.map((r) => ({
+            type: r.type,
+            provider: r.provider,
+            required: r.required,
+          })),
+        },
+      };
+      const { data } = await transport.execute<CapabilityOutWire>({
+        method: 'POST',
+        path: '/api/v1/tools',
+        body: { descriptor },
+      });
+      return toTool(data);
     },
     async approve(toolId: string): Promise<void> {
       await transport.execute<void>({

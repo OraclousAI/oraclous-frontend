@@ -165,6 +165,7 @@ export type {
   ToolCapability,
   CredentialRequirement,
   ImportMcpInput,
+  RegisterToolInput,
 } from './tools';
 
 // Credential-broker sub-client
