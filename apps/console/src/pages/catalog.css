@@ -121,3 +121,216 @@
   gap: var(--sp-3);
   flex-shrink: 0;
 }
+
+/* ── Tool detail drawer (Tools — increment 1) ────────────────────────────────── */
+/* A modal right-side panel opened from a tool tile. Sits above the topbar (z 60) and the mobile nav
+   drawer (z 80). Focus trap / Escape / scroll-lock / focus-restore are handled by useDrawerA11y. */
+.tool-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: color-mix(in oklab, var(--ink) 40%, transparent);
+  cursor: pointer;
+  animation: tool-drawer-fade var(--motion-hover-dur) var(--motion-hover-ease);
+}
+
+.tool-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 91;
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-left: 1px solid var(--rule);
+  box-shadow: var(--shadow-3);
+  overflow-y: auto;
+  outline: none;
+  animation: tool-drawer-slide 180ms var(--motion-hover-ease);
+}
+
+.tool-drawer__head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+.tool-drawer__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.tool-drawer__title h2 {
+  margin: 0;
+  font-size: var(--t-dense-size);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  overflow-wrap: break-word;
+}
+
+.tool-drawer__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-2);
+  background: var(--paper);
+  color: var(--mute);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-hover-dur) var(--motion-hover-ease),
+    color var(--motion-hover-dur) var(--motion-hover-ease);
+}
+.tool-drawer__close:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.tool-drawer__close:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+
+.tool-drawer__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5);
+}
+
+.tool-drawer__desc {
+  margin: 0;
+  font-size: var(--t-mono-size);
+  line-height: 1.55;
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+.tool-drawer__muted {
+  margin: 0;
+  font-size: var(--t-mono-size);
+  line-height: 1.55;
+  color: var(--mute);
+}
+
+.tool-drawer__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.tool-drawer__section h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  font-weight: 500;
+  letter-spacing: var(--t-tiny-track);
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.tool-cap-list,
+.tool-req-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.tool-cap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-3) 14px;
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+}
+.tool-cap__name {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono-size);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+.tool-cap__desc {
+  font-size: var(--t-caption-size);
+  line-height: 1.5;
+  color: var(--mute);
+  overflow-wrap: break-word;
+}
+
+.tool-req {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 14px;
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+}
+.tool-req__type {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono-size);
+  color: var(--ink);
+}
+.tool-req__provider {
+  font-size: var(--t-caption-size);
+  color: var(--mute);
+}
+.tool-req__provider::before {
+  content: '·';
+  margin-right: var(--sp-2);
+  color: var(--rule);
+}
+
+.tool-drawer__doc {
+  font-size: var(--t-mono-size);
+  color: var(--ink);
+  width: fit-content;
+  text-underline-offset: 3px;
+}
+.tool-drawer__doc:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+@keyframes tool-drawer-slide {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes tool-drawer-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tool-drawer,
+  .tool-drawer__backdrop {
+    animation: none;
+  }
+}

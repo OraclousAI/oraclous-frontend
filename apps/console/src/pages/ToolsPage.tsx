@@ -2,20 +2,15 @@
 // org-registered tools), from GET /api/v1/tools. Admins can import an external MCP server's tools,
 // which land in a pending-approval queue (the supply-chain HITL gate, #57 / Wave 3): an imported
 // tool can't run until an admin approves it — or rejects it (terminal, kept as an audit record).
-import { useId, useMemo, useState, type FormEvent } from 'react';
+import { useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import { ApiClientError } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import { useApproveTool, useImportMcp, useRejectTool, useTools } from '../lib/tools.js';
 import { useToast } from '../lib/toast.jsx';
 import { SkeletonList } from '../components/ui/Skeleton.js';
+import { ToolDetailDrawer } from '../components/ToolDetailDrawer.js';
 import { IconPlug } from '../icons/index.js';
 import './catalog.css';
-
-// Only render a documentation link if it is an http(s) URL (org-registered tools could supply
-// arbitrary values; never emit a javascript:/data: href).
-function safeDocUrl(url: string | null): string | null {
-  return url !== null && /^https?:\/\//i.test(url) ? url : null;
-}
 
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
@@ -37,6 +32,14 @@ export default function ToolsPage() {
   const active = useMemo(
     () => tools.filter((t) => t.status !== 'pending_approval' && t.status !== 'rejected'),
     [tools]
+  );
+
+  // The tool whose detail drawer is open, and the tile that opened it (focus returns there on close).
+  const [openToolId, setOpenToolId] = useState<string | null>(null);
+  const tileTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const openTool = useMemo(
+    () => (openToolId === null ? null : (active.find((t) => t.id === openToolId) ?? null)),
+    [active, openToolId]
   );
 
   const [importOpen, setImportOpen] = useState(false);
@@ -285,26 +288,37 @@ export default function ToolsPage() {
 
           {active.length > 0 && (
             <ul className="cat-grid" aria-label="Tools catalogue">
-              {active.map((t) => {
-                const doc = safeDocUrl(t.documentationUrl);
-                return (
-                  <li key={t.id} className="cat-tile" style={{ cursor: 'default' }}>
-                    <div className="top">
+              {active.map((t) => (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    className="cat-tile"
+                    aria-haspopup="dialog"
+                    aria-expanded={openToolId === t.id}
+                    onClick={(e) => {
+                      tileTriggerRef.current = e.currentTarget;
+                      setOpenToolId(t.id);
+                    }}
+                  >
+                    <span className="top">
                       <span className="nm">{t.name}</span>
                       {t.category !== null && <span className="chip chip-sm">{t.category}</span>}
-                    </div>
-                    {t.description !== null && <p className="desc">{t.description}</p>}
-                    {doc !== null && (
-                      <a href={doc} target="_blank" rel="noopener noreferrer" className="doc">
-                        Documentation ↗
-                      </a>
-                    )}
-                  </li>
-                );
-              })}
+                    </span>
+                    {t.description !== null && <span className="desc">{t.description}</span>}
+                  </button>
+                </li>
+              ))}
             </ul>
           )}
         </>
+      )}
+
+      {openTool !== null && (
+        <ToolDetailDrawer
+          tool={openTool}
+          triggerRef={tileTriggerRef}
+          onClose={() => setOpenToolId(null)}
+        />
       )}
     </div>
   );
