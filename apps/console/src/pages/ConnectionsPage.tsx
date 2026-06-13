@@ -2,9 +2,9 @@
 // credential list out of Settings' ConnectionsSection into a routed page: every credential the
 // signed-in user holds (BYOM model keys + tool credentials) with provider, type, and name, plus a
 // two-step danger Remove. The secret is only ever SENT on create elsewhere — it is never listed,
-// displayed, or read back here (§1.5). Adding / renaming / the providers panel / OAuth connect are
-// later increments; the BYOM add form stays in Settings for now.
-import { useState } from 'react';
+// displayed, or read back here (§1.5). Adding a credential is done here via the "Add a credential"
+// sheet (increment 2); renaming, the providers panel, and OAuth connect are later increments.
+import { useRef, useState } from 'react';
 import { ApiClientError, type Credential } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import {
@@ -13,7 +13,8 @@ import {
   useDeleteCredential,
 } from '../lib/credentials.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
-import { IconGlobe } from '../icons/index.js';
+import { AddCredentialSheet } from '../components/AddCredentialSheet.js';
+import { IconGlobe, IconPlus } from '../icons/index.js';
 import './catalog.css';
 
 const cols = { gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1.4fr) auto' } as const;
@@ -41,6 +42,9 @@ export default function ConnectionsPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   // Two-step destructive confirm: first click on a row arms it, second removes.
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  // The "Add a credential" sheet, and the button that opens it (focus returns there on close).
+  const [addOpen, setAddOpen] = useState(false);
+  const addTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   async function onRemove(id: string) {
     setError(null);
@@ -82,6 +86,19 @@ export default function ConnectionsPage() {
             again.
           </p>
         </div>
+        <div className="page-head-actions">
+          <button
+            type="button"
+            className="btn"
+            data-variant="primary"
+            ref={addTriggerRef}
+            aria-haspopup="dialog"
+            onClick={() => setAddOpen(true)}
+          >
+            <IconPlus size={16} />
+            Add a credential
+          </button>
+        </div>
       </header>
 
       <div
@@ -117,7 +134,7 @@ export default function ConnectionsPage() {
               <IconGlobe size={24} />
             </span>
             <span className="t">No connections yet</span>
-            <span className="s">Add a model connection in Settings to run agents.</span>
+            <span className="s">Add a credential to get started.</span>
           </div>
         </div>
       ) : (
@@ -176,6 +193,14 @@ export default function ConnectionsPage() {
             Removing a credential breaks any agent or tool that uses it.
           </p>
         </>
+      )}
+
+      {addOpen && (
+        <AddCredentialSheet
+          userId={userId}
+          triggerRef={addTriggerRef}
+          onClose={() => setAddOpen(false)}
+        />
       )}
     </div>
   );

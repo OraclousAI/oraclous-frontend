@@ -12,6 +12,11 @@ import { useTokenStore } from './token-store.jsx';
 // not validate tool_id against the registry, and resolution is keyed by credential_id alone.
 export const MODEL_CREDENTIAL_TOOL_ID = '00000000-0000-4000-8000-0000006d6f64';
 
+// Standalone tool credentials (an API key or connection string added from the Connections page,
+// not yet attached to a specific tool instance) carry this unscoped sentinel ("…746f6f6c" = "tool")
+// so they are NOT counted as model keys. They are matched to a tool by provider when attached later.
+export const UNSCOPED_CREDENTIAL_TOOL_ID = '00000000-0000-4000-8000-0000746f6f6c';
+
 // How a tool's credential REQUIREMENT type maps onto a broker credential: the broker cred_type,
 // the payload key the secret is stored under, a human label, and whether the secret can be
 // entered manually (OAuth tokens come from a connect flow, not a text field). Mirrors the

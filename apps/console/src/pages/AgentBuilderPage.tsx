@@ -251,8 +251,13 @@ function BuilderForm({
 
   // ── Credential wiring ──────────────────────────────────────────────────────
   const modelProvider = modelProviderOf(form.model);
+  // Only BYOM model keys (the model sentinel) — never a standalone tool API key that happens to share
+  // a provider name (those carry the unscoped sentinel and belong to tool credential slots).
   const modelCredentialCandidates = credentials.filter(
-    (c) => c.provider === modelProvider && c.credType === 'api_key'
+    (c) =>
+      c.provider === modelProvider &&
+      c.credType === 'api_key' &&
+      c.toolId === MODEL_CREDENTIAL_TOOL_ID
   );
 
   // Changing the binding can change the provider; a BYOM key for the old provider would resolve
