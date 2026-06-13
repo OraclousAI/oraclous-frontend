@@ -334,3 +334,91 @@
     animation: none;
   }
 }
+
+/* ── Add-a-tool form (the drawer body when registering a tool — increment 2) ──── */
+.tool-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.tool-form__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.tool-form__section-head h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  font-weight: 500;
+  letter-spacing: var(--t-tiny-track);
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.tool-form__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+/* Persistent visible column labels for the editable rows (the inputs also carry per-row aria-labels
+   for assistive tech; this is the sighted-user label since placeholders vanish on focus). */
+.tool-form__colhead {
+  display: grid;
+  grid-template-columns: 1fr 1fr 30px;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  letter-spacing: var(--t-tiny-track);
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.tool-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 30px;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.tool-form__row input {
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: var(--t-dense-size);
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+.tool-form__row input:focus-visible {
+  border-color: var(--ink);
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+.tool-form__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-2);
+  background: var(--paper);
+  color: var(--mute);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-hover-dur) var(--motion-hover-ease),
+    color var(--motion-hover-dur) var(--motion-hover-ease);
+}
+.tool-form__remove:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.tool-form__remove:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}

@@ -1,7 +1,7 @@
 // Tools catalogue hooks — the org's visible tools (platform built-in connectors + org-registered),
 // plus the admin MCP-import + approve actions (the supply-chain HITL gate).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ImportMcpInput, Tool } from '@oraclous/api-client';
+import type { ImportMcpInput, RegisterToolInput, Tool } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -30,6 +30,17 @@ export function useImportMcp() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: ImportMcpInput): Promise<Tool[]> => client.importMcp(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['tools'] });
+    },
+  });
+}
+
+export function useRegisterTool() {
+  const { tools: client } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RegisterToolInput): Promise<Tool> => client.register(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tools'] });
     },
