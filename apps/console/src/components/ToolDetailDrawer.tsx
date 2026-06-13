@@ -5,9 +5,12 @@
 // originating tile come from useDrawerA11y. Credential attachment + validation are later increments.
 import { useId, useMemo, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { ApiClientError, type Tool } from '@oraclous/api-client';
+import { useDash } from '../context/dash.js';
 import { useCreateInstance, useInstances } from '../lib/agents.js';
+import { useCredentials } from '../lib/credentials.js';
 import { useToast } from '../lib/toast.jsx';
 import { useDrawerA11y } from './shell/useDrawerA11y.js';
+import { ToolInstanceRow } from './ToolInstanceRow.js';
 import { IconX } from '../icons/index.js';
 
 // Only render a documentation link if it is an http(s) URL (org-registered tools could supply
@@ -19,11 +22,6 @@ function safeDocUrl(url: string | null): string | null {
 function messageFor(cause: unknown): string {
   if (ApiClientError.is(cause)) return cause.message;
   return 'Something went wrong. Please try again.';
-}
-
-// "CONFIGURATION_REQUIRED" → "configuration required" for display.
-function humanizeStatus(status: string): string {
-  return status.toLowerCase().replace(/_/g, ' ');
 }
 
 export function ToolDetailDrawer({
@@ -43,7 +41,10 @@ export function ToolDetailDrawer({
   const setupErrId = useId();
   useDrawerA11y({ open: true, drawerRef: panelRef, triggerRef, onClose });
 
+  const { userId } = useDash();
   const { instances, isLoading: instancesLoading, isError: instancesError } = useInstances();
+  // The signed-in user's stored credentials (metadata only) — the pool ToolInstanceRow picks from.
+  const { credentials } = useCredentials(userId);
   // This tool's instances (the catalogue tool id is the instance's capability id).
   const toolInstances = useMemo(
     () => instances.filter((i) => i.capabilityId === tool.id),
@@ -157,10 +158,13 @@ export function ToolDetailDrawer({
               ) : toolInstances.length > 0 ? (
                 <ul className="tool-inst-list">
                   {toolInstances.map((inst) => (
-                    <li key={inst.id} className="tool-inst">
-                      <span className="tool-inst__name">{inst.name}</span>
-                      <span className="chip chip-sm">{humanizeStatus(inst.status)}</span>
-                    </li>
+                    <ToolInstanceRow
+                      key={inst.id}
+                      instance={inst}
+                      tool={tool}
+                      userId={userId}
+                      candidates={credentials}
+                    />
                   ))}
                 </ul>
               ) : (
