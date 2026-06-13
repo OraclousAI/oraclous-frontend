@@ -56,10 +56,16 @@ export interface ValidationState {
   readonly report: ValidationReport | null;
   readonly isLoading: boolean;
   readonly isError: boolean;
+  // True while a (re)fetch is in flight — drives an on-demand "Test connection" button's busy state.
+  readonly isFetching: boolean;
+  // Run the readiness check on demand (works even when `enabled` is false). Returns the in-flight
+  // promise so callers can await/catch it; the result + error also land in `report`/`isError`.
+  readonly refetch: () => Promise<unknown>;
 }
 
 // `enabled` lets the caller defer the readiness check until the instance is known to exist, so a
-// missing/foreign id doesn't fire a second (invisible) 404 alongside the instance fetch.
+// missing/foreign id doesn't fire a second (invisible) 404 alongside the instance fetch. Pass
+// `enabled: false` and call `refetch()` for a purely on-demand check (the "Test connection" button).
 export function useValidation(instanceId: string, enabled: boolean): ValidationState {
   const { instances: client } = useApi();
   const { isAuthenticated } = useTokenStore();
@@ -71,7 +77,13 @@ export function useValidation(instanceId: string, enabled: boolean): ValidationS
     retry: false,
   });
 
-  return { report: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
+  return {
+    report: query.data ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    refetch: () => query.refetch(),
+  };
 }
 
 export function useCreateInstance() {
