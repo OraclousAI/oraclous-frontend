@@ -336,7 +336,9 @@ export default function AgentDetailPage() {
       credType: form.credType,
       credential: { [form.secretKey]: secret },
     });
-    await configure.mutateAsync({ [type]: credential.id });
+    // Send the full merged mapping — configure-credentials REPLACES the map, so a single-entry
+    // payload would drop the instance's other configured credentials (#142).
+    await configure.mutateAsync({ ...instance.credentialMappings, [type]: credential.id });
     toast.success(`Connected ${providerLabel(provider)}.`);
   }
 
