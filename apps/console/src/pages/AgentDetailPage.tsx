@@ -10,6 +10,8 @@ import {
   useInstance,
   useValidation,
 } from '../lib/agents.js';
+import { useConnectProvider } from '../lib/credentials.js';
+import { providerLabel } from '../lib/providers.js';
 import { useMe } from '../lib/session.js';
 import { useTools } from '../lib/tools.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
@@ -195,10 +197,25 @@ function RequirementRow({
 }) {
   const form = formForRequirement(type);
   const inputId = useId();
+  const connect = useConnectProvider();
   const [secret, setSecret] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replacing, setReplacing] = useState(false);
+
+  async function onOAuthConnect() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      // On success the browser is redirected to the provider; the connect-callback route lands the
+      // credential server-side. Control returns here only if begin fails (e.g. provider unconfigured).
+      await connect(provider);
+    } catch {
+      setError(`Couldn’t start the ${providerLabel(provider)} connection. Please try again.`);
+      setBusy(false);
+    }
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -220,7 +237,7 @@ function RequirementRow({
     return (
       <div style={styles.reqRow}>
         <span style={styles.reqLabel}>
-          {type} · {provider}
+          {type} · {providerLabel(provider)}
         </span>
         <span style={styles.okText}>✓ configured</span>
         <button type="button" onClick={() => setReplacing(true)} style={styles.secondary}>
@@ -234,9 +251,22 @@ function RequirementRow({
     return (
       <div style={styles.reqRow}>
         <span style={styles.reqLabel}>
-          {type} · {provider}
+          {type} · {providerLabel(provider)}
         </span>
-        <span style={styles.muted}>Needs an OAuth connection (coming soon).</span>
+        <button
+          type="button"
+          onClick={() => void onOAuthConnect()}
+          disabled={busy}
+          aria-busy={busy}
+          style={busy ? { ...styles.primary, ...styles.busy } : styles.primary}
+        >
+          {busy ? 'Connecting…' : `Connect with ${providerLabel(provider)}`}
+        </button>
+        {error !== null && (
+          <p role="alert" style={styles.error}>
+            {error}
+          </p>
+        )}
       </div>
     );
   }
@@ -244,7 +274,7 @@ function RequirementRow({
   return (
     <form style={styles.reqForm} onSubmit={onSubmit}>
       <label htmlFor={inputId} style={styles.label}>
-        {form.label} for {provider}
+        {form.label} for {providerLabel(provider)}
       </label>
       <div style={styles.reqInputRow}>
         <input
@@ -302,7 +332,7 @@ export default function AgentDetailPage() {
       credential: { [form.secretKey]: secret },
     });
     await configure.mutateAsync({ [type]: credential.id });
-    toast.success(`Connected ${provider}.`);
+    toast.success(`Connected ${providerLabel(provider)}.`);
   }
 
   const [input, setInput] = useState(DEFAULT_INPUT);

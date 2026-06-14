@@ -4,7 +4,8 @@
 // or error state with the reason. Attaching a credential maps credential_type → credential id via
 // configure-credentials; the instance flips to READY once every required type is mapped. Secrets live
 // only in CredentialSlot's in-memory state, in-flight to POST /credentials — never persisted (§1.5).
-// OAuth requirements are out of scope here (the connect flow is the Connections journey).
+// CredentialSlot covers both manual (api_key/connection_string) entry and OAuth requirements — its
+// non-manual branch shows a "Connect with {provider}" button.
 import { useId, useState } from 'react';
 import type { Credential, Instance, Tool } from '@oraclous/api-client';
 import { useConfigureCredentials, useValidation } from '../lib/agents.js';
@@ -140,28 +141,24 @@ export function ToolInstanceRow({
                   </span>
                   {mapped !== null && <span className="chip chip-sm">credential configured</span>}
                 </div>
-                {form.manual ? (
-                  <CredentialSlot
-                    label={form.label}
-                    provider={provider}
-                    credType={form.credType}
-                    secretKey={form.secretKey}
-                    toolId={tool.id}
-                    userId={userId}
-                    candidates={candidates.filter(
-                      (c) =>
-                        c.credType === form.credType &&
-                        (c.toolId === tool.id || c.provider === provider)
-                    )}
-                    value={mapped}
-                    onChange={(credentialId) => void attach(type, credentialId)}
-                    manual={form.manual}
-                  />
-                ) : (
-                  <p className="tool-drawer__muted">
-                    This credential is connected through OAuth, which is coming soon.
-                  </p>
-                )}
+                {/* Renders for both manual (api_key/connection_string) and OAuth requirements —
+                    CredentialSlot's !manual branch shows a "Connect with {provider}" button. */}
+                <CredentialSlot
+                  label={form.label}
+                  provider={provider}
+                  credType={form.credType}
+                  secretKey={form.secretKey}
+                  toolId={tool.id}
+                  userId={userId}
+                  candidates={candidates.filter(
+                    (c) =>
+                      c.credType === form.credType &&
+                      (c.toolId === tool.id || c.provider === provider)
+                  )}
+                  value={mapped}
+                  onChange={(credentialId) => void attach(type, credentialId)}
+                  manual={form.manual}
+                />
               </li>
             );
           })}

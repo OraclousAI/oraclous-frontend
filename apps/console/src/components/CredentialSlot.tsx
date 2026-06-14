@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CredType, Credential } from '@oraclous/api-client';
 import { useConnectProvider, useCreateCredential } from '../lib/credentials.js';
+import { providerLabel } from '../lib/providers.js';
 
 export interface CredentialSlotProps {
   readonly label: string;
@@ -92,7 +93,7 @@ export function CredentialSlot({
       // credential server-side. Control returns here only if begin fails (e.g. provider unconfigured).
       await connect(provider);
     } catch {
-      setError(`Couldn’t start the ${provider} connection. Please try again.`);
+      setError(`Couldn’t start the ${providerLabel(provider)} connection. Please try again.`);
       setConnecting(false);
     }
   }
@@ -178,7 +179,7 @@ export function CredentialSlot({
           onClick={() => void onConnect()}
           disabled={connecting}
         >
-          {connecting ? 'Connecting…' : `Connect with ${provider}`}
+          {connecting ? 'Connecting…' : `Connect with ${providerLabel(provider)}`}
         </button>
       )}
 

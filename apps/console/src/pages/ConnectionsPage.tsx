@@ -17,6 +17,7 @@ import {
   useOAuthProviders,
   useProviders,
 } from '../lib/credentials.js';
+import { providerLabel } from '../lib/providers.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { AddCredentialSheet } from '../components/AddCredentialSheet.js';
 import { IconGlobe, IconPlus } from '../icons/index.js';
@@ -161,7 +162,7 @@ export default function ConnectionsPage() {
             <ul className="conn-providers">
               {providers.map((p) => {
                 const sources = dataSources[p] ?? [];
-                const label = p.charAt(0).toUpperCase() + p.slice(1);
+                const label = providerLabel(p);
                 return (
                   <li key={p} className="conn-provider">
                     <div className="conn-provider__head">
@@ -199,7 +200,7 @@ export default function ConnectionsPage() {
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
                 {connectable.map((p) => {
-                  const label = p.charAt(0).toUpperCase() + p.slice(1);
+                  const label = providerLabel(p);
                   return (
                     <button
                       key={p}
