@@ -97,8 +97,9 @@ export interface RecipeTemplate {
   readonly recipe: RecipeDocument;
 }
 
-// The result of persisting a recipe (POST /api/v1/recipes). NOTE: the store endpoint promotes on
-// save (it sets status to "promoted" and bumps the version) — there is no separate draft state.
+// The result of persisting a recipe (POST /api/v1/recipes). The store endpoint persists a DRAFT
+// (status "draft") and bumps the version; promotion to "promoted" is a separate step (not part of
+// this surface).
 export interface StoredRecipe {
   readonly id: string;
   readonly version: number;
@@ -156,7 +157,7 @@ export interface RecipesClient {
   templates(): Promise<RecipeTemplate[]>;
   // Preview a recipe over a sample — no writes; 422 on a malformed sample/recipe.
   dryRun(input: DryRunInput): Promise<DryRunResult>;
-  // Persist a recipe document (201); 422 on an invalid document. Promotes on save (see StoredRecipe).
+  // Persist a recipe document as a draft (201); 422 on an invalid document (see StoredRecipe).
   store(recipe: RecipeDocument): Promise<StoredRecipe>;
 }
 

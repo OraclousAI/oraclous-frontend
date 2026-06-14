@@ -84,8 +84,8 @@ export function RecipeDetailDrawer({
     setSaveError(null);
     try {
       await store.mutateAsync(recipe);
-      // The store endpoint promotes on save, so the new tile reflects its real (promoted) status.
-      toast.success('Recipe saved.');
+      // The store endpoint persists a draft; the new tile shows its real "draft" status.
+      toast.success('Draft saved.');
       onClose();
     } catch (cause) {
       // 422 (invalid document) keeps the drawer open with the validation detail shown inline.
@@ -244,7 +244,7 @@ export function RecipeDetailDrawer({
                 <section className="tool-drawer__section">
                   <h3>Save</h3>
                   <p className="t-caption" style={caption}>
-                    Saves this recipe to your library.
+                    Saves this draft to your library.
                   </p>
                   <button
                     type="button"
