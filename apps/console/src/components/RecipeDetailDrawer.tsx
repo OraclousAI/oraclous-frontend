@@ -7,6 +7,7 @@ import { useId, useMemo, useRef, useState, type RefObject } from 'react';
 import type { RecipeDocument } from '@oraclous/api-client';
 import { useRecipe } from '../lib/recipes.js';
 import { SkeletonList } from './ui/Skeleton.js';
+import { RecipeDryRunPanel } from './RecipeDryRunPanel.js';
 import { useDrawerA11y } from './shell/useDrawerA11y.js';
 import { IconX } from '../icons/index.js';
 
@@ -212,6 +213,8 @@ export function RecipeDetailDrawer({
                   </pre>
                 )}
               </section>
+
+              <RecipeDryRunPanel recipe={recipe} />
 
               <section className="tool-drawer__section">
                 <h3>Raw document</h3>

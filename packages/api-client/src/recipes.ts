@@ -97,6 +97,40 @@ export interface RecipeTemplate {
   readonly recipe: RecipeDocument;
 }
 
+// Dry-run a recipe over a small sample — a preview with NO writes (POST /api/v1/recipes/dry-run).
+export interface DryRunInput {
+  readonly sample: string;
+  readonly sourceType: string;
+  // The recipe document to project with (the draft/saved document). Omit to let the backend
+  // synthesise a default recipe from the sample shape.
+  readonly recipe?: RecipeDocument;
+  readonly ontology?: Readonly<Record<string, unknown>>;
+}
+
+// The dry-run preview. For structured sources it reports the projected labels + counts; for sources
+// that need LLM extraction it returns requires_llm + a note instead. Fields are optional + a
+// passthrough is kept (the engine owns the authoritative shape).
+export interface DryRunResult {
+  readonly source_type?: string;
+  readonly recipe_id?: string;
+  readonly node_labels?: Readonly<Record<string, number>>;
+  readonly relationship_types?: readonly string[];
+  readonly container_labels?: Readonly<Record<string, number>>;
+  readonly counts?: {
+    readonly nodes?: number;
+    readonly edges?: number;
+    readonly containers?: number;
+    readonly properties?: number;
+    readonly units_skipped?: number;
+    readonly [key: string]: unknown;
+  };
+  readonly ontology_violations?: readonly unknown[];
+  readonly warnings?: readonly string[];
+  readonly requires_llm?: boolean;
+  readonly note?: string;
+  readonly [key: string]: unknown;
+}
+
 interface RecipeWire {
   readonly id: string;
   readonly version: number;
@@ -112,6 +146,8 @@ export interface RecipesClient {
   get(recipeId: string): Promise<RecipeDetail>;
   // The built-in recipe templates to author from.
   templates(): Promise<RecipeTemplate[]>;
+  // Preview a recipe over a sample — no writes; 422 on a malformed sample/recipe.
+  dryRun(input: DryRunInput): Promise<DryRunResult>;
 }
 
 export function createRecipesClient(transport: ApiTransport): RecipesClient {
@@ -142,6 +178,22 @@ export function createRecipesClient(transport: ApiTransport): RecipesClient {
         path: '/api/v1/recipes/templates',
       });
       return Array.isArray(data) ? data : [];
+    },
+    async dryRun(input: DryRunInput): Promise<DryRunResult> {
+      const body: {
+        sample: string;
+        source_type: string;
+        recipe?: RecipeDocument;
+        ontology?: Readonly<Record<string, unknown>>;
+      } = { sample: input.sample, source_type: input.sourceType };
+      if (input.recipe !== undefined) body.recipe = input.recipe;
+      if (input.ontology !== undefined) body.ontology = input.ontology;
+      const { data } = await transport.execute<DryRunResult>({
+        method: 'POST',
+        path: '/api/v1/recipes/dry-run',
+        body,
+      });
+      return data;
     },
   };
 }

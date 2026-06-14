@@ -1,7 +1,13 @@
-// Recipe library hooks: list the org's recipes, read one's full document, and list the built-in
-// templates to author from.
-import { useQuery } from '@tanstack/react-query';
-import type { Recipe, RecipeDetail, RecipeTemplate } from '@oraclous/api-client';
+// Recipe library hooks: list the org's recipes, read one's full document, list the built-in
+// templates to author from, and dry-run a recipe over a sample.
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type {
+  DryRunInput,
+  DryRunResult,
+  Recipe,
+  RecipeDetail,
+  RecipeTemplate,
+} from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -75,4 +81,13 @@ export function useRecipeTemplates(): RecipeTemplatesState {
     isLoading: query.isLoading,
     isError: query.isError,
   };
+}
+
+// Dry-run a recipe over a sample (preview, no writes). A mutation — the caller renders the result
+// or a 422 error inline.
+export function useDryRun() {
+  const { recipes: client } = useApi();
+  return useMutation({
+    mutationFn: (input: DryRunInput): Promise<DryRunResult> => client.dryRun(input),
+  });
 }

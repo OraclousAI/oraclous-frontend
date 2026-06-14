@@ -161,6 +161,8 @@ export type {
   RecipeDetail,
   RecipeDocument,
   RecipeTemplate,
+  DryRunInput,
+  DryRunResult,
   RecipeAppliesTo,
   RecipeAuthoring,
   RecipeDefaults,
