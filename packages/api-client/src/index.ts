@@ -155,7 +155,17 @@ export type { ChatClient, ChatThread, ChatMessage, ChatTurn, ChatTurnStatus } fr
 
 // Recipe library sub-client
 export { createRecipesClient } from './recipes';
-export type { RecipesClient, Recipe, RecipeDetail } from './recipes';
+export type {
+  RecipesClient,
+  Recipe,
+  RecipeDetail,
+  RecipeDocument,
+  RecipeAppliesTo,
+  RecipeAuthoring,
+  RecipeDefaults,
+  RecipeMapping,
+  RecipeExtraction,
+} from './recipes';
 
 // Capability-registry tools sub-client
 export { createToolsClient } from './tools';
