@@ -74,11 +74,11 @@ export default function ConnectionsPage() {
     setConnecting(p);
     try {
       // Opens the provider in a popup and resolves when it reports back; on success the hook refreshes
-      // the credential set, so the connected providers + roster update in place. (If the popup was
-      // blocked it falls back to a full-page redirect and never resolves here.)
+      // the credential set, so the connected providers + roster update in place. (A blocked popup
+      // resolves 'redirected' and the page navigates away; cancel is quiet.)
       const result = await connect(p);
-      if (result.ok) connectedHeadingRef.current?.focus();
-      else if (!result.cancelled)
+      if (result.status === 'connected') connectedHeadingRef.current?.focus();
+      else if (result.status === 'failed')
         setError(`Couldn’t complete the ${providerLabel(p)} connection. Please try again.`);
     } catch (cause) {
       setError(messageFor(cause));

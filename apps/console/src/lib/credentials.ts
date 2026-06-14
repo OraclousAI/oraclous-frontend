@@ -2,6 +2,7 @@
 // (user, tool); the secret is only ever SENT on create — the list returns metadata only. The
 // agent builder uses these to wire a model's BYOM key (model.config.credential_id) and a tool's
 // credential_mappings; the tool-instance flow (lib/agents.ts) creates+configures its own.
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type {
   CredType,
@@ -192,13 +193,22 @@ export function useOAuthProviders(): OAuthProvidersState {
 // Begin a provider connect. The provider's authorize page opens in a POPUP so the originating
 // surface (the agent builder, a tool instance, Connections) stays mounted and its in-progress work
 // survives (#140). The connect-callback route completes the exchange in the popup, posts the new
-// credential id back here (same origin), and closes; we refresh the credential set and resolve with
-// it. If the popup is blocked we fall back to a full-page redirect — the returned promise then never
-// resolves (the page navigates away) and the callback lands on Connections. The secret never touches
-// the FE either way (§1.5). Rejects only if the begin call itself fails (e.g. provider unconfigured).
+// credential id back here (same origin), and closes; we refresh the credential set and resolve
+// 'connected'. The secret never touches the FE (§1.5). Rejects only if the begin call itself fails
+// (e.g. provider unconfigured). Pending waits are torn down if the calling component unmounts.
 export function useConnectProvider(): (provider: string) => Promise<ConnectResult> {
   const { auth } = useApi();
   const queryClient = useQueryClient();
+  // Teardown owners for in-flight waits, so an opener that unmounts mid-connect doesn't leak its
+  // message listener + poll (each wait registers/unregisters itself here).
+  const teardownsRef = useRef<Set<() => void>>(new Set());
+  useEffect(() => {
+    const teardowns = teardownsRef.current;
+    return () => {
+      teardowns.forEach((fn) => fn());
+      teardowns.clear();
+    };
+  }, []);
 
   return async (provider: string): Promise<ConnectResult> => {
     const redirectUri = `${window.location.origin}/app/oauth/connect/${encodeURIComponent(
@@ -222,21 +232,39 @@ export function useConnectProvider(): (provider: string) => Promise<ConnectResul
       popup?.close();
       throw err;
     }
-    if (popup === null || popup.closed) {
-      // Popup blocked — fall back to a full-page redirect (the callback navigates to Connections).
+    if (popup === null) {
+      // Popup was blocked at open time — fall back to a full-page redirect. Resolve BEFORE assign so
+      // the caller never wedges if navigation is deferred/no-op'd; the callback lands on Connections.
+      const redirected: ConnectResult = { status: 'redirected' };
       window.location.assign(authorizeUrl);
-      return new Promise<ConnectResult>(() => {});
+      return redirected;
+    }
+    if (popup.closed) {
+      // The user closed the blank popup while begin was in flight — a cancel. Do NOT redirect the
+      // opener (that would destroy the in-progress form — the very thing #140 protects).
+      return { status: 'cancelled' };
     }
     popup.location.href = authorizeUrl;
-    return waitForConnectResult(popup, queryClient);
+    return waitForConnectResult(popup, queryClient, teardownsRef.current);
   };
 }
 
 // Monotonic so each connect popup gets a distinct window name (see useConnectProvider).
 let connectWindowSeq = 0;
 
-// Settle when the connect popup reports back (same-origin postMessage) or is closed by the user.
-function waitForConnectResult(popup: Window, queryClient: QueryClient): Promise<ConnectResult> {
+// A connect popup can legitimately take a while (provider login + 2FA + consent), but it must never
+// leave the opener spinning forever — e.g. if the popup can't restore its session and is bounced to
+// /login, it never posts back. After this ceiling we settle as 'cancelled' (the popup, if still
+// open, is left alone — its own close handler runs if the user later finishes or closes it).
+const CONNECT_TIMEOUT_MS = 180_000;
+
+// Settle when the connect popup reports back (same-origin postMessage), is closed by the user, the
+// opener unmounts, or the ceiling elapses.
+function waitForConnectResult(
+  popup: Window,
+  queryClient: QueryClient,
+  teardowns: Set<() => void>
+): Promise<ConnectResult> {
   return new Promise<ConnectResult>((resolve) => {
     let settled = false;
     let closedTimer: number | undefined;
@@ -245,9 +273,14 @@ function waitForConnectResult(popup: Window, queryClient: QueryClient): Promise<
       settled = true;
       window.removeEventListener('message', onMessage);
       clearInterval(poll);
+      clearTimeout(overallTimer);
       if (closedTimer !== undefined) clearTimeout(closedTimer);
+      teardowns.delete(teardown);
       resolve(result);
     };
+    // Registered with the hook so an unmounting opener tears this wait down (no leaked listener/poll).
+    const teardown = () => finish({ status: 'cancelled' });
+    teardowns.add(teardown);
     const onMessage = (event: MessageEvent) => {
       // Match THIS connect's popup: origin + message shape + the sending window itself (event.source),
       // so a concurrent connect's message never resolves this one.
@@ -264,9 +297,13 @@ function waitForConnectResult(popup: Window, queryClient: QueryClient): Promise<
       }
       if (event.data.ok && typeof event.data.credentialId === 'string') {
         invalidateCredentialSet(queryClient);
-        finish({ ok: true, provider: event.data.provider, credentialId: event.data.credentialId });
+        finish({
+          status: 'connected',
+          provider: event.data.provider,
+          credentialId: event.data.credentialId,
+        });
       } else {
-        finish({ ok: false, cancelled: event.data.cancelled === true });
+        finish({ status: event.data.cancelled === true ? 'cancelled' : 'failed' });
       }
     };
     window.addEventListener('message', onMessage);
@@ -275,7 +312,11 @@ function waitForConnectResult(popup: Window, queryClient: QueryClient): Promise<
       if (!popup.closed || settled || closedTimer !== undefined) return;
       // A success message posted just before the popup closed may still be in flight; wait briefly
       // before concluding the user cancelled.
-      closedTimer = window.setTimeout(() => finish({ ok: false, cancelled: true }), 400);
+      closedTimer = window.setTimeout(() => finish({ status: 'cancelled' }), 400);
     }, 500);
+    const overallTimer = window.setTimeout(
+      () => finish({ status: 'cancelled' }),
+      CONNECT_TIMEOUT_MS
+    );
   });
 }

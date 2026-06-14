@@ -16,11 +16,18 @@ export interface ConnectMessage {
   readonly cancelled?: boolean;
 }
 
-// What a connect resolves with. On the full-page fallback (popup blocked) the connect promise never
-// resolves — the page navigates away — so callers only ever observe these in popup mode.
+// What a connect resolves with:
+// - connected: the popup completed; credentialId is the new broker credential.
+// - cancelled: the user closed/denied the popup, or it never reported back within the ceiling — no
+//   error to show.
+// - failed: the popup reported a genuine completion failure — surface an error.
+// - redirected: the popup was blocked, so we fell back to a full-page redirect and the opener is
+//   navigating away (callers do nothing).
 export type ConnectResult =
-  | { readonly ok: true; readonly provider: string; readonly credentialId: string }
-  | { readonly ok: false; readonly cancelled: boolean };
+  | { readonly status: 'connected'; readonly provider: string; readonly credentialId: string }
+  | { readonly status: 'cancelled' }
+  | { readonly status: 'failed' }
+  | { readonly status: 'redirected' };
 
 export function isConnectMessage(data: unknown): data is ConnectMessage {
   return (
