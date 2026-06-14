@@ -90,6 +90,13 @@ export interface RecipeDocument {
 // The detail endpoint returns a full recipe document.
 export type RecipeDetail = RecipeDocument;
 
+// A built-in, author-ready recipe template: a concern label + a seed recipe document to open as a
+// draft. (GET /api/v1/recipes/templates.)
+export interface RecipeTemplate {
+  readonly concern: string;
+  readonly recipe: RecipeDocument;
+}
+
 interface RecipeWire {
   readonly id: string;
   readonly version: number;
@@ -103,6 +110,8 @@ export interface RecipesClient {
   list(): Promise<Recipe[]>;
   // The full recipe document by id.
   get(recipeId: string): Promise<RecipeDetail>;
+  // The built-in recipe templates to author from.
+  templates(): Promise<RecipeTemplate[]>;
 }
 
 export function createRecipesClient(transport: ApiTransport): RecipesClient {
@@ -126,6 +135,13 @@ export function createRecipesClient(transport: ApiTransport): RecipesClient {
         path: `/api/v1/recipes/${encodeURIComponent(recipeId)}`,
       });
       return data;
+    },
+    async templates(): Promise<RecipeTemplate[]> {
+      const { data } = await transport.execute<RecipeTemplate[]>({
+        method: 'GET',
+        path: '/api/v1/recipes/templates',
+      });
+      return Array.isArray(data) ? data : [];
     },
   };
 }

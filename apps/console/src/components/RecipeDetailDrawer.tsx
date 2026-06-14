@@ -47,11 +47,14 @@ const caption = { color: 'var(--mute)', margin: 0 } as const;
 
 export function RecipeDetailDrawer({
   recipeId,
+  draft,
   triggerRef,
   onClose,
 }: {
-  recipeId: string;
-  // The tile that opened the drawer — focus returns to it on close.
+  // A saved recipe to fetch by id, OR an in-memory draft document to render (template authoring).
+  recipeId?: string;
+  draft?: RecipeDocument;
+  // The control that opened the drawer — focus returns to it on close.
   triggerRef: RefObject<HTMLButtonElement>;
   onClose: () => void;
 }) {
@@ -59,7 +62,10 @@ export function RecipeDetailDrawer({
   const titleId = useId();
   useDrawerA11y({ open: true, drawerRef: panelRef, triggerRef, onClose });
 
-  const { recipe, isError } = useRecipe(recipeId);
+  // In draft mode the document is in memory; otherwise fetch it (the query is disabled when no id).
+  const { recipe: fetched, isError } = useRecipe(recipeId ?? '');
+  const isDraft = draft !== undefined;
+  const recipe = draft ?? fetched;
   const [showRaw, setShowRaw] = useState(false);
 
   const produced = useMemo(
@@ -114,8 +120,11 @@ export function RecipeDetailDrawer({
         <div className="tool-drawer__head">
           <div className="tool-drawer__title">
             <h2 id={titleId}>{title}</h2>
-            {status !== undefined && status !== '' && (
-              <span className="chip chip-sm">{status}</span>
+            {isDraft ? (
+              <span className="chip chip-sm">draft (unsaved)</span>
+            ) : (
+              status !== undefined &&
+              status !== '' && <span className="chip chip-sm">{status}</span>
             )}
           </div>
           <button type="button" className="tool-drawer__close" aria-label="Close" onClick={onClose}>

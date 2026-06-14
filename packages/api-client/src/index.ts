@@ -160,6 +160,7 @@ export type {
   Recipe,
   RecipeDetail,
   RecipeDocument,
+  RecipeTemplate,
   RecipeAppliesTo,
   RecipeAuthoring,
   RecipeDefaults,

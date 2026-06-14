@@ -1,19 +1,26 @@
 // Recipes — the org's ingestion recipe library (GET /api/v1/recipes). A read-only browser: pick a
-// recipe to inspect its full format-0.2 document in a focus-trapped detail drawer. Recipes are the
-// templates that turn a source (document, CSV, code, …) into graph nodes and edges. Styled per the
-// handoff tile patterns.
+// recipe to inspect its full format-0.2 document in a focus-trapped detail drawer, or "Author a
+// recipe" to start an unsaved draft from a built-in template. Recipes are the templates that turn a
+// source (document, CSV, code, …) into graph nodes and edges. Styled per the handoff tile patterns.
 import { useRef, useState } from 'react';
+import type { RecipeDocument } from '@oraclous/api-client';
 import { useRecipes } from '../lib/recipes.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { RecipeDetailDrawer } from '../components/RecipeDetailDrawer.js';
-import { IconSparkle } from '../icons/index.js';
+import { RecipeTemplatePicker } from '../components/RecipeTemplatePicker.js';
+import { IconPlus, IconSparkle } from '../icons/index.js';
 import './catalog.css';
 
 export default function RecipesPage() {
   const { recipes, isLoading, isError } = useRecipes();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // The tile that opened the drawer — focus returns to it when the drawer closes.
+  // The tile that opened the saved-recipe drawer — focus returns to it on close.
   const tileTriggerRef = useRef<HTMLButtonElement | null>(null);
+  // "Author a recipe": the template picker, the seeded unsaved draft it produces, and the button
+  // focus returns to when either closes.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [draft, setDraft] = useState<RecipeDocument | null>(null);
+  const authorTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
@@ -24,6 +31,19 @@ export default function RecipesPage() {
           <p className="sub">
             Ingestion recipes — the templates that turn a source into graph nodes and relationships.
           </p>
+        </div>
+        <div className="page-head-actions">
+          <button
+            type="button"
+            className="btn"
+            data-variant="primary"
+            ref={authorTriggerRef}
+            aria-haspopup="dialog"
+            onClick={() => setPickerOpen(true)}
+          >
+            <IconPlus size={16} />
+            Author a recipe
+          </button>
         </div>
       </header>
 
@@ -40,7 +60,9 @@ export default function RecipesPage() {
               <IconSparkle size={24} />
             </span>
             <span className="t">No recipes in this organisation yet</span>
-            <span className="s">Recipes appear here as the library is populated.</span>
+            <span className="s">
+              Author one from a template, or wait for the library to populate.
+            </span>
           </div>
         </div>
       ) : (
@@ -74,6 +96,25 @@ export default function RecipesPage() {
           recipeId={selectedId}
           triggerRef={tileTriggerRef}
           onClose={() => setSelectedId(null)}
+        />
+      )}
+
+      {pickerOpen && (
+        <RecipeTemplatePicker
+          triggerRef={authorTriggerRef}
+          onPick={(recipe) => {
+            setPickerOpen(false);
+            setDraft(recipe);
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
+
+      {draft !== null && (
+        <RecipeDetailDrawer
+          draft={draft}
+          triggerRef={authorTriggerRef}
+          onClose={() => setDraft(null)}
         />
       )}
     </div>
