@@ -89,11 +89,16 @@ export function CredentialSlot({
     setError(null);
     setConnecting(true);
     try {
-      // On success the browser is redirected to the provider; the connect-callback route lands the
-      // credential server-side. Control returns here only if begin fails (e.g. provider unconfigured).
-      await connect(provider);
+      // Opens the provider in a popup; resolves when it reports back. On success we auto-select the
+      // freshly connected credential so the slot completes in place — no page navigation. (If the
+      // popup was blocked, connect falls back to a full-page redirect and never resolves here.)
+      const result = await connect(provider);
+      if (result.ok) onChange(result.credentialId);
+      else if (!result.cancelled)
+        setError(`Couldn’t complete the ${providerLabel(provider)} connection. Please try again.`);
     } catch {
       setError(`Couldn’t start the ${providerLabel(provider)} connection. Please try again.`);
+    } finally {
       setConnecting(false);
     }
   }

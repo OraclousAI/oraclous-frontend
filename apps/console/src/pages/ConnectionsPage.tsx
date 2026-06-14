@@ -40,9 +40,12 @@ export default function ConnectionsPage() {
   const remove = useDeleteCredential();
 
   const [error, setError] = useState<string | null>(null);
-  // The provider whose connect redirect is in flight (the button shows "Connecting…" until the
-  // browser leaves for the provider's authorize page).
+  // The provider whose connect popup is open (its button shows "Connecting…" until the popup
+  // reports back or is closed).
   const [connecting, setConnecting] = useState<string | null>(null);
+  // On a successful connect the provider's "Connect with …" button unmounts (it moves to the
+  // connected list), so move focus to the panel heading rather than dropping it on <body>.
+  const connectedHeadingRef = useRef<HTMLHeadingElement>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   // Two-step destructive confirm: first click on a row arms it, second removes.
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -70,10 +73,16 @@ export default function ConnectionsPage() {
     setError(null);
     setConnecting(p);
     try {
-      // On success this redirects the browser to the provider; control does not return here.
-      await connect(p);
+      // Opens the provider in a popup and resolves when it reports back; on success the hook refreshes
+      // the credential set, so the connected providers + roster update in place. (If the popup was
+      // blocked it falls back to a full-page redirect and never resolves here.)
+      const result = await connect(p);
+      if (result.ok) connectedHeadingRef.current?.focus();
+      else if (!result.cancelled)
+        setError(`Couldn’t complete the ${providerLabel(p)} connection. Please try again.`);
     } catch (cause) {
       setError(messageFor(cause));
+    } finally {
       setConnecting(null);
     }
   }
@@ -141,7 +150,9 @@ export default function ConnectionsPage() {
       <section className="card" aria-label="Connected providers">
         <div className="card-head">
           <div className="h">
-            <h2>Connected providers</h2>
+            <h2 ref={connectedHeadingRef} tabIndex={-1} style={{ outline: 'none' }}>
+              Connected providers
+            </h2>
             <span className="sub">
               Providers you've connected and the data sources they unlock.
             </span>
