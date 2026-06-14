@@ -146,6 +146,47 @@ export function useIngestFile(graphId: string) {
   });
 }
 
+export interface RunRecipeInput {
+  // The workspace (graph) to project into, the source to project, and the recipe to run.
+  readonly graphId: string;
+  readonly content: string;
+  readonly sourceType: string;
+  readonly recipeId: string;
+}
+
+// Run a saved recipe over a pasted source on a chosen workspace — a structured ingest carrying the
+// recipe_id. The graph is chosen at call time (unlike useIngest, which is bound to one graph), so
+// the caller polls the returned job with useGraphJob.
+export function useRunRecipe() {
+  const { graphs: client } = useApi();
+
+  return useMutation({
+    mutationFn: ({ graphId, content, sourceType, recipeId }: RunRecipeInput): Promise<IngestJob> =>
+      client.ingestText(graphId, { content, sourceType, recipeId }),
+  });
+}
+
+export interface GraphJobState {
+  readonly job: IngestJob | null;
+  readonly isLoading: boolean;
+}
+
+// Poll a single ingestion job until it reaches a terminal state (mirrors runs.ts useJob): every 2s
+// while pending/running, then stops.
+export function useGraphJob(graphId: string, jobId: string | null): GraphJobState {
+  const { graphs: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['graph-job', graphId, jobId],
+    queryFn: () => client.getJob(graphId, jobId ?? ''),
+    enabled: isAuthenticated && graphId !== '' && jobId !== null && jobId !== '',
+    refetchInterval: (q) => (q.state.data && isJobActive(q.state.data) ? 2000 : false),
+  });
+
+  return { job: query.data ?? null, isLoading: query.isLoading };
+}
+
 export function useUpdateGraph(graphId: string) {
   const { graphs: client } = useApi();
   const queryClient = useQueryClient();

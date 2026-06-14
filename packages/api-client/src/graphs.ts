@@ -26,6 +26,8 @@ export interface IngestTextInput {
   readonly content: string;
   // 'text' | 'csv' | 'json' | 'md' | 'code' | ... — structured types route to the recipe engine.
   readonly sourceType: string;
+  // Optional: run a specific stored recipe over the source (structured ingestion).
+  readonly recipeId?: string;
 }
 
 // An ingestion job. Async: POST .../ingest returns one in `pending`, then it progresses to
@@ -171,10 +173,15 @@ export function createGraphsClient(transport: ApiTransport): GraphsClient {
       return toGraph(data);
     },
     async ingestText(graphId: string, input: IngestTextInput): Promise<IngestJob> {
+      const body: { content: string; source_type: string; recipe_id?: string } = {
+        content: input.content,
+        source_type: input.sourceType,
+      };
+      if (input.recipeId !== undefined) body.recipe_id = input.recipeId;
       const { data } = await transport.execute<JobResponseWire>({
         method: 'POST',
         path: `/api/v1/graphs/${encodeURIComponent(graphId)}/ingest`,
-        body: { content: input.content, source_type: input.sourceType },
+        body,
       });
       return toJob(data);
     },

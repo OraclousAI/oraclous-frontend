@@ -8,6 +8,7 @@ import { ApiClientError, type RecipeDocument } from '@oraclous/api-client';
 import { useRecipe, useStoreRecipe } from '../lib/recipes.js';
 import { SkeletonList } from './ui/Skeleton.js';
 import { RecipeDryRunPanel } from './RecipeDryRunPanel.js';
+import { RecipeRunPanel } from './RecipeRunPanel.js';
 import { useToast } from '../lib/toast.jsx';
 import { useDrawerA11y } from './shell/useDrawerA11y.js';
 import { IconX } from '../icons/index.js';
@@ -237,6 +238,10 @@ export function RecipeDetailDrawer({
                   </pre>
                 )}
               </section>
+
+              {!isDraft && typeof recipe.id === 'string' && recipe.id !== '' && (
+                <RecipeRunPanel recipeId={recipe.id} sourceType={recipe.applies_to?.source_type} />
+              )}
 
               <RecipeDryRunPanel recipe={recipe} />
 
