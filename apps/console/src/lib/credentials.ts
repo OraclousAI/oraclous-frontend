@@ -3,7 +3,12 @@
 // agent builder uses these to wire a model's BYOM key (model.config.credential_id) and a tool's
 // credential_mappings; the tool-instance flow (lib/agents.ts) creates+configures its own.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CredType, CreateCredentialInput, Credential } from '@oraclous/api-client';
+import type {
+  CredType,
+  CreateCredentialInput,
+  UpdateCredentialInput,
+  Credential,
+} from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
@@ -43,6 +48,15 @@ export function credentialFormForRequirement(type: string): RequirementCredentia
   return { credType: 'api_key', secretKey: 'value', label: 'Secret', manual: true };
 }
 
+// A human label for each credential kind shown on the Connections page and the rename sheet.
+export function credKindLabel(c: Credential): string {
+  if (c.toolId === MODEL_CREDENTIAL_TOOL_ID) return 'model key';
+  if (c.credType === 'api_key') return 'API key';
+  if (c.credType === 'oauth') return 'OAuth';
+  if (c.credType === 'raw') return 'Connection string';
+  return c.credType;
+}
+
 export interface CredentialsState {
   readonly credentials: readonly Credential[];
   readonly isLoading: boolean;
@@ -77,6 +91,18 @@ export function useCreateCredential() {
     mutationFn: (input: CreateCredentialInput): Promise<Credential> => client.create(input),
     onSuccess: () => {
       // Prefix-invalidate so every ['credentials', userId] list refreshes.
+      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
+    },
+  });
+}
+
+export function useUpdateCredential() {
+  const { credentials: client } = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateCredentialInput): Promise<Credential> => client.update(input),
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['credentials'] });
     },
   });

@@ -170,7 +170,13 @@ export type {
 
 // Credential-broker sub-client
 export { createCredentialsClient } from './credentials';
-export type { CredentialsClient, Credential, CreateCredentialInput, CredType } from './credentials';
+export type {
+  CredentialsClient,
+  Credential,
+  CreateCredentialInput,
+  UpdateCredentialInput,
+  CredType,
+} from './credentials';
 
 // Integration-keys sub-client (developer/embed surface — display-once tokens)
 export { createIntegrationKeysClient } from './integrationKeys';
