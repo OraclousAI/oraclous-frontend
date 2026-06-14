@@ -5,7 +5,7 @@
 // Escape-to-close, scroll-lock, and focus-restore to the originating tile come from useDrawerA11y.
 import { useId, useMemo, useRef, useState, type RefObject } from 'react';
 import { ApiClientError, type RecipeDocument } from '@oraclous/api-client';
-import { useRecipe, useStoreRecipe } from '../lib/recipes.js';
+import { usePromoteRecipe, useRecipe, useStoreRecipe } from '../lib/recipes.js';
 import { SkeletonList } from './ui/Skeleton.js';
 import { RecipeDryRunPanel } from './RecipeDryRunPanel.js';
 import { RecipeRunPanel } from './RecipeRunPanel.js';
@@ -13,9 +13,9 @@ import { useToast } from '../lib/toast.jsx';
 import { useDrawerA11y } from './shell/useDrawerA11y.js';
 import { IconX } from '../icons/index.js';
 
-function messageFor(cause: unknown): string {
+function messageFor(cause: unknown, fallback: string): string {
   if (ApiClientError.is(cause)) return cause.message;
-  return 'Couldn’t save the recipe. Please try again.';
+  return fallback;
 }
 
 // Derive the graph shape a recipe produces from its mappings + extractions: node labels and
@@ -77,8 +77,10 @@ export function RecipeDetailDrawer({
   const [showRaw, setShowRaw] = useState(false);
 
   const store = useStoreRecipe();
+  const promote = usePromoteRecipe();
   const toast = useToast();
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [promoteError, setPromoteError] = useState<string | null>(null);
 
   async function onSave() {
     if (recipe === null || store.isPending) return;
@@ -90,7 +92,20 @@ export function RecipeDetailDrawer({
       onClose();
     } catch (cause) {
       // 422 (invalid document) keeps the drawer open with the validation detail shown inline.
-      setSaveError(messageFor(cause));
+      setSaveError(messageFor(cause, 'Couldn’t save the recipe. Please try again.'));
+    }
+  }
+
+  async function onPromote() {
+    if (recipe === null || typeof recipe.id !== 'string' || recipe.id === '' || promote.isPending)
+      return;
+    setPromoteError(null);
+    try {
+      await promote.mutateAsync(recipe.id);
+      // The detail refetches → status flips draft → promoted in place, revealing the Run panel.
+      toast.success('Recipe promoted.');
+    } catch (cause) {
+      setPromoteError(messageFor(cause, 'Couldn’t promote the recipe. Please try again.'));
     }
   }
 
@@ -239,9 +254,44 @@ export function RecipeDetailDrawer({
                 )}
               </section>
 
-              {!isDraft && typeof recipe.id === 'string' && recipe.id !== '' && (
-                <RecipeRunPanel recipeId={recipe.id} sourceType={recipe.applies_to?.source_type} />
-              )}
+              {/* A saved recipe's lifecycle lives here: a draft must be promoted before it can run
+                  (ingestion rejects drafts), so a draft offers Promote and a promoted recipe offers
+                  Run. (An unsaved template draft, isDraft, offers Save instead — below.) */}
+              {!isDraft &&
+                typeof recipe.id === 'string' &&
+                recipe.id !== '' &&
+                status === 'draft' && (
+                  <section className="tool-drawer__section">
+                    <h3>Promote</h3>
+                    <p className="t-caption" style={caption}>
+                      Promote this draft to make it live and runnable on a workspace.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn"
+                      data-variant="primary"
+                      onClick={() => void onPromote()}
+                      disabled={promote.isPending}
+                    >
+                      {promote.isPending ? 'Promoting…' : 'Promote to run this recipe'}
+                    </button>
+                    {promoteError !== null && (
+                      <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+                        {promoteError}
+                      </p>
+                    )}
+                  </section>
+                )}
+
+              {!isDraft &&
+                typeof recipe.id === 'string' &&
+                recipe.id !== '' &&
+                status === 'promoted' && (
+                  <RecipeRunPanel
+                    recipeId={recipe.id}
+                    sourceType={recipe.applies_to?.source_type}
+                  />
+                )}
 
               <RecipeDryRunPanel recipe={recipe} />
 

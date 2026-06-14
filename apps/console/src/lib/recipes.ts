@@ -106,3 +106,17 @@ export function useStoreRecipe() {
     },
   });
 }
+
+// Promote a draft recipe to runnable. On success the list + the open detail refresh, so the status
+// chip flips draft → promoted and the Run panel becomes available in place.
+export function usePromoteRecipe() {
+  const { recipes: client } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (recipeId: string): Promise<StoredRecipe> => client.promote(recipeId),
+    onSuccess: (_data, recipeId) => {
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] });
+    },
+  });
+}
