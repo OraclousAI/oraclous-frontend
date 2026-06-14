@@ -127,8 +127,9 @@ export function useDataSources(): DataSourcesState {
 }
 
 // Creating or removing a credential can change the connected-provider set, so the providers +
-// data-sources panel must refresh too (rename leaves the provider set unchanged).
-function invalidateCredentialSet(qc: QueryClient) {
+// data-sources panel must refresh too (rename leaves the provider set unchanged). Also used by the
+// OAuth connect-callback page, where the backend lands the credential out of band.
+export function invalidateCredentialSet(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: ['credentials'] }); // prefix → every ['credentials', userId]
   void qc.invalidateQueries({ queryKey: ['providers'] });
   void qc.invalidateQueries({ queryKey: ['data-sources'] });
@@ -164,4 +165,41 @@ export function useDeleteCredential() {
     mutationFn: (credentialId: string): Promise<void> => client.remove(credentialId),
     onSuccess: () => invalidateCredentialSet(queryClient),
   });
+}
+
+export interface OAuthProvidersState {
+  // The OAuth providers the platform has configured — i.e. the ones a user can connect via the
+  // hosted flow (distinct from `useProviders`, which is the ones the user has ALREADY connected).
+  readonly providers: readonly string[];
+  readonly isLoading: boolean;
+}
+
+export function useOAuthProviders(): OAuthProvidersState {
+  const { auth } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['oauth-providers'],
+    queryFn: () => auth.oauthProviders(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return { providers: query.data ?? [], isLoading: query.isLoading };
+}
+
+// Begin a provider connect and hand the browser off to the provider's authorize page. The
+// connect-callback route (/app/oauth/connect/:provider/callback) completes the exchange, which lands
+// the provider token as a broker credential server-side — the secret never touches the FE (§1.5).
+// Rejects if the begin call fails (e.g. provider not configured); the caller surfaces the error.
+export function useConnectProvider(): (provider: string) => Promise<void> {
+  const { auth } = useApi();
+
+  return async (provider: string): Promise<void> => {
+    const redirectUri = `${window.location.origin}/app/oauth/connect/${encodeURIComponent(
+      provider
+    )}/callback`;
+    const url = await auth.oauthConnectBegin(provider, redirectUri);
+    window.location.assign(url);
+  };
 }

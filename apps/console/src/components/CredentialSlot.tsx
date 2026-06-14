@@ -4,7 +4,7 @@
 // wired, the slot keeps the wired id selected without ever reading the secret back.
 import { useEffect, useRef, useState } from 'react';
 import type { CredType, Credential } from '@oraclous/api-client';
-import { useCreateCredential } from '../lib/credentials.js';
+import { useConnectProvider, useCreateCredential } from '../lib/credentials.js';
 
 export interface CredentialSlotProps {
   readonly label: string;
@@ -35,7 +35,9 @@ export function CredentialSlot({
   manual = true,
 }: CredentialSlotProps) {
   const create = useCreateCredential();
+  const connect = useConnectProvider();
   const [adding, setAdding] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [name, setName] = useState('');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +80,20 @@ export function CredentialSlot({
       closeAdd();
     } catch {
       setError('Couldn’t save the credential. Please try again.');
+    }
+  }
+
+  async function onConnect() {
+    if (connecting) return;
+    setError(null);
+    setConnecting(true);
+    try {
+      // On success the browser is redirected to the provider; the connect-callback route lands the
+      // credential server-side. Control returns here only if begin fails (e.g. provider unconfigured).
+      await connect(provider);
+    } catch {
+      setError(`Couldn’t start the ${provider} connection. Please try again.`);
+      setConnecting(false);
     }
   }
 
@@ -154,10 +170,16 @@ export function CredentialSlot({
       )}
 
       {!manual && (
-        <p className="cred-note">
-          This {provider} credential is connected through an OAuth flow — add it from the tool
-          instance page, then select it here.
-        </p>
+        <button
+          type="button"
+          className="btn"
+          data-variant="secondary"
+          data-size="sm"
+          onClick={() => void onConnect()}
+          disabled={connecting}
+        >
+          {connecting ? 'Connecting…' : `Connect with ${provider}`}
+        </button>
       )}
 
       {error !== null && (
