@@ -150,7 +150,7 @@ The protocol, exactly:
    - **Approved + merged** → your turn is over; the reviewer will ready the next increment when it's time. Do not anticipate it.
 4. **Stay idle between turns.** When nothing is `ready` for you and no PR of yours has changes requested, you have no work — wait for a GitHub signal; do not invent work or pull a non-`ready` issue.
 
-The reviewer's mirror of this: readies exactly one increment at a time, reviews your PR by driving the running app, posts improvements as a **"changes requested"** review (that is how you're notified), or approves via `johnkennII` and merges — then, after the maintainer has tested it live, readies the next. While you build, the reviewer is idle; while the reviewer reviews, you are idle.
+The reviewer's mirror of this: readies exactly one increment at a time, reviews your PR by driving the running app, posts improvements as a **"changes requested"** review (that is how you're notified), or approves via `johnkennII` and merges — and **immediately readies the next increment as part of that merge** (the maintainer tests merged increments live in parallel; that is **not** a gate on readying the next, so you never wait for a `ready` issue). While you build, the reviewer is idle; while the reviewer reviews, you are idle.
 
 ---
 
