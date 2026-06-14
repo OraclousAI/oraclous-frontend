@@ -175,6 +175,7 @@ export type {
   Credential,
   CreateCredentialInput,
   UpdateCredentialInput,
+  DataSourcesByProvider,
   CredType,
 } from './credentials';
 
