@@ -110,7 +110,9 @@ function DryRunResultView({ result }: { result: DryRunResult }) {
         </p>
       )}
       {violations.length > 0 && (
-        <div className="callout" data-tone="error" role="alert">
+        // No role="alert" — this renders inside the panel's aria-live="polite" region, and nesting
+        // an assertive region would double-announce (the styling doesn't depend on the role).
+        <div className="callout" data-tone="error">
           <strong>Ontology violations</strong>
           <ul style={{ margin: 'var(--sp-2) 0 0', paddingLeft: 'var(--sp-4)' }}>
             {violations.map((v, i) => (
@@ -136,6 +138,7 @@ export function RecipeDryRunPanel({ recipe }: { recipe: RecipeDocument }) {
   const dryRun = useDryRun();
   const sampleId = useId();
   const sourceId = useId();
+  const hintId = useId();
   const [sample, setSample] = useState('');
   const [sourceType, setSourceType] = useState(recipe.applies_to?.source_type ?? 'json');
 
@@ -159,14 +162,15 @@ export function RecipeDryRunPanel({ recipe }: { recipe: RecipeDocument }) {
   return (
     <section className="tool-drawer__section">
       <h3>Dry run</h3>
-      <p className="t-caption" style={caption}>
-        Preview the projection over a sample — nothing is written.
+      <p id={hintId} className="t-caption" style={caption}>
+        Paste a sample to preview the projection — nothing is written.
       </p>
 
       <div className="field">
         <label htmlFor={sampleId}>Sample</label>
         <textarea
           id={sampleId}
+          aria-describedby={hintId}
           value={sample}
           onChange={(e) => setSample(e.target.value)}
           placeholder={'{ "id": "…", "label": "…" }'}
@@ -211,7 +215,9 @@ export function RecipeDryRunPanel({ recipe }: { recipe: RecipeDocument }) {
             Running the preview…
           </p>
         ) : error !== null ? (
-          <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+          // No role="alert" — the aria-live="polite" wrapper announces this; a nested assertive
+          // region would double-announce.
+          <p className="callout" data-tone="error" style={{ margin: 0 }}>
             {error}
           </p>
         ) : result !== null ? (
