@@ -13,6 +13,20 @@ import type {
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
 
+// The canonical recipe source kinds (recipe.schema.json `applies_to.source_type` enum). Shared by
+// the dry-run + run panels so their source-type dropdowns can't drift from the schema.
+export const RECIPE_SOURCE_TYPES = [
+  'json',
+  'csv',
+  'relational',
+  'text',
+  'code',
+  'timeseries',
+  'event_log',
+  'geospatial',
+  'graph',
+] as const;
+
 export interface RecipesState {
   readonly recipes: readonly Recipe[];
   readonly isLoading: boolean;
@@ -103,6 +117,25 @@ export function useStoreRecipe() {
     mutationFn: (recipe: RecipeDocument): Promise<StoredRecipe> => client.store(recipe),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+}
+
+// Promote a draft recipe to runnable. On success the list + the open detail refresh, so the status
+// chip flips draft → promoted and the Run panel becomes available in place.
+export function usePromoteRecipe() {
+  const { recipes: client } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (recipeId: string): Promise<StoredRecipe> => client.promote(recipeId),
+    onSuccess: (data, recipeId) => {
+      // Seed the flip from the result so the drawer reveals Run immediately — even if the refetch
+      // below is slow or fails transiently (the server is already promoted).
+      queryClient.setQueryData<RecipeDetail>(['recipe', recipeId], (prev) =>
+        prev ? { ...prev, status: data.status } : prev
+      );
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      void queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] });
     },
   });
 }

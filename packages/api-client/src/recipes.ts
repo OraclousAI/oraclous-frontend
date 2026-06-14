@@ -159,6 +159,9 @@ export interface RecipesClient {
   dryRun(input: DryRunInput): Promise<DryRunResult>;
   // Persist a recipe document as a draft (201); 422 on an invalid document (see StoredRecipe).
   store(recipe: RecipeDocument): Promise<StoredRecipe>;
+  // Promote a draft recipe to the runnable "promoted" state (in place, no version bump).
+  // Idempotent; 404 if the recipe is unknown.
+  promote(recipeId: string): Promise<StoredRecipe>;
 }
 
 export function createRecipesClient(transport: ApiTransport): RecipesClient {
@@ -211,6 +214,13 @@ export function createRecipesClient(transport: ApiTransport): RecipesClient {
         method: 'POST',
         path: '/api/v1/recipes',
         body: { recipe },
+      });
+      return data;
+    },
+    async promote(recipeId: string): Promise<StoredRecipe> {
+      const { data } = await transport.execute<StoredRecipe>({
+        method: 'POST',
+        path: `/api/v1/recipes/${encodeURIComponent(recipeId)}/promote`,
       });
       return data;
     },
