@@ -120,11 +120,37 @@ Before **any** `git push`, the cheap checks CI runs must pass locally: `lint`, `
 - **Title** follows the Conventional Commits summary; **body** states what changed, why, and how it was verified (gates run, bundle impact, a11y notes).
 - **Open ready:** before opening for review the PR is lint/type/format clean, CI-green, and rebased onto current `main`.
 - **Sizing:** target under ~300 net lines of *logic* per PR (JSX nodes don't count against this). If you cross it, justify or split.
-- **Review:** a **non-author** reviews and approves; the maintainer merges. No self-merge.
+- **Review:** a **non-author** reviews and approves; the maintainer (or CTO) merges. No self-merge. For **product-surface** PRs the two agent reviewers are **`experience-architect`** (the product/user lens — does it deliver the journey, match the design, respect the six non-negotiables) and the **CTO** (craft), both approving via the **`johnkennII`** GitHub identity so the approval is a genuine non-author one. Those two reviews are the whole agent check; the automated CI gates (§4) run on their own.
 
 ### 3.5 Tests
 
 Frontend has **no unit/component test suite yet** — it is deferred. The invariants are enforced by the CI gates (§4), and a11y is covered by `axe-core` specs in `tests/a11y/`. When the test suite is introduced (Vitest + React Testing Library + Playwright), update this file. Prototype/throwaway work is a **spike** and does not merge to `main`.
+
+### 3.6 Incremental, testable-on-the-app delivery
+
+Product-surface work ships in **small, vertical increments that each run on the live app** — never a big-bang journey in one PR. `experience-architect` slices each journey into the smallest increments that each deliver something a person can **open in the running console and actually use** (against the live gateway), and opens one GitHub issue per increment. Each increment:
+
+- Is one focused PR that builds + runs and leaves the app in a working, testable state (no half-wired screens behind a broken nav).
+- States in its PR body **exactly how to test it on the app** (the route to open, the steps to exercise, what you should see) so the maintainer can verify it directly.
+- Is reviewed against that — `experience-architect` validates it by driving the running surface, not just reading the diff (§3.4).
+
+Prefer five small increments you can each test over one large PR you can only test at the end. The journey is "done" when its increments add up to the whole flow working end-to-end on the app.
+
+### 3.7 Serial, turn-based delivery (the build ↔ review baton)
+
+Product-surface work is **strictly serial — one increment at a time.** You (the FE agent) and the reviewer (`experience-architect`, acting as the `johnkennII` identity) take turns; **GitHub signals are the baton, and whoever is not acting stays idle and waits for their signal.** Never work ahead.
+
+**Your turn — build — begins on a signal:** an issue **assigned to you (`Jahankohan`) and labelled `ready`** (a new increment), **or** a **"changes requested"** review on your open PR (revise it). Otherwise it is **not** your turn — stay idle.
+
+The protocol, exactly:
+1. **One `ready` issue at a time — and you never choose the order.** The **`ready` issue *is* the order**: build the single increment assigned to you and labelled `ready`, and nothing else. Other open `product-surface` issues are *future* increments not yet your turn — **ignore them** until they're readied (do not pick one because it looks next). Do not start a second issue while a PR of yours is open or in review; there is never more than one increment in flight. For where this increment sits and what comes after it, read its **epic issue's ordered checklist** (linked in the issue body) and `oraclous-knowledge/product/roadmap.md` — but you build only what is `ready`.
+2. **Build it, open the PR, then STOP.** Open one focused PR with the test-on-the-app steps in the body, request review from the reviewer, and **go idle.** Do **not** pick up the next issue — the next one will not be `ready` until this one merges.
+3. **Wait for the baton.** Watch your open PR for the reviewer's signal:
+   - **Changes requested** → it's your turn again: address the feedback **on the same PR** (no new issue, no new PR), push, re-request review, then **go idle** again.
+   - **Approved + merged** → your turn is over; the reviewer will ready the next increment when it's time. Do not anticipate it.
+4. **Stay idle between turns.** When nothing is `ready` for you and no PR of yours has changes requested, you have no work — wait for a GitHub signal; do not invent work or pull a non-`ready` issue.
+
+The reviewer's mirror of this: readies exactly one increment at a time, reviews your PR by driving the running app, posts improvements as a **"changes requested"** review (that is how you're notified), or approves via `johnkennII` and merges — then, after the maintainer has tested it live, readies the next. While you build, the reviewer is idle; while the reviewer reviews, you are idle.
 
 ---
 
@@ -201,6 +227,7 @@ Confirm against the [Frontend Stack Reference](https://oraclous.atlassian.net/wi
 The previous Oraclous frontend is available **read-only** at `/Users/reza/workspace/OraclousAI/legacy-reference/old-frontend/` — a git worktree pinned to `develop` (the most current branch of the old codebase, Bun + React 18 + Vite).
 
 - This is a **migration, not a rewrite.** The default is **clone-and-refactor**: start from the legacy behaviour and refit it to the target stack, the design system, and the gateway-only API rule. Greenfield is the exception and must be justified — the legacy app is at minimum the **behavioural specification**.
+- **Product-surface work is journey-driven, not legacy-driven (overrides the default above for product surfaces).** For any FE **product surface** (pages, nav, routed surfaces — agents, tools, recipes, runs, connections, harness, billing flows, etc.) the design comes from the **journey+IA+UX spec** authored by `experience-architect` (`oraclous-knowledge/product/journeys/<journey>.md`), **not** the legacy app — the legacy IA is a different, older product's skeleton, only a behavioural reference here. `experience-architect` opens the GitHub issue with that design as the brief, you build it, and it reviews/validates the PR from the user's perspective (see §3.4). The clone-and-refactor default still governs *component-level* lifts (the design-system primitives) and non-product-surface work.
 - The lift-vs-rewrite decision for a given piece of work is captured in its **GitHub issue** (Lift / Reshape / Extract / Greenfield, naming the legacy source). If an issue lacks that call for UI that plainly has a legacy precursor, flag it on the issue rather than silently choosing greenfield.
 - When reshaping, fix these while preserving behaviour: API calls (legacy may talk to non-gateway services — the new app talks only to `application-gateway-service`), token storage (legacy may use `localStorage` — the new app does not), and ad-hoc styling (use the design system).
 - **Never write to `legacy-reference/`**; it is read-only. If it is on a branch other than `develop`, surface it and stop — don't switch it yourself.
