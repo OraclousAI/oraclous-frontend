@@ -1,12 +1,14 @@
 // Recipe library hooks: list the org's recipes, read one's full document, list the built-in
-// templates to author from, and dry-run a recipe over a sample.
-import { useMutation, useQuery } from '@tanstack/react-query';
+// templates to author from, dry-run a recipe over a sample, and store (save) a recipe.
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   DryRunInput,
   DryRunResult,
   Recipe,
   RecipeDetail,
+  RecipeDocument,
   RecipeTemplate,
+  StoredRecipe,
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
@@ -89,5 +91,18 @@ export function useDryRun() {
   const { recipes: client } = useApi();
   return useMutation({
     mutationFn: (input: DryRunInput): Promise<DryRunResult> => client.dryRun(input),
+  });
+}
+
+// Persist a recipe document. On success the recipe list refreshes so the new tile appears; the
+// caller handles the toast/close and renders a 422 inline (the drawer stays open).
+export function useStoreRecipe() {
+  const { recipes: client } = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (recipe: RecipeDocument): Promise<StoredRecipe> => client.store(recipe),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
   });
 }

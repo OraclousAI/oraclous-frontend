@@ -4,12 +4,18 @@
 // a raw JSON blob. A "View raw document" toggle keeps the full JSON one click away. Focus trap,
 // Escape-to-close, scroll-lock, and focus-restore to the originating tile come from useDrawerA11y.
 import { useId, useMemo, useRef, useState, type RefObject } from 'react';
-import type { RecipeDocument } from '@oraclous/api-client';
-import { useRecipe } from '../lib/recipes.js';
+import { ApiClientError, type RecipeDocument } from '@oraclous/api-client';
+import { useRecipe, useStoreRecipe } from '../lib/recipes.js';
 import { SkeletonList } from './ui/Skeleton.js';
 import { RecipeDryRunPanel } from './RecipeDryRunPanel.js';
+import { useToast } from '../lib/toast.jsx';
 import { useDrawerA11y } from './shell/useDrawerA11y.js';
 import { IconX } from '../icons/index.js';
+
+function messageFor(cause: unknown): string {
+  if (ApiClientError.is(cause)) return cause.message;
+  return 'Couldn’t save the recipe. Please try again.';
+}
 
 // Derive the graph shape a recipe produces from its mappings + extractions: node labels and
 // extracted entity types are "entities"; edge types, extraction link types, and extraction
@@ -68,6 +74,24 @@ export function RecipeDetailDrawer({
   const isDraft = draft !== undefined;
   const recipe = draft ?? fetched;
   const [showRaw, setShowRaw] = useState(false);
+
+  const store = useStoreRecipe();
+  const toast = useToast();
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function onSave() {
+    if (recipe === null || store.isPending) return;
+    setSaveError(null);
+    try {
+      await store.mutateAsync(recipe);
+      // The store endpoint promotes on save, so the new tile reflects its real (promoted) status.
+      toast.success('Recipe saved.');
+      onClose();
+    } catch (cause) {
+      // 422 (invalid document) keeps the drawer open with the validation detail shown inline.
+      setSaveError(messageFor(cause));
+    }
+  }
 
   const produced = useMemo(
     () => (recipe !== null ? producedLabels(recipe) : { entities: [], relationships: [] }),
@@ -215,6 +239,29 @@ export function RecipeDetailDrawer({
               </section>
 
               <RecipeDryRunPanel recipe={recipe} />
+
+              {isDraft && (
+                <section className="tool-drawer__section">
+                  <h3>Save</h3>
+                  <p className="t-caption" style={caption}>
+                    Saves this recipe to your library.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn"
+                    data-variant="primary"
+                    onClick={() => void onSave()}
+                    disabled={store.isPending}
+                  >
+                    {store.isPending ? 'Saving…' : 'Save draft'}
+                  </button>
+                  {saveError !== null && (
+                    <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
+                      {saveError}
+                    </p>
+                  )}
+                </section>
+              )}
 
               <section className="tool-drawer__section">
                 <h3>Raw document</h3>
