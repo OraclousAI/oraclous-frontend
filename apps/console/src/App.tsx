@@ -44,6 +44,7 @@ const AgentBuilder = lazy(() => import('./pages/AgentBuilderPage.js'));
 const Jobs = lazy(() => import('./pages/JobsPage.js'));
 const Tools = lazy(() => import('./pages/ToolsPage.js'));
 const Connections = lazy(() => import('./pages/ConnectionsPage.js'));
+const OAuthConnectCallback = lazy(() => import('./pages/OAuthConnectCallbackPage.js'));
 const Recipes = lazy(() => import('./pages/RecipesPage.js'));
 const Members = lazy(() => import('./pages/MembersPage.js'));
 const IntegrationKeys = lazy(() => import('./pages/IntegrationKeysPage.js'));
@@ -186,6 +187,15 @@ export function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <Connections />
+                </Suspense>
+              }
+            />
+            {/* OAuth connect callback — authed (connect/complete needs the bearer); lands a credential. */}
+            <Route
+              path="oauth/connect/:provider/callback"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <OAuthConnectCallback />
                 </Suspense>
               }
             />

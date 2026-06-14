@@ -32,6 +32,22 @@ export interface AuthClient {
   oauthLoginUrl(provider: string, redirectUri: string): Promise<string>;
   // GET /oauth/{provider}/callback — exchange the returned code+state for a session.
   oauthCallback(provider: string, code: string, state: string): Promise<AuthSession>;
+  // POST /oauth/{provider}/connect — begin a provider *connect* (authed, distinct from login): returns
+  // the authorize URL to redirect to, requesting the given scopes. Connect binds a token to the
+  // signed-in user, it does NOT issue a session.
+  oauthConnectBegin(
+    provider: string,
+    redirectUri: string,
+    scopes?: readonly string[]
+  ): Promise<string>;
+  // POST /oauth/{provider}/connect/complete — exchange the returned code+state; the backend lands the
+  // provider token as a broker credential for the authenticated caller (the secret never reaches the
+  // FE). Returns the new credential id — no session.
+  oauthConnectComplete(
+    provider: string,
+    code: string,
+    state: string
+  ): Promise<{ provider: string; credentialId: string }>;
   // GET /v1/auth/me — the authenticated principal (requires a bearer token).
   me(): Promise<AuthPrincipal>;
   // POST /v1/auth/refresh — exchange a (rotating) refresh token for a fresh session.
@@ -95,6 +111,30 @@ export function createAuthClient(transport: ApiTransport): AuthClient {
         )}&state=${encodeURIComponent(state)}`,
       });
       return toSession(data);
+    },
+    async oauthConnectBegin(
+      provider: string,
+      redirectUri: string,
+      scopes?: readonly string[]
+    ): Promise<string> {
+      const { data } = await transport.execute<{ authorize_url: string }>({
+        method: 'POST',
+        path: `/oauth/${encodeURIComponent(provider)}/connect`,
+        body: { redirect_uri: redirectUri, scopes: scopes ?? [] },
+      });
+      return data.authorize_url;
+    },
+    async oauthConnectComplete(
+      provider: string,
+      code: string,
+      state: string
+    ): Promise<{ provider: string; credentialId: string }> {
+      const { data } = await transport.execute<{ provider: string; credential_id: string }>({
+        method: 'POST',
+        path: `/oauth/${encodeURIComponent(provider)}/connect/complete`,
+        body: { code, state },
+      });
+      return { provider: data.provider, credentialId: data.credential_id };
     },
     async me(): Promise<AuthPrincipal> {
       const { data } = await transport.execute<MeResponseWire>({

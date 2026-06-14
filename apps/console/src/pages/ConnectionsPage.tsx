@@ -10,9 +10,11 @@ import { useDash } from '../context/dash.js';
 import {
   MODEL_CREDENTIAL_TOOL_ID,
   credKindLabel,
+  useConnectProvider,
   useCredentials,
   useDataSources,
   useDeleteCredential,
+  useOAuthProviders,
   useProviders,
 } from '../lib/credentials.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
@@ -32,9 +34,14 @@ export default function ConnectionsPage() {
   const { credentials, isLoading, isError } = useCredentials(userId);
   const { providers, isLoading: providersLoading, isError: providersError } = useProviders();
   const { dataSources } = useDataSources();
+  const { providers: oauthProviders } = useOAuthProviders();
+  const connect = useConnectProvider();
   const remove = useDeleteCredential();
 
   const [error, setError] = useState<string | null>(null);
+  // The provider whose connect redirect is in flight (the button shows "Connecting…" until the
+  // browser leaves for the provider's authorize page).
+  const [connecting, setConnecting] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   // Two-step destructive confirm: first click on a row arms it, second removes.
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -57,6 +64,22 @@ export default function ConnectionsPage() {
       setConfirmId(null);
     }
   }
+
+  async function onConnect(p: string) {
+    setError(null);
+    setConnecting(p);
+    try {
+      // On success this redirects the browser to the provider; control does not return here.
+      await connect(p);
+    } catch (cause) {
+      setError(messageFor(cause));
+      setConnecting(null);
+    }
+  }
+
+  // Configured OAuth providers the user hasn't connected yet — the ones a "Connect with …" button
+  // can start. (Once connected they drop out, appearing instead in the connected list above.)
+  const connectable = oauthProviders.filter((p) => !providers.includes(p));
 
   // Model keys first, then tool credentials; stable by name within each group.
   const sorted = [...credentials].sort((a, b) => {
@@ -161,6 +184,38 @@ export default function ConnectionsPage() {
                 );
               })}
             </ul>
+          )}
+          {!providersLoading && !providersError && connectable.length > 0 && (
+            <div
+              style={{
+                marginTop: providers.length > 0 ? 'var(--sp-4)' : 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--sp-2)',
+              }}
+            >
+              <span className="t-caption" style={{ color: 'var(--mute)' }}>
+                Connect a provider
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
+                {connectable.map((p) => {
+                  const label = p.charAt(0).toUpperCase() + p.slice(1);
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      className="btn"
+                      data-variant="secondary"
+                      data-size="sm"
+                      disabled={connecting !== null}
+                      onClick={() => void onConnect(p)}
+                    >
+                      {connecting === p ? 'Connecting…' : `Connect with ${label}`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       </section>
