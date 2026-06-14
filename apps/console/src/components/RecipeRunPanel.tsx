@@ -2,14 +2,13 @@
 // and run the recipe over it — a structured ingest carrying the recipe_id. The job streams
 // pending → running → completed/failed (mint pulse while live, mirroring GraphDetailPage), then
 // links to the Explorer. Text paste only here (file upload / scheduling are out of scope).
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiClientError } from '@oraclous/api-client';
 import { useGraphJob, useGraphs, useRunRecipe } from '../lib/graphs.js';
+import { RECIPE_SOURCE_TYPES } from '../lib/recipes.js';
 import { IconArrowUpRight } from '../icons/index.js';
-
-const SOURCE_TYPES = ['text', 'csv', 'json', 'md', 'code'] as const;
 
 const caption = { color: 'var(--mute)', margin: 0 } as const;
 
@@ -26,32 +25,42 @@ function messageFor(cause: unknown): string {
   return 'Couldn’t start the run. Please try again.';
 }
 
-function defaultSourceType(recipeSourceType: string | undefined): string {
-  return recipeSourceType !== undefined &&
-    (SOURCE_TYPES as readonly string[]).includes(recipeSourceType)
-    ? recipeSourceType
-    : 'text';
-}
-
 export function RecipeRunPanel({
   recipeId,
   sourceType: recipeSourceType,
+  autoFocus,
 }: {
   recipeId: string;
   sourceType?: string | undefined;
+  // Move focus here when the panel is revealed by a promote (the Promote section unmounts).
+  autoFocus?: boolean | undefined;
 }) {
   const { graphs, isLoading: graphsLoading } = useGraphs();
   const run = useRunRecipe();
   const queryClient = useQueryClient();
+  const sectionRef = useRef<HTMLElement>(null);
   const graphSelId = useId();
   const contentId = useId();
   const typeId = useId();
 
   const [graphId, setGraphId] = useState('');
   const [content, setContent] = useState('');
-  const [sourceType, setSourceType] = useState(() => defaultSourceType(recipeSourceType));
+  // Default to the recipe's declared source type; keep whatever it is selectable below.
+  const [sourceType, setSourceType] = useState(() => recipeSourceType ?? 'text');
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // The recipe's source type may be outside the canonical list — keep it selectable.
+  const sourceOptions = RECIPE_SOURCE_TYPES.includes(
+    sourceType as (typeof RECIPE_SOURCE_TYPES)[number]
+  )
+    ? RECIPE_SOURCE_TYPES
+    : [sourceType, ...RECIPE_SOURCE_TYPES];
+
+  // When revealed by a promote, take focus so the keyboard/SR journey continues here.
+  useEffect(() => {
+    if (autoFocus) sectionRef.current?.focus();
+  }, [autoFocus]);
 
   const { job } = useGraphJob(graphId, jobId);
   const currentJob = job ?? run.data ?? null;
@@ -84,7 +93,12 @@ export function RecipeRunPanel({
   const noWorkspaces = !graphsLoading && graphs.length === 0;
 
   return (
-    <section className="tool-drawer__section">
+    <section
+      ref={sectionRef}
+      tabIndex={-1}
+      style={{ outline: 'none' }}
+      className="tool-drawer__section"
+    >
       <h3>Run on a workspace</h3>
       <p className="t-caption" style={caption}>
         Project a source into a workspace using this recipe.
@@ -151,7 +165,7 @@ export function RecipeRunPanel({
                 value={sourceType}
                 onChange={(e) => setSourceType(e.target.value)}
               >
-                {SOURCE_TYPES.map((t) => (
+                {sourceOptions.map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>

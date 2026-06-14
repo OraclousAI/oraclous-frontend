@@ -81,6 +81,8 @@ export function RecipeDetailDrawer({
   const toast = useToast();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [promoteError, setPromoteError] = useState<string | null>(null);
+  // After a promote, the Promote section unmounts and the Run panel appears — take focus there.
+  const [promotedThisSession, setPromotedThisSession] = useState(false);
 
   async function onSave() {
     if (recipe === null || store.isPending) return;
@@ -102,7 +104,8 @@ export function RecipeDetailDrawer({
     setPromoteError(null);
     try {
       await promote.mutateAsync(recipe.id);
-      // The detail refetches → status flips draft → promoted in place, revealing the Run panel.
+      // The detail flips draft → promoted in place, revealing the Run panel; focus moves there.
+      setPromotedThisSession(true);
       toast.success('Recipe promoted.');
     } catch (cause) {
       setPromoteError(messageFor(cause, 'Couldn’t promote the recipe. Please try again.'));
@@ -290,6 +293,7 @@ export function RecipeDetailDrawer({
                   <RecipeRunPanel
                     recipeId={recipe.id}
                     sourceType={recipe.applies_to?.source_type}
+                    autoFocus={promotedThisSession}
                   />
                 )}
 

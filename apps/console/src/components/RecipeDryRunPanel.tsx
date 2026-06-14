@@ -4,20 +4,7 @@
 // and warning callouts. A 422 (malformed sample/recipe) shows a clear inline error, never a crash.
 import { useId, useState } from 'react';
 import { ApiClientError, type DryRunResult, type RecipeDocument } from '@oraclous/api-client';
-import { useDryRun } from '../lib/recipes.js';
-
-// The format-0.2 source kinds (recipe.schema.json applies_to.source_type enum).
-const SOURCE_TYPES = [
-  'json',
-  'csv',
-  'relational',
-  'text',
-  'code',
-  'timeseries',
-  'event_log',
-  'geospatial',
-  'graph',
-] as const;
+import { RECIPE_SOURCE_TYPES, useDryRun } from '../lib/recipes.js';
 
 const chipRow = {
   listStyle: 'none',
@@ -155,9 +142,11 @@ export function RecipeDryRunPanel({ recipe }: { recipe: RecipeDocument }) {
   }
 
   // The recipe's own source type may be outside the standard list — keep it selectable.
-  const sourceOptions = SOURCE_TYPES.includes(sourceType as (typeof SOURCE_TYPES)[number])
-    ? SOURCE_TYPES
-    : [sourceType, ...SOURCE_TYPES];
+  const sourceOptions = RECIPE_SOURCE_TYPES.includes(
+    sourceType as (typeof RECIPE_SOURCE_TYPES)[number]
+  )
+    ? RECIPE_SOURCE_TYPES
+    : [sourceType, ...RECIPE_SOURCE_TYPES];
 
   return (
     <section className="tool-drawer__section">
