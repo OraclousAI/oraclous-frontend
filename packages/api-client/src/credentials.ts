@@ -14,6 +14,18 @@ export interface CreateCredentialInput {
   readonly credential: Readonly<Record<string, string>>;
 }
 
+// Rename a credential. The secret is NEVER re-sent: omitting `credential` tells the broker to keep
+// the stored ciphertext (a name-only update). provider/toolId/credType are echoed from the existing
+// credential because the broker's update schema still requires them.
+export interface UpdateCredentialInput {
+  readonly id: string;
+  readonly name: string;
+  readonly provider: string;
+  readonly toolId: string;
+  readonly credType: CredType;
+  readonly userId: string;
+}
+
 export interface Credential {
   readonly id: string;
   readonly name: string | null;
@@ -34,6 +46,9 @@ export interface CredentialsClient {
   // The user's credentials (optionally narrowed to one tool). Secret material is NOT returned here.
   list(userId: string, toolId?: string): Promise<Credential[]>;
   create(input: CreateCredentialInput): Promise<Credential>;
+  // Rename a credential (metadata only — the stored secret is preserved). 200, returns the updated
+  // metadata.
+  update(input: UpdateCredentialInput): Promise<Credential>;
   remove(credentialId: string): Promise<void>;
 }
 
@@ -80,6 +95,22 @@ export function createCredentialsClient(transport: ApiTransport): CredentialsCli
         method: 'POST',
         path: '/credentials/',
         body,
+      });
+      return toCredential(data);
+    },
+    async update(input: UpdateCredentialInput): Promise<Credential> {
+      // No `credential` in the body → the broker keeps the stored secret (a name-only rename).
+      const { data } = await transport.execute<CredentialWire>({
+        method: 'PUT',
+        path: `/credentials/${encodeURIComponent(input.id)}`,
+        body: {
+          id: input.id,
+          name: input.name,
+          provider: input.provider,
+          user_id: input.userId,
+          tool_id: input.toolId,
+          cred_type: input.credType,
+        },
       });
       return toCredential(data);
     },

@@ -9,6 +9,7 @@ import { ApiClientError, type Credential } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
 import {
   MODEL_CREDENTIAL_TOOL_ID,
+  credKindLabel,
   useCredentials,
   useDeleteCredential,
 } from '../lib/credentials.js';
@@ -24,15 +25,6 @@ function messageFor(cause: unknown): string {
   return 'Something went wrong. Please try again.';
 }
 
-// A human label for each credential type the roster renders.
-function credKindLabel(c: Credential): string {
-  if (c.toolId === MODEL_CREDENTIAL_TOOL_ID) return 'model key';
-  if (c.credType === 'api_key') return 'API key';
-  if (c.credType === 'oauth') return 'OAuth';
-  if (c.credType === 'raw') return 'Connection string';
-  return c.credType;
-}
-
 export default function ConnectionsPage() {
   const { userId } = useDash();
   const { credentials, isLoading, isError } = useCredentials(userId);
@@ -45,6 +37,9 @@ export default function ConnectionsPage() {
   // The "Add a credential" sheet, and the button that opens it (focus returns there on close).
   const [addOpen, setAddOpen] = useState(false);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
+  // The credential being renamed (opens the same sheet in edit mode) + the row's Rename button.
+  const [editing, setEditing] = useState<Credential | null>(null);
+  const renameTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   async function onRemove(id: string) {
     setError(null);
@@ -163,7 +158,25 @@ export default function ConnectionsPage() {
                     <span role="cell" style={{ overflowWrap: 'break-word' }}>
                       {c.name ?? '—'}
                     </span>
-                    <span role="cell" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <span
+                      role="cell"
+                      style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--sp-2)' }}
+                    >
+                      <button
+                        type="button"
+                        className="btn"
+                        data-variant="secondary"
+                        data-size="sm"
+                        aria-haspopup="dialog"
+                        aria-label={`Rename the ${c.name ?? c.provider} ${kind}`}
+                        onClick={(e) => {
+                          renameTriggerRef.current = e.currentTarget;
+                          setConfirmId(null);
+                          setEditing(c);
+                        }}
+                      >
+                        Rename
+                      </button>
                       <button
                         type="button"
                         className="btn"
@@ -195,11 +208,15 @@ export default function ConnectionsPage() {
         </>
       )}
 
-      {addOpen && (
+      {(addOpen || editing !== null) && (
         <AddCredentialSheet
           userId={userId}
-          triggerRef={addTriggerRef}
-          onClose={() => setAddOpen(false)}
+          editing={editing}
+          triggerRef={editing !== null ? renameTriggerRef : addTriggerRef}
+          onClose={() => {
+            setAddOpen(false);
+            setEditing(null);
+          }}
         />
       )}
     </div>

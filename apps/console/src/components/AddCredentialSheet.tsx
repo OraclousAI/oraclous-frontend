@@ -1,16 +1,18 @@
-// Add-a-credential sheet (Connections journey, increment 2). One sheet to add any credential kind:
-// a model key (BYOM preset or custom OpenAI-compatible endpoint), an API key, or a connection string,
-// via POST /credentials. Model keys carry the BYOM sentinel tool_id (so the agent builder's model
-// dropdown finds them by provider); standalone API key / connection-string credentials carry the
-// unscoped sentinel and are matched to a tool by provider when attached later. The secret is only ever
-// SENT on create — it is never stored, displayed, or read back (§1.5). Reuses the drawer chrome +
-// useDrawerA11y (focus trap, Esc, scroll-lock, focus-restore to the trigger).
+// Add / rename credential sheet (Connections journey, increments 2 & 3). In ADD mode, one sheet to
+// create any credential kind — a model key (BYOM preset or custom OpenAI-compatible endpoint), an
+// API key, or a connection string — via POST /credentials. In RENAME mode (when `editing` is set) it
+// shows the credential's provider/kind read-only and edits the NAME ONLY via PUT /credentials/{id};
+// the secret is never shown or re-sent (the broker preserves it when `credential` is omitted, §1.5).
+// Model keys carry the BYOM sentinel; standalone API key / connection-string credentials carry the
+// unscoped sentinel. Reuses the drawer chrome + useDrawerA11y (focus trap, Esc, scroll-lock, restore).
 import { useId, useRef, useState, type FormEvent, type RefObject } from 'react';
-import { ApiClientError } from '@oraclous/api-client';
+import { ApiClientError, type Credential, type CredType } from '@oraclous/api-client';
 import {
   MODEL_CREDENTIAL_TOOL_ID,
   UNSCOPED_CREDENTIAL_TOOL_ID,
+  credKindLabel,
   useCreateCredential,
+  useUpdateCredential,
 } from '../lib/credentials.js';
 import { useToast } from '../lib/toast.jsx';
 import { useDrawerA11y } from './shell/useDrawerA11y.js';
@@ -49,14 +51,18 @@ function messageFor(cause: unknown): string {
 
 export function AddCredentialSheet({
   userId,
+  editing = null,
   triggerRef,
   onClose,
 }: {
   userId: string;
+  // When set, the sheet is in rename mode for this credential (edits the name only).
+  editing?: Credential | null;
   // The button that opened the sheet — focus returns to it on close.
   triggerRef: RefObject<HTMLButtonElement>;
   onClose: () => void;
 }) {
+  const isEditing = editing !== null;
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const kindId = useId();
@@ -70,6 +76,7 @@ export function AddCredentialSheet({
   const secretId = useId();
   const errId = useId();
   const create = useCreateCredential();
+  const update = useUpdateCredential();
   const toast = useToast();
   useDrawerA11y({ open: true, drawerRef: panelRef, triggerRef, onClose });
 
@@ -78,7 +85,7 @@ export function AddCredentialSheet({
   const [customLabel, setCustomLabel] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [provider, setProvider] = useState('');
-  const [name, setName] = useState('');
+  const [name, setName] = useState(editing?.name ?? '');
   const [secret, setSecret] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -96,10 +103,32 @@ export function AddCredentialSheet({
   const providerReady = isModel || providerValue !== '';
   const canAdd =
     userId !== '' && secret.trim() !== '' && providerReady && customModelReady && !create.isPending;
+  const canSave = name.trim() !== '' && !update.isPending;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (editing !== null) {
+      if (!canSave) return;
+      try {
+        // Name only — no `credential` is sent, so the broker keeps the stored secret.
+        const renamed = await update.mutateAsync({
+          id: editing.id,
+          name: name.trim(),
+          provider: editing.provider,
+          toolId: editing.toolId,
+          credType: editing.credType as CredType,
+          userId,
+        });
+        toast.success(`Renamed to ${renamed.name ?? name.trim()}.`);
+        onClose();
+      } catch (cause) {
+        setError(messageFor(cause));
+      }
+      return;
+    }
+
     if (!canAdd) return;
     const toolId = isModel ? MODEL_CREDENTIAL_TOOL_ID : UNSCOPED_CREDENTIAL_TOOL_ID;
     const credType = kind === 'connection_string' ? 'raw' : 'api_key';
@@ -128,7 +157,7 @@ export function AddCredentialSheet({
       <button
         type="button"
         className="tool-drawer__backdrop"
-        aria-label="Close add credential form"
+        aria-label={isEditing ? 'Close rename form' : 'Close add credential form'}
         onClick={onClose}
         tabIndex={-1}
       />
@@ -142,7 +171,7 @@ export function AddCredentialSheet({
       >
         <div className="tool-drawer__head">
           <div className="tool-drawer__title">
-            <h2 id={titleId}>Add a credential</h2>
+            <h2 id={titleId}>{isEditing ? 'Rename credential' : 'Add a credential'}</h2>
           </div>
           <button type="button" className="tool-drawer__close" aria-label="Close" onClick={onClose}>
             <IconX size={18} />
@@ -150,121 +179,137 @@ export function AddCredentialSheet({
         </div>
 
         <form className="tool-drawer__body tool-form" onSubmit={onSubmit} noValidate>
-          <div className="field">
-            <label htmlFor={kindId}>Kind</label>
-            <select
-              id={kindId}
-              value={kind}
-              onChange={(e) => {
-                setKind(e.target.value as Kind);
-                setError(null);
-              }}
-            >
-              {KINDS.map((k) => (
-                <option key={k.value} value={k.value}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {isModel ? (
+          {editing !== null ? (
+            <p className="tool-drawer__muted">
+              {editing.provider} · {credKindLabel(editing)}
+            </p>
+          ) : (
             <>
               <div className="field">
-                <label htmlFor={modelProviderId}>Provider</label>
+                <label htmlFor={kindId}>Kind</label>
                 <select
-                  id={modelProviderId}
-                  value={modelProvider}
+                  id={kindId}
+                  value={kind}
                   onChange={(e) => {
-                    setModelProvider(e.target.value as ModelProvider);
+                    setKind(e.target.value as Kind);
                     setError(null);
                   }}
                 >
-                  {MODEL_PROVIDERS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
+                  {KINDS.map((k) => (
+                    <option key={k.value} value={k.value}>
+                      {k.label}
                     </option>
                   ))}
                 </select>
               </div>
-              {isCustomModel && (
+
+              {isModel ? (
                 <>
                   <div className="field">
-                    <label htmlFor={labelFieldId}>Provider label</label>
-                    <input
-                      id={labelFieldId}
-                      value={customLabel}
-                      onChange={(e) => setCustomLabel(e.target.value)}
-                      placeholder="my-llm"
-                      autoComplete="off"
-                      aria-describedby={customHintId}
-                    />
-                    {customLabel.trim() !== '' && (
-                      <span id={customHintId} className="hint">
-                        Model binding prefix: <span className="mono">{providerValue || '…'}/…</span>
-                      </span>
-                    )}
+                    <label htmlFor={modelProviderId}>Provider</label>
+                    <select
+                      id={modelProviderId}
+                      value={modelProvider}
+                      onChange={(e) => {
+                        setModelProvider(e.target.value as ModelProvider);
+                        setError(null);
+                      }}
+                    >
+                      {MODEL_PROVIDERS.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="field">
-                    <label htmlFor={baseUrlId}>Base URL</label>
-                    <input
-                      id={baseUrlId}
-                      type="url"
-                      inputMode="url"
-                      value={baseUrl}
-                      onChange={(e) => setBaseUrl(e.target.value)}
-                      placeholder="https://my-endpoint/v1"
-                      autoComplete="off"
-                    />
-                  </div>
+                  {isCustomModel && (
+                    <>
+                      <div className="field">
+                        <label htmlFor={labelFieldId}>Provider label</label>
+                        <input
+                          id={labelFieldId}
+                          value={customLabel}
+                          onChange={(e) => setCustomLabel(e.target.value)}
+                          placeholder="my-llm"
+                          autoComplete="off"
+                          aria-describedby={customHintId}
+                        />
+                        {customLabel.trim() !== '' && (
+                          <span id={customHintId} className="hint">
+                            Model binding prefix:{' '}
+                            <span className="mono">{providerValue || '…'}/…</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="field">
+                        <label htmlFor={baseUrlId}>Base URL</label>
+                        <input
+                          id={baseUrlId}
+                          type="url"
+                          inputMode="url"
+                          value={baseUrl}
+                          onChange={(e) => setBaseUrl(e.target.value)}
+                          placeholder="https://my-endpoint/v1"
+                          autoComplete="off"
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
+              ) : (
+                <div className="field">
+                  <label htmlFor={providerId}>Provider</label>
+                  <input
+                    id={providerId}
+                    value={provider}
+                    onChange={(e) => setProvider(e.target.value)}
+                    placeholder={kind === 'connection_string' ? 'e.g. postgresql' : 'e.g. github'}
+                    autoComplete="off"
+                    aria-describedby={providerHintId}
+                  />
+                  <span id={providerHintId} className="hint">
+                    Match the provider the tool expects so you can attach it later.
+                  </span>
+                </div>
               )}
             </>
-          ) : (
-            <div className="field">
-              <label htmlFor={providerId}>Provider</label>
-              <input
-                id={providerId}
-                value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                placeholder={kind === 'connection_string' ? 'e.g. postgresql' : 'e.g. github'}
-                autoComplete="off"
-                aria-describedby={providerHintId}
-              />
-              <span id={providerHintId} className="hint">
-                Match the provider the tool expects so you can attach it later.
-              </span>
-            </div>
           )}
 
           <div className="field">
-            <label htmlFor={nameId}>Name (optional)</label>
+            <label htmlFor={nameId}>{isEditing ? 'Name' : 'Name (optional)'}</label>
             <input
               id={nameId}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (error !== null) setError(null);
+              }}
               placeholder="A label for this credential"
               autoComplete="off"
               maxLength={255}
+              aria-invalid={isEditing && error !== null}
+              aria-describedby={isEditing && error !== null ? errId : undefined}
             />
           </div>
 
-          <div className="field">
-            <label htmlFor={secretId}>{secretLabel}</label>
-            <input
-              id={secretId}
-              type="password"
-              autoComplete="off"
-              value={secret}
-              onChange={(e) => {
-                setSecret(e.target.value);
-                if (error !== null) setError(null);
-              }}
-              placeholder={kind === 'connection_string' ? 'postgresql://…' : 'sk-…'}
-              aria-invalid={error !== null}
-              aria-describedby={error !== null ? errId : undefined}
-            />
-          </div>
+          {!isEditing && (
+            <div className="field">
+              <label htmlFor={secretId}>{secretLabel}</label>
+              <input
+                id={secretId}
+                type="password"
+                autoComplete="off"
+                value={secret}
+                onChange={(e) => {
+                  setSecret(e.target.value);
+                  if (error !== null) setError(null);
+                }}
+                placeholder={kind === 'connection_string' ? 'postgresql://…' : 'sk-…'}
+                aria-invalid={error !== null}
+                aria-describedby={error !== null ? errId : undefined}
+              />
+            </div>
+          )}
 
           {error !== null && (
             <p id={errId} className="field" role="alert">
@@ -277,10 +322,16 @@ export function AddCredentialSheet({
               type="submit"
               className="btn"
               data-variant="primary"
-              disabled={!canAdd}
-              aria-busy={create.isPending}
+              disabled={isEditing ? !canSave : !canAdd}
+              aria-busy={isEditing ? update.isPending : create.isPending}
             >
-              {create.isPending ? 'Adding…' : 'Add credential'}
+              {isEditing
+                ? update.isPending
+                  ? 'Saving…'
+                  : 'Save'
+                : create.isPending
+                  ? 'Adding…'
+                  : 'Add credential'}
             </button>
           </div>
         </form>
