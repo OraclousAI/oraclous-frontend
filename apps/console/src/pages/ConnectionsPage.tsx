@@ -2,8 +2,8 @@
 // credential list out of Settings' ConnectionsSection into a routed page: every credential the
 // signed-in user holds (BYOM model keys + tool credentials) with provider, type, and name, plus a
 // two-step danger Remove. The secret is only ever SENT on create elsewhere — it is never listed,
-// displayed, or read back here (§1.5). Adding a credential is done here via the "Add a credential"
-// sheet (increment 2); renaming, the providers panel, and OAuth connect are later increments.
+// displayed, or read back here (§1.5). Adding (increment 2), renaming (increment 3), and the
+// connected-providers panel (increment 4) live here; OAuth connect is a later increment.
 import { useRef, useState } from 'react';
 import { ApiClientError, type Credential } from '@oraclous/api-client';
 import { useDash } from '../context/dash.js';
@@ -11,7 +11,9 @@ import {
   MODEL_CREDENTIAL_TOOL_ID,
   credKindLabel,
   useCredentials,
+  useDataSources,
   useDeleteCredential,
+  useProviders,
 } from '../lib/credentials.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { AddCredentialSheet } from '../components/AddCredentialSheet.js';
@@ -28,6 +30,8 @@ function messageFor(cause: unknown): string {
 export default function ConnectionsPage() {
   const { userId } = useDash();
   const { credentials, isLoading, isError } = useCredentials(userId);
+  const { providers, isLoading: providersLoading, isError: providersError } = useProviders();
+  const { dataSources } = useDataSources();
   const remove = useDeleteCredential();
 
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +113,57 @@ export default function ConnectionsPage() {
       >
         {armedMessage}
       </div>
+
+      <section className="card" aria-label="Connected providers">
+        <div className="card-head">
+          <div className="h">
+            <h2>Connected providers</h2>
+            <span className="sub">
+              Providers you've connected and the data sources they unlock.
+            </span>
+          </div>
+        </div>
+        <div className="card-body">
+          {providersLoading ? (
+            <SkeletonList rows={2} />
+          ) : providersError ? (
+            <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
+              Couldn’t load connected providers.
+            </p>
+          ) : providers.length === 0 ? (
+            <p className="t-caption" style={{ color: 'var(--mute)', margin: 0 }}>
+              No providers connected yet. Add a credential to connect one.
+            </p>
+          ) : (
+            <ul className="conn-providers">
+              {providers.map((p) => {
+                const sources = dataSources[p] ?? [];
+                const label = p.charAt(0).toUpperCase() + p.slice(1);
+                return (
+                  <li key={p} className="conn-provider">
+                    <div className="conn-provider__head">
+                      <span className="conn-provider__name">{label}</span>
+                      <span className="status-pill" data-state="active">
+                        <span className="dot" aria-hidden="true" />
+                        connected
+                      </span>
+                    </div>
+                    {sources.length > 0 && (
+                      <ul className="conn-provider__sources" aria-label={`${label} data sources`}>
+                        {sources.map((ds) => (
+                          <li key={ds} className="chip chip-sm">
+                            {ds}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
 
       {error !== null && (
         <p role="alert" className="callout" data-tone="error" style={{ margin: 0 }}>

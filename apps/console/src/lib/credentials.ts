@@ -2,11 +2,12 @@
 // (user, tool); the secret is only ever SENT on create — the list returns metadata only. The
 // agent builder uses these to wire a model's BYOM key (model.config.credential_id) and a tool's
 // credential_mappings; the tool-instance flow (lib/agents.ts) creates+configures its own.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type {
   CredType,
   CreateCredentialInput,
   UpdateCredentialInput,
+  DataSourcesByProvider,
   Credential,
 } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
@@ -83,16 +84,63 @@ export function useCredentials(userId: string | null): CredentialsState {
   };
 }
 
+export interface ProvidersState {
+  // The provider names the user has connected (i.e. holds at least one credential for).
+  readonly providers: readonly string[];
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+export function useProviders(): ProvidersState {
+  const { credentials: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['providers'],
+    queryFn: () => client.listProviders(),
+    enabled: isAuthenticated,
+    staleTime: 30 * 1000,
+  });
+
+  return { providers: query.data ?? [], isLoading: query.isLoading, isError: query.isError };
+}
+
+export interface DataSourcesState {
+  // Connected provider → the data sources it unlocks.
+  readonly dataSources: DataSourcesByProvider;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+}
+
+export function useDataSources(): DataSourcesState {
+  const { credentials: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['data-sources'],
+    queryFn: () => client.listDataSources(),
+    enabled: isAuthenticated,
+    staleTime: 30 * 1000,
+  });
+
+  return { dataSources: query.data ?? {}, isLoading: query.isLoading, isError: query.isError };
+}
+
+// Creating or removing a credential can change the connected-provider set, so the providers +
+// data-sources panel must refresh too (rename leaves the provider set unchanged).
+function invalidateCredentialSet(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: ['credentials'] }); // prefix → every ['credentials', userId]
+  void qc.invalidateQueries({ queryKey: ['providers'] });
+  void qc.invalidateQueries({ queryKey: ['data-sources'] });
+}
+
 export function useCreateCredential() {
   const { credentials: client } = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: CreateCredentialInput): Promise<Credential> => client.create(input),
-    onSuccess: () => {
-      // Prefix-invalidate so every ['credentials', userId] list refreshes.
-      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
-    },
+    onSuccess: () => invalidateCredentialSet(queryClient),
   });
 }
 
@@ -114,8 +162,6 @@ export function useDeleteCredential() {
 
   return useMutation({
     mutationFn: (credentialId: string): Promise<void> => client.remove(credentialId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['credentials'] });
-    },
+    onSuccess: () => invalidateCredentialSet(queryClient),
   });
 }

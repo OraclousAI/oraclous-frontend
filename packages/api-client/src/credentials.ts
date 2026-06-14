@@ -34,12 +34,22 @@ export interface Credential {
   readonly credType: string;
 }
 
+// A connected provider name → the names of the data sources it unlocks (the broker's static
+// catalogue, narrowed to the user's connected providers).
+export type DataSourcesByProvider = Readonly<Record<string, readonly string[]>>;
+
 interface CredentialWire {
   readonly id: string;
   readonly name: string | null;
   readonly provider: string;
   readonly tool_id: string;
   readonly cred_type: string;
+}
+interface ProvidersWire {
+  readonly providers?: readonly string[] | null;
+}
+interface DataSourcesWire {
+  readonly data_sources?: Readonly<Record<string, Readonly<Record<string, unknown>>>> | null;
 }
 
 export interface CredentialsClient {
@@ -50,6 +60,9 @@ export interface CredentialsClient {
   // metadata.
   update(input: UpdateCredentialInput): Promise<Credential>;
   remove(credentialId: string): Promise<void>;
+  // Read-only discovery: the provider names the user has connected, and the data sources each unlocks.
+  listProviders(): Promise<string[]>;
+  listDataSources(): Promise<DataSourcesByProvider>;
 }
 
 function toCredential(wire: CredentialWire): Credential {
@@ -119,6 +132,27 @@ export function createCredentialsClient(transport: ApiTransport): CredentialsCli
         method: 'DELETE',
         path: `/credentials/${encodeURIComponent(credentialId)}`,
       });
+    },
+    async listProviders(): Promise<string[]> {
+      const { data } = await transport.execute<ProvidersWire>({
+        method: 'GET',
+        path: '/credentials/providers',
+      });
+      // Defensive: a malformed/empty payload yields no connected providers, never a thrown query.
+      return Array.isArray(data?.providers) ? [...data.providers] : [];
+    },
+    async listDataSources(): Promise<DataSourcesByProvider> {
+      const { data } = await transport.execute<DataSourcesWire>({
+        method: 'GET',
+        path: '/credentials/available-data-sources',
+      });
+      const grouped = data?.data_sources;
+      if (grouped === null || grouped === undefined || typeof grouped !== 'object') return {};
+      const out: Record<string, string[]> = {};
+      for (const [provider, sources] of Object.entries(grouped)) {
+        out[provider] = sources !== null && typeof sources === 'object' ? Object.keys(sources) : [];
+      }
+      return out;
     },
   };
 }
