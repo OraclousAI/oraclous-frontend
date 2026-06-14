@@ -97,6 +97,15 @@ export interface RecipeTemplate {
   readonly recipe: RecipeDocument;
 }
 
+// The result of persisting a recipe (POST /api/v1/recipes). The store endpoint persists a DRAFT
+// (status "draft") and bumps the version; promotion to "promoted" is a separate step (not part of
+// this surface).
+export interface StoredRecipe {
+  readonly id: string;
+  readonly version: number;
+  readonly status: string;
+}
+
 // Dry-run a recipe over a small sample — a preview with NO writes (POST /api/v1/recipes/dry-run).
 export interface DryRunInput {
   readonly sample: string;
@@ -148,6 +157,8 @@ export interface RecipesClient {
   templates(): Promise<RecipeTemplate[]>;
   // Preview a recipe over a sample — no writes; 422 on a malformed sample/recipe.
   dryRun(input: DryRunInput): Promise<DryRunResult>;
+  // Persist a recipe document as a draft (201); 422 on an invalid document (see StoredRecipe).
+  store(recipe: RecipeDocument): Promise<StoredRecipe>;
 }
 
 export function createRecipesClient(transport: ApiTransport): RecipesClient {
@@ -192,6 +203,14 @@ export function createRecipesClient(transport: ApiTransport): RecipesClient {
         method: 'POST',
         path: '/api/v1/recipes/dry-run',
         body,
+      });
+      return data;
+    },
+    async store(recipe: RecipeDocument): Promise<StoredRecipe> {
+      const { data } = await transport.execute<StoredRecipe>({
+        method: 'POST',
+        path: '/api/v1/recipes',
+        body: { recipe },
       });
       return data;
     },
