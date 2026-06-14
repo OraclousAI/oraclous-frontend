@@ -8,18 +8,11 @@ import { useQuery } from '@tanstack/react-query';
 import { ApiClientError, ErrorCode } from '@oraclous/api-client';
 import { useApi } from '../lib/api.jsx';
 import { useTokenStore } from '../lib/token-store.jsx';
+import { providerLabel } from '../lib/providers.js';
 import { Logo, Wordmark } from '../icons/index.js';
 import './auth.css';
 
 type Mode = 'login' | 'signup';
-
-const PROVIDER_LABEL: Record<string, string> = {
-  google: 'Google',
-  github: 'GitHub',
-  notion: 'Notion',
-};
-const providerLabel = (p: string): string =>
-  PROVIDER_LABEL[p] ?? p.charAt(0).toUpperCase() + p.slice(1);
 
 // Only ever navigate to an in-app path (guards against open-redirect via ?redirect=).
 function safeRedirect(target: string | null): string {

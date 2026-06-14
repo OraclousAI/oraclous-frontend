@@ -2,7 +2,7 @@
 // result. /execute returns 201 for both success and failure, so we branch on the execution status.
 import { useId, useState, type CSSProperties, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ApiClientError, type CredType } from '@oraclous/api-client';
+import { ApiClientError, type Credential, type CredType } from '@oraclous/api-client';
 import {
   useConfigureCredentials,
   useCreateCredential,
@@ -10,10 +10,14 @@ import {
   useInstance,
   useValidation,
 } from '../lib/agents.js';
+import { useCredentials } from '../lib/credentials.js';
+import { providerLabel } from '../lib/providers.js';
 import { useMe } from '../lib/session.js';
 import { useTools } from '../lib/tools.js';
+import { CredentialSlot } from '../components/CredentialSlot.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
 import { useToast } from '../lib/toast.jsx';
+import './agent.css';
 
 interface RequirementForm {
   readonly credType: CredType;
@@ -185,16 +189,25 @@ const DEFAULT_INPUT = '{\n  "operation": "list_tables"\n}';
 function RequirementRow({
   type,
   provider,
-  mapped,
+  mappedId,
+  toolId,
+  userId,
+  candidates,
   onConnect,
+  onAttach,
 }: {
   type: string;
   provider: string;
-  mapped: boolean;
+  mappedId: string | null;
+  toolId: string;
+  userId: string;
+  candidates: readonly Credential[];
   onConnect: (secret: string) => Promise<void>;
+  onAttach: (credentialId: string | null) => Promise<void>;
 }) {
   const form = formForRequirement(type);
   const inputId = useId();
+  const mapped = mappedId !== null;
   const [secret, setSecret] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -220,7 +233,7 @@ function RequirementRow({
     return (
       <div style={styles.reqRow}>
         <span style={styles.reqLabel}>
-          {type} · {provider}
+          {type} · {providerLabel(provider)}
         </span>
         <span style={styles.okText}>✓ configured</span>
         <button type="button" onClick={() => setReplacing(true)} style={styles.secondary}>
@@ -231,12 +244,33 @@ function RequirementRow({
   }
 
   if (!form.manual) {
+    // OAuth: CredentialSlot shows a "Connect with {provider}" button AND a picker over already-
+    // connected oauth credentials. Selecting one attaches it (configure) so the requirement can
+    // actually complete from here — connect, then pick the connected credential → "✓ configured".
     return (
-      <div style={styles.reqRow}>
+      <div style={styles.reqForm}>
         <span style={styles.reqLabel}>
-          {type} · {provider}
+          {type} · {providerLabel(provider)}
         </span>
-        <span style={styles.muted}>Needs an OAuth connection (coming soon).</span>
+        <CredentialSlot
+          label={form.label}
+          provider={provider}
+          credType={form.credType}
+          secretKey={form.secretKey}
+          toolId={toolId}
+          userId={userId}
+          candidates={candidates.filter(
+            (c) => c.credType === form.credType && (c.toolId === toolId || c.provider === provider)
+          )}
+          value={mappedId}
+          onChange={(credentialId) => {
+            void (async () => {
+              await onAttach(credentialId);
+              setReplacing(false);
+            })();
+          }}
+          manual={false}
+        />
       </div>
     );
   }
@@ -244,7 +278,7 @@ function RequirementRow({
   return (
     <form style={styles.reqForm} onSubmit={onSubmit}>
       <label htmlFor={inputId} style={styles.label}>
-        {form.label} for {provider}
+        {form.label} for {providerLabel(provider)}
       </label>
       <div style={styles.reqInputRow}>
         <input
@@ -283,6 +317,7 @@ export default function AgentDetailPage() {
   const { principal } = useMe();
   const createCredential = useCreateCredential();
   const configure = useConfigureCredentials(instanceId);
+  const { credentials: candidates } = useCredentials(principal?.id ?? null);
   const toast = useToast();
 
   const tool =
@@ -302,7 +337,21 @@ export default function AgentDetailPage() {
       credential: { [form.secretKey]: secret },
     });
     await configure.mutateAsync({ [type]: credential.id });
-    toast.success(`Connected ${provider}.`);
+    toast.success(`Connected ${providerLabel(provider)}.`);
+  }
+
+  async function attachRequirement(type: string, credentialId: string | null): Promise<void> {
+    if (instance === null) return;
+    // Send the full merged mapping so attaching one credential never drops the others.
+    const mappings: Record<string, string> = { ...instance.credentialMappings };
+    if (credentialId !== null) mappings[type] = credentialId;
+    else delete mappings[type];
+    try {
+      await configure.mutateAsync(mappings);
+      toast.success(credentialId !== null ? 'Credential configured.' : 'Credential removed.');
+    } catch {
+      toast.error('Could not update the credential. Please try again.');
+    }
   }
 
   const [input, setInput] = useState(DEFAULT_INPUT);
@@ -424,8 +473,12 @@ export default function AgentDetailPage() {
                       key={type}
                       type={type}
                       provider={provider}
-                      mapped={Boolean(instance.credentialMappings[type])}
+                      mappedId={instance.credentialMappings[type] ?? null}
+                      toolId={instance.capabilityId}
+                      userId={principal?.id ?? ''}
+                      candidates={candidates}
                       onConnect={(secret) => connectRequirement(type, provider, secret)}
+                      onAttach={(credentialId) => attachRequirement(type, credentialId)}
                     />
                   );
                 })
