@@ -30,10 +30,10 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-// Item definitions — one source of truth, composed into groups per persona below. Increment 1 of the
-// Nav-IA journey keeps every existing label + route (Jobs stays "Jobs", Ask stays "Ask"); only the
-// structure groups. Relabels (Jobs→Runs, Ask→Explore), promoting Connections into Operate, and retiring
-// the "Personal" group land in later increments.
+// Item definitions — one source of truth, composed into groups per persona below. The Nav-IA journey
+// restructures the grouped spine without changing what each surface does. Connections is now a
+// first-class Operate item (increment 2). Relabels (Jobs→Runs, Ask→Explore) and retiring the now
+// near-empty "Personal" group land in later increments.
 const dashboard: NavItem = { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' };
 const workspaces: NavItem = {
   id: 'workspaces',
@@ -80,23 +80,23 @@ const settings: NavItem = {
 const OWNER: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools, recipes] },
-  { id: 'operate', label: 'Operate', items: [jobs, workspaces] },
-  { id: 'personal', label: 'Personal', items: [ask, connections] },
+  { id: 'operate', label: 'Operate', items: [jobs, workspaces, connections] },
+  { id: 'personal', label: 'Personal', items: [ask] },
   { id: 'admin', label: 'Admin', items: [developer, members, billing, settings] },
 ];
 
 const MEMBER: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools] },
-  { id: 'operate', label: 'Operate', items: [jobs, workspaces] },
-  { id: 'personal', label: 'Personal', items: [ask, connections] },
+  { id: 'operate', label: 'Operate', items: [jobs, workspaces, connections] },
+  { id: 'personal', label: 'Personal', items: [ask] },
 ];
 
 const STANDALONE: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools, recipes] },
-  { id: 'operate', label: 'Operate', items: [jobs, workspaces] },
-  { id: 'personal', label: 'Personal', items: [ask, connections] },
+  { id: 'operate', label: 'Operate', items: [jobs, workspaces, connections] },
+  { id: 'personal', label: 'Personal', items: [ask] },
   { id: 'admin', label: 'Admin', items: [developer, billing, settings] },
 ];
 
