@@ -26,7 +26,7 @@ export function Sidebar({
   const spendHead = spendHeadline(spend, spendLoading, spendError);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const nav = NAV_BY_PERSONA[persona];
+  const groups = NAV_BY_PERSONA[persona];
   const activeId = activeNavId(pathname);
 
   // Navigate then let the shell close the mobile drawer.
@@ -61,34 +61,33 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Primary navigation */}
+      {/* Primary navigation — ordered, persona-aware groups (each header is a non-interactive label,
+          not a tab stop; selection stays aria-current, mint is reserved for live signals). */}
       <nav className="shell-sidebar__nav" aria-label="Primary">
-        {nav.map((it) => {
-          if (it.divider) {
-            return (
-              <h3 key={it.id} className="shell-sidebar__section-label">
-                {it.label}
-              </h3>
-            );
-          }
-          const Icon = it.icon;
-          const isActive = it.id === activeId;
-          return (
-            <button
-              key={it.id}
-              type="button"
-              className="shell-nav-item"
-              onClick={() => {
-                if (it.route != null) go(it.route);
-              }}
-              aria-current={isActive ? 'page' : undefined}
-              aria-disabled={it.route == null || undefined}
-            >
-              {Icon != null && <Icon size={15} aria-hidden="true" />}
-              <span style={{ flex: 1 }}>{it.label}</span>
-            </button>
-          );
-        })}
+        {groups.map((group) => (
+          <section key={group.id} aria-label={group.label}>
+            <h3 className="shell-sidebar__section-label">{group.label}</h3>
+            {group.items.map((it) => {
+              const Icon = it.icon;
+              const isActive = it.id === activeId;
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  className="shell-nav-item"
+                  onClick={() => {
+                    if (it.route != null) go(it.route);
+                  }}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-disabled={it.route == null || undefined}
+                >
+                  {Icon != null && <Icon size={15} aria-hidden="true" />}
+                  <span style={{ flex: 1 }}>{it.label}</span>
+                </button>
+              );
+            })}
+          </section>
+        ))}
 
         {/* Workspace shortcuts — the current org's knowledge graphs */}
         {workspaces.length > 0 && (

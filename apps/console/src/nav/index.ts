@@ -21,50 +21,86 @@ export interface NavItem {
   label: string;
   icon?: ComponentType<IconProps>;
   route?: string;
-  divider?: boolean;
 }
 
-const OWNER: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' },
-  { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
-  { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
-  { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
-  { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
-  { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
-  { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
-  { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
-  { id: 'members', label: 'Members', icon: IconUsers, route: '/app/members' },
-  { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
-  { id: 'connections', label: 'Connections', icon: IconGlobe, route: '/app/connections' },
-  { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
+/** A labelled section of the nav: a header + its ordered items. */
+export interface NavGroup {
+  id: string;
+  label: string;
+  items: NavItem[];
+}
+
+// Item definitions — one source of truth, composed into groups per persona below. Increment 1 of the
+// Nav-IA journey keeps every existing label + route (Jobs stays "Jobs", Ask stays "Ask"); only the
+// structure groups. Relabels (Jobs→Runs, Ask→Explore), promoting Connections into Operate, and retiring
+// the "Personal" group land in later increments.
+const dashboard: NavItem = { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' };
+const workspaces: NavItem = {
+  id: 'workspaces',
+  label: 'Workspaces',
+  icon: IconLayers,
+  route: '/app/workspaces',
+};
+const agents: NavItem = { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' };
+const jobs: NavItem = { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' };
+const tools: NavItem = { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' };
+const recipes: NavItem = {
+  id: 'recipes',
+  label: 'Recipes',
+  icon: IconSparkle,
+  route: '/app/recipes',
+};
+const ask: NavItem = { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' };
+const developer: NavItem = {
+  id: 'developer',
+  label: 'Developer',
+  icon: IconKey,
+  route: '/app/developer/keys',
+};
+const members: NavItem = {
+  id: 'members',
+  label: 'Members',
+  icon: IconUsers,
+  route: '/app/members',
+};
+const billing: NavItem = { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' };
+const connections: NavItem = {
+  id: 'connections',
+  label: 'Connections',
+  icon: IconGlobe,
+  route: '/app/connections',
+};
+const settings: NavItem = {
+  id: 'settings',
+  label: 'Settings',
+  icon: IconCog,
+  route: '/app/settings',
+};
+
+const OWNER: NavGroup[] = [
+  { id: 'home', label: 'Home', items: [dashboard] },
+  { id: 'build', label: 'Build', items: [agents, tools, recipes] },
+  { id: 'operate', label: 'Operate', items: [jobs, workspaces] },
+  { id: 'personal', label: 'Personal', items: [ask, connections] },
+  { id: 'admin', label: 'Admin', items: [developer, members, billing, settings] },
 ];
 
-const MEMBER: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' },
-  { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
-  { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
-  { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
-  { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
-  { id: 'd1', label: 'Personal', divider: true },
-  { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
-  { id: 'connections', label: 'Connections', icon: IconGlobe, route: '/app/connections' },
+const MEMBER: NavGroup[] = [
+  { id: 'home', label: 'Home', items: [dashboard] },
+  { id: 'build', label: 'Build', items: [agents, tools] },
+  { id: 'operate', label: 'Operate', items: [jobs, workspaces] },
+  { id: 'personal', label: 'Personal', items: [ask, connections] },
 ];
 
-const STANDALONE: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' },
-  { id: 'workspaces', label: 'Workspaces', icon: IconLayers, route: '/app/workspaces' },
-  { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' },
-  { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' },
-  { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' },
-  { id: 'recipes', label: 'Recipes', icon: IconSparkle, route: '/app/recipes' },
-  { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' },
-  { id: 'developer', label: 'Developer', icon: IconKey, route: '/app/developer/keys' },
-  { id: 'billing', label: 'Billing', icon: IconCard, route: '/app/billing' },
-  { id: 'connections', label: 'Connections', icon: IconGlobe, route: '/app/connections' },
-  { id: 'settings', label: 'Settings', icon: IconCog, route: '/app/settings' },
+const STANDALONE: NavGroup[] = [
+  { id: 'home', label: 'Home', items: [dashboard] },
+  { id: 'build', label: 'Build', items: [agents, tools, recipes] },
+  { id: 'operate', label: 'Operate', items: [jobs, workspaces] },
+  { id: 'personal', label: 'Personal', items: [ask, connections] },
+  { id: 'admin', label: 'Admin', items: [developer, billing, settings] },
 ];
 
-export const NAV_BY_PERSONA: Record<Persona, NavItem[]> = {
+export const NAV_BY_PERSONA: Record<Persona, NavGroup[]> = {
   owner: OWNER,
   member: MEMBER,
   standalone: STANDALONE,
