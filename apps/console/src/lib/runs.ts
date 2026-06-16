@@ -172,6 +172,29 @@ export function useCancelJob() {
   });
 }
 
+export interface ExecutionsState {
+  readonly executions: readonly HarnessExecution[];
+  readonly isLoading: boolean;
+}
+
+// The org's harness executions (each carries its full step trace). Used to enrich the runs table
+// with a per-row step summary without a fetch per row — one list call, matched to jobs by
+// harnessExecutionId. Polls while any run is in flight (a running trace grows; an escalated one
+// changes when a human resolves it).
+export function useExecutions(live = false): ExecutionsState {
+  const { harnesses: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['harness-executions-list'],
+    queryFn: () => client.listExecutions(),
+    enabled: isAuthenticated,
+    refetchInterval: live ? 2000 : false,
+  });
+
+  return { executions: query.data ?? [], isLoading: query.isLoading };
+}
+
 export interface ExecutionState {
   readonly execution: HarnessExecution | null;
   readonly isLoading: boolean;
