@@ -96,6 +96,45 @@
 .run-detail {
   border-top: 1px solid var(--rule);
 }
+/* Resolve-an-escalation panel — warning-toned, NEVER mint (mint = live signal only). */
+.run-resolve {
+  margin: 12px 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning);
+  background: var(--warning-bg);
+  border-radius: var(--r-3);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.run-resolve-h {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--t-dense-size);
+  color: var(--ink);
+}
+.run-resolve-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.run-resolve label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--t-tiny-size);
+  color: var(--mute);
+}
+.run-resolve textarea,
+.run-resolve input {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--paper);
+  color: var(--ink);
+}
 .run-detail .out {
   background: var(--ink);
   color: var(--paper);

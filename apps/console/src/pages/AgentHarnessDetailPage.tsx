@@ -17,6 +17,7 @@ import {
   useHarnessAgent,
   useJob,
   useJobs,
+  useExecutions,
   useSubmitJob,
 } from '../lib/runs.js';
 import { fmtTime, stateRowClass } from '../lib/jobs-format.js';
@@ -215,6 +216,12 @@ function RunsTab({
   const [input, setInput] = useState('');
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Per-row step summary: one executions list (each carries its steps), matched to jobs by
+  // harnessExecutionId. Poll while anything is in flight (a running trace grows; an escalated
+  // one changes when resolved).
+  const anyInFlight = jobs.some(isRunActive);
+  const { executions } = useExecutions(anyInFlight);
+  const execById = useMemo(() => new Map(executions.map((e) => [e.id, e])), [executions]);
   const listed = jobs.find((j) => j.id === openJobId) ?? null;
   // Fallback fetch: right after submit (before the list refetch lands) and when other jobs
   // push this one past the service's 50-row cap, the drawer must not vanish.
@@ -284,7 +291,7 @@ function RunsTab({
           className="run-table"
           role="table"
           aria-label="Run history"
-          style={{ gridTemplateColumns: '14px minmax(0, 1fr) 110px 110px 150px' }}
+          style={{ gridTemplateColumns: '14px minmax(0, 1fr) 110px 150px 150px' }}
         >
           <div role="row" style={{ display: 'contents' }}>
             <span className="run-th" role="columnheader" aria-label="Status" />
@@ -322,7 +329,23 @@ function RunsTab({
                 {isRunActive(j) && !isRunEscalated(j) && <CancelRunButton jobId={j.id} />}
               </span>
               <span className="run-td mute" role="cell">
-                {isJobTerminal(j.state) ? '—' : `${j.progress}%`}
+                {(() => {
+                  const exec =
+                    j.harnessExecutionId != null ? execById.get(j.harnessExecutionId) : undefined;
+                  const steps = exec?.steps ?? [];
+                  if (steps.length > 0) {
+                    const last = steps[steps.length - 1]!;
+                    const detail =
+                      last.detail != null && last.detail !== '' ? ` — ${last.detail}` : '';
+                    return (
+                      <span title={`last: ${last.name}${detail}`}>
+                        {steps.length} step{steps.length === 1 ? '' : 's'} · {last.kind}{' '}
+                        {last.status}
+                      </span>
+                    );
+                  }
+                  return isJobTerminal(j.state) ? '—' : `${j.progress}%`;
+                })()}
               </span>
               <span className="run-td mute" role="cell">
                 {fmtTime(j.createdAt)}
