@@ -6,6 +6,7 @@ import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
   createAuthClient,
+  createBindingsClient,
   createCapabilitiesClient,
   createChatClient,
   createCredentialsClient,
@@ -25,6 +26,7 @@ import {
   createToolsClient,
   createWebhookSubscriptionsClient,
   type AuthClient,
+  type BindingsClient,
   type CapabilitiesClient,
   type ChatClient,
   type CredentialsClient,
@@ -61,6 +63,7 @@ interface ApiContextValue {
   readonly harnesses: HarnessesClient;
   readonly engine: EngineClient;
   readonly capabilities: CapabilitiesClient;
+  readonly bindings: BindingsClient;
   readonly integrationKeys: IntegrationKeysClient;
   readonly publishedAgents: PublishedAgentsClient;
   readonly webhookSubscriptions: WebhookSubscriptionsClient;
@@ -93,6 +96,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       harnesses: createHarnessesClient(transport),
       engine: createEngineClient(transport),
       capabilities: createCapabilitiesClient(transport),
+      bindings: createBindingsClient(transport),
       invitations: createInvitationsClient(transport),
       instances: createInstancesClient(transport),
       credentials: createCredentialsClient(transport),

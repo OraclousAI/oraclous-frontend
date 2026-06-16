@@ -20,6 +20,7 @@ import {
   useExecutions,
   useSubmitJob,
 } from '../lib/runs.js';
+import { useGraphsForHarness } from '../lib/bindings.js';
 import { fmtTime, stateRowClass } from '../lib/jobs-format.js';
 import '../styles/runs.css';
 import './agent.css';
@@ -170,6 +171,8 @@ function AgentView({
           <span className="s">{lastRun?.state ?? 'never run'}</span>
         </div>
       </div>
+
+      <WorkspacesServed capabilityId={capabilityId} />
 
       <div className="tabs" role="group" aria-label="Agent sections">
         {TABS.map((t) => (
@@ -357,6 +360,49 @@ function RunsTab({
 
       {openJob !== null && <RunDetail job={openJob} />}
     </section>
+  );
+}
+
+// The workspaces this agent is bound to (ADR-029 / G2). Curation only — it doesn't change what the
+// agent can read or where it runs; it answers "which workspaces is this agent for".
+function WorkspacesServed({ capabilityId }: { capabilityId: string }) {
+  const { graphs, isLoading } = useGraphsForHarness(capabilityId);
+  if (isLoading) return null;
+  return (
+    <div
+      role="group"
+      aria-label="Workspaces this agent serves"
+      style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}
+    >
+      <span
+        style={{
+          fontSize: 'var(--t-tiny-size)',
+          fontFamily: 'var(--font-mono)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          color: 'var(--mute)',
+        }}
+      >
+        Workspaces
+      </span>
+      {graphs.length === 0 ? (
+        <span className="t-caption" style={{ color: 'var(--mute)' }}>
+          Not assigned to a workspace yet
+        </span>
+      ) : (
+        graphs.map((g) => (
+          <Link
+            key={g.graphId}
+            to={`/app/workspaces/${g.graphId}`}
+            className="btn"
+            data-variant="ghost"
+            data-size="sm"
+          >
+            {g.name}
+          </Link>
+        ))
+      )}
+    </div>
   );
 }
 

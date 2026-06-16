@@ -15,6 +15,8 @@ import {
   useUpdateGraph,
 } from '../lib/graphs.js';
 import { resultScore, resultText, useSearch } from '../lib/search.js';
+import { useHarnessAgents } from '../lib/runs.js';
+import { useAgentsForGraph, useAttachAgent, useDetachAgent } from '../lib/bindings.js';
 import { useToast } from '../lib/toast.jsx';
 import { OntologyEditor } from '../components/graph/OntologyEditor.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
@@ -80,6 +82,119 @@ function JobRow({ job }: { job: IngestJob }) {
         <p className="err">{job.errorMessage}</p>
       )}
     </li>
+  );
+}
+
+// "Agents for this workspace" — the binding curation surface (ADR-029 / G2). Lists the agents bound
+// to this workspace, attaches an existing agent (or links out to build one), and detaches. Binding is
+// curation only — it does not change what an agent can read or where it runs.
+function WorkspaceAgents({ graphId }: { graphId: string }) {
+  const pickId = useId();
+  const { agents: bound, isLoading } = useAgentsForGraph(graphId);
+  const { agents: allAgents } = useHarnessAgents();
+  const attach = useAttachAgent();
+  const detach = useDetachAgent();
+  const [pick, setPick] = useState('');
+
+  const boundIds = new Set(bound.map((a) => a.harnessId));
+  const attachable = allAgents.filter((a) => !boundIds.has(a.id));
+
+  return (
+    <section className="card" aria-label="Agents for this workspace">
+      <div className="card-head">
+        <div className="h">
+          <h2>Agents for this workspace</h2>
+          <span className="sub">Attach an existing agent or build one for this workspace</span>
+        </div>
+      </div>
+      <div
+        className="card-body"
+        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+      >
+        <div className="control-row">
+          <div className="field grow">
+            <label htmlFor={pickId}>Attach an agent</label>
+            <select id={pickId} value={pick} onChange={(e) => setPick(e.target.value)}>
+              <option value="">
+                {attachable.length === 0 ? 'No more agents to attach' : 'Select an agent…'}
+              </option>
+              {attachable.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.manifest?.metadata.name ?? a.name ?? a.id.slice(0, 8)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            className="btn"
+            data-variant="primary"
+            disabled={pick === '' || attach.isPending}
+            onClick={() =>
+              attach.mutate({ harnessId: pick, graphId }, { onSuccess: () => setPick('') })
+            }
+          >
+            {attach.isPending ? 'Attaching…' : 'Attach'}
+          </button>
+          <Link to="/app/agents/new" className="btn" data-variant="secondary">
+            Build an agent
+          </Link>
+        </div>
+
+        {isLoading ? (
+          <SkeletonList rows={2} />
+        ) : bound.length === 0 ? (
+          <div className="empty">
+            <span className="t">No agents yet</span>
+            <span className="s">
+              Attach an existing agent above, or build one for this workspace.
+            </span>
+          </div>
+        ) : (
+          <ul className="row-list">
+            {bound.map((a) => (
+              <li
+                key={a.harnessId}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-3)',
+                  padding: '10px 0',
+                }}
+              >
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <Link to={`/app/agents/harness/${a.harnessId}`}>
+                    {a.name ?? a.harnessId.slice(0, 8)}
+                  </Link>
+                  {a.summary != null && a.summary !== '' && (
+                    <span className="sub" style={{ display: 'block' }}>
+                      {a.summary}
+                    </span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  className="btn"
+                  data-variant="ghost"
+                  data-size="sm"
+                  disabled={detach.isPending}
+                  onClick={() => detach.mutate({ harnessId: a.harnessId, graphId })}
+                  aria-label={`Detach ${a.name ?? 'agent'} from this workspace`}
+                >
+                  Detach
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {(attach.isError || detach.isError) && (
+          <p role="alert" className="callout" data-tone="error" style={{ margin: 0 }}>
+            Couldn’t update this workspace’s agents. Please try again.
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -542,6 +657,8 @@ export default function GraphDetailPage() {
               </div>
             </div>
           </form>
+
+          <WorkspaceAgents graphId={graphId} />
 
           <section className="card" aria-label="Ingestion history">
             <div className="card-head">
