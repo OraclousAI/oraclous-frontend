@@ -9,7 +9,7 @@ import { useTools } from '../lib/tools.js';
 import { useCreateInstance, useInstances } from '../lib/agents.js';
 import { isRunActive, isRunEscalated, useHarnessAgents, useJobs } from '../lib/runs.js';
 import { SkeletonList } from '../components/ui/Skeleton.js';
-import { IconBot } from '../icons/index.js';
+import { IconBot, IconInfo } from '../icons/index.js';
 import './catalog.css';
 
 function messageFor(cause: unknown): string {
@@ -141,11 +141,31 @@ export default function AgentsPage() {
         </div>
       </section>
 
+      <p
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 8,
+          margin: '0 0 var(--sp-4)',
+          color: 'var(--mute)',
+          fontSize: 'var(--t-caption-size)',
+          lineHeight: 1.5,
+        }}
+      >
+        <IconInfo size={15} style={{ marginTop: 1 }} />
+        <span>
+          An <strong style={{ color: 'var(--ink)', fontWeight: 600 }}>agent</strong> is an OHM
+          manifest run durably through the engine; a{' '}
+          <strong style={{ color: 'var(--ink)', fontWeight: 600 }}>tool instance</strong> is a
+          single configured tool run directly.
+        </span>
+      </p>
+
       <form
         className="card"
         style={{ marginBottom: 'var(--sp-4)' }}
         onSubmit={onCreate}
-        aria-label="Create an agent"
+        aria-label="Create a tool instance"
       >
         <div className="card-head">
           <div className="h">
@@ -203,7 +223,7 @@ export default function AgentsPage() {
               disabled={createInstance.isPending || capabilityId === '' || name.trim() === ''}
               aria-busy={createInstance.isPending}
             >
-              {createInstance.isPending ? 'Creating…' : 'Create agent'}
+              {createInstance.isPending ? 'Creating…' : 'Create tool instance'}
             </button>
           </div>
           {error !== null && (
@@ -228,7 +248,7 @@ export default function AgentsPage() {
             <SkeletonList rows={3} />
           ) : isError ? (
             <p className="callout" data-tone="error" role="alert" style={{ margin: 0 }}>
-              Couldn&rsquo;t load your agents. Please try again.
+              Couldn&rsquo;t load your tool instances. Please try again.
             </p>
           ) : instances.length === 0 ? (
             <div className="empty">
@@ -239,7 +259,7 @@ export default function AgentsPage() {
               <span className="s">Create one above to run a tool against your graphs.</span>
             </div>
           ) : (
-            <ul className="cat-grid" aria-label="Agents">
+            <ul className="cat-grid" aria-label="Tool instances">
               {instances.map((inst) => {
                 const state = pillState(inst.status);
                 return (

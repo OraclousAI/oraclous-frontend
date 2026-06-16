@@ -36,6 +36,23 @@ import './agent.css';
 const DEFAULT_MODEL = 'openrouter/meta-llama/llama-3.1-8b-instruct';
 const PROTOCOL = 'openai-compatible' as const;
 
+// Curated wired model bindings offered in the picker — all openrouter / openai-compatible (the only
+// wired shape). The binding string is the manifest value; the "other" escape hatch covers anything
+// not listed (and can introduce a different provider, which re-arms the BYOM-key mismatch check).
+const WIRED_MODELS: { binding: string; label: string }[] = [
+  {
+    binding: 'openrouter/meta-llama/llama-3.1-8b-instruct',
+    label: 'Llama 3.1 8B Instruct · OpenRouter',
+  },
+  {
+    binding: 'openrouter/meta-llama/llama-3.3-70b-instruct',
+    label: 'Llama 3.3 70B Instruct · OpenRouter',
+  },
+  { binding: 'openrouter/openai/gpt-4o-mini', label: 'GPT-4o mini · OpenRouter' },
+  { binding: 'openrouter/anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet · OpenRouter' },
+];
+const MODEL_OTHER = '__other__';
+
 // The model's BYOM provider is the binding's first segment: "openrouter/meta-llama/…" → openrouter.
 function modelProviderOf(binding: string): string {
   const head = binding.split('/')[0]?.trim();
@@ -224,6 +241,12 @@ function BuilderForm({
   const [form, setForm] = useState<FormState>(() =>
     existing !== null ? formFromManifest(existing) : emptyForm()
   );
+  // The model picker shows the wired list; "other" mode reveals the free-text binding. Seed it from
+  // whether the saved/initial binding is one of the wired options so edits round-trip correctly.
+  const [modelOther, setModelOther] = useState(() => {
+    const initial = existing !== null ? (modelBindingOf(existing) ?? DEFAULT_MODEL) : DEFAULT_MODEL;
+    return initial.trim() !== '' && !WIRED_MODELS.some((m) => m.binding === initial);
+  });
   const [error, setError] = useState<string | null>(null);
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
 
@@ -316,6 +339,20 @@ function BuilderForm({
     form.model.trim() !== '' &&
     entrypoint !== '' &&
     form.modelCredentialId !== null;
+
+  // Pre-save review: a read-only snapshot of what will be saved. The key shows only wired/not-set —
+  // never the credential id. Budget cells appear only when set, mirroring the detail Config grid.
+  const reviewCells: { k: string; v: string }[] = [
+    { k: 'name', v: form.name.trim() || '—' },
+    { k: 'model', v: form.model.trim() || '—' },
+    { k: 'model key', v: form.modelCredentialId !== null ? 'wired' : 'not set' },
+    { k: 'tools', v: String(form.caps.length) },
+    { k: 'entrypoint', v: entrypoint || '—' },
+  ];
+  if (/^\d+$/.test(form.maxToolCalls))
+    reviewCells.push({ k: 'max tool calls', v: form.maxToolCalls });
+  if (/^\d+$/.test(form.maxWallTime))
+    reviewCells.push({ k: 'max wall time', v: `${form.maxWallTime}s` });
 
   function buildManifest(principalOrgId: string): OhmManifest {
     // Merge over the saved manifest: only form-managed fields change.
@@ -480,6 +517,11 @@ function BuilderForm({
             <h2>Model</h2>
             <span className="sub">protocol: openai-compatible (the only wired shape)</span>
           </div>
+          <div className="right">
+            <span className="req" data-need={form.modelCredentialId === null ? 'true' : undefined}>
+              {form.modelCredentialId === null ? 'key required to run' : 'key ready'}
+            </span>
+          </div>
         </div>
         <div
           className="sec-body"
@@ -487,15 +529,39 @@ function BuilderForm({
         >
           <label className="field">
             <span>Model binding</span>
-            <input
-              type="text"
-              value={form.model}
-              onChange={(e) => setModelBinding(e.target.value)}
-              placeholder={DEFAULT_MODEL}
+            <select
+              value={modelOther ? MODEL_OTHER : form.model}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === MODEL_OTHER) setModelOther(true);
+                else {
+                  setModelOther(false);
+                  setModelBinding(value);
+                }
+              }}
               style={{ fontFamily: 'var(--font-mono)' }}
-              required
-            />
+            >
+              {WIRED_MODELS.map((m) => (
+                <option key={m.binding} value={m.binding}>
+                  {m.label}
+                </option>
+              ))}
+              <option value={MODEL_OTHER}>Other…</option>
+            </select>
           </label>
+          {modelOther && (
+            <label className="field">
+              <span>Custom model binding</span>
+              <input
+                type="text"
+                value={form.model}
+                onChange={(e) => setModelBinding(e.target.value)}
+                placeholder={DEFAULT_MODEL}
+                style={{ fontFamily: 'var(--font-mono)' }}
+                required
+              />
+            </label>
+          )}
           <div className="field">
             <span>{modelProvider} key (BYOM)</span>
             <CredentialSlot
@@ -680,6 +746,23 @@ function BuilderForm({
               placeholder="unlimited"
             />
           </label>
+        </div>
+      </section>
+
+      <section className="sec" aria-label="Review summary">
+        <div className="sec-h">
+          <div className="t">
+            <h2>Review</h2>
+            <span className="sub">what will be saved</span>
+          </div>
+        </div>
+        <div className="cfg-grid">
+          {reviewCells.map((c) => (
+            <div className="cfg-cell" key={c.k}>
+              <span className="k">{c.k}</span>
+              <span className="v">{c.v}</span>
+            </div>
+          ))}
         </div>
       </section>
 
