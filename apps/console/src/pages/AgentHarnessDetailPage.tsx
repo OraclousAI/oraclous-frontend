@@ -331,9 +331,7 @@ function RunsTab({
               <span className="run-td mute" role="cell">
                 {(() => {
                   const exec =
-                    j.harnessExecutionId != null
-                      ? execById.get(j.harnessExecutionId)
-                      : undefined;
+                    j.harnessExecutionId != null ? execById.get(j.harnessExecutionId) : undefined;
                   const steps = exec?.steps ?? [];
                   if (steps.length > 0) {
                     const last = steps[steps.length - 1]!;

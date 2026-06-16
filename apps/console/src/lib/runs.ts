@@ -5,7 +5,14 @@
 // idle tick is the only wake path for runs submitted outside this tab (focus refetch is
 // globally off).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { HarnessCapability, HarnessExecution, Job, OhmManifest } from '@oraclous/api-client';
+import type {
+  HarnessAssignment,
+  HarnessCapability,
+  HarnessExecution,
+  Job,
+  OhmManifest,
+  ResumeDecision,
+} from '@oraclous/api-client';
 import { isJobTerminal } from '@oraclous/api-client';
 import { useApi } from './api.jsx';
 import { useTokenStore } from './token-store.jsx';
@@ -216,4 +223,76 @@ export function useExecution(executionId: string | null, live = false): Executio
   });
 
   return { execution: query.data ?? null, isLoading: query.isLoading, isError: query.isError };
+}
+
+// ── Resolve an escalated run (human task board + mid-loop HITL pause) ─────────
+
+export interface AssignmentsState {
+  readonly assignments: readonly HarnessAssignment[];
+  readonly isLoading: boolean;
+}
+
+// The org's PENDING human-actor task-board assignments. Enabled only when something is waiting on a
+// human (the caller passes `enabled`), polled on the escalated cadence; a claim/complete invalidates it.
+export function useAssignments(enabled = true): AssignmentsState {
+  const { harnesses: client } = useApi();
+  const { isAuthenticated } = useTokenStore();
+
+  const query = useQuery({
+    queryKey: ['harness-assignments'],
+    queryFn: () => client.listAssignments(),
+    enabled: isAuthenticated && enabled,
+    refetchInterval: enabled ? 15000 : false,
+  });
+
+  return { assignments: query.data ?? [], isLoading: query.isLoading };
+}
+
+// A run leaving ESCALATED changes the job state, the assignment board, and the execution trace — so a
+// resolution refreshes all three (which also drives the "waiting on human" KPI down).
+function invalidateRunState(qc: ReturnType<typeof useQueryClient>): void {
+  void qc.invalidateQueries({ queryKey: ['engine-jobs'] });
+  void qc.invalidateQueries({ queryKey: ['harness-assignments'] });
+  void qc.invalidateQueries({ queryKey: ['harness-executions-list'] });
+  void qc.invalidateQueries({ queryKey: ['harness-execution'] });
+}
+
+export function useClaimAssignment() {
+  const { harnesses: client } = useApi();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (assignmentId: string): Promise<HarnessAssignment> =>
+      client.claimAssignment(assignmentId),
+    // Claiming moves it off the PENDING board; the complete step is driven off this result.
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['harness-assignments'] });
+    },
+  });
+}
+
+export function useCompleteAssignment() {
+  const { harnesses: client } = useApi();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (vars: { assignmentId: string; output: string }): Promise<HarnessAssignment> =>
+      client.completeAssignment(vars.assignmentId, vars.output),
+    onSuccess: () => invalidateRunState(qc),
+  });
+}
+
+export function useResumeExecution() {
+  const { harnesses: client } = useApi();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (vars: {
+      executionId: string;
+      decision: ResumeDecision;
+      reason?: string;
+    }): Promise<HarnessExecution> =>
+      client.resumeExecution(vars.executionId, vars.decision, vars.reason),
+    onSuccess: () => invalidateRunState(qc),
+  });
 }
