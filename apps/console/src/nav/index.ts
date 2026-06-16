@@ -32,8 +32,8 @@ export interface NavGroup {
 
 // Item definitions — one source of truth, composed into groups per persona below. The Nav-IA journey
 // restructures the grouped spine without changing what each surface does. Connections is now a
-// first-class Operate item (increment 2). Relabels (Jobs→Runs, Ask→Explore) and retiring the now
-// near-empty "Personal" group land in later increments.
+// first-class Operate item and Jobs is relabelled to Runs (increments 2–3). Relabelling Ask→Explore
+// and retiring the now near-empty "Personal" group land in increment 4.
 const dashboard: NavItem = { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' };
 const workspaces: NavItem = {
   id: 'workspaces',
@@ -42,7 +42,7 @@ const workspaces: NavItem = {
   route: '/app/workspaces',
 };
 const agents: NavItem = { id: 'agents', label: 'Agents', icon: IconBot, route: '/app/agents' };
-const jobs: NavItem = { id: 'jobs', label: 'Jobs', icon: IconActivity, route: '/app/jobs' };
+const runs: NavItem = { id: 'runs', label: 'Runs', icon: IconActivity, route: '/app/runs' };
 const tools: NavItem = { id: 'tools', label: 'Tools', icon: IconPlug, route: '/app/tools' };
 const recipes: NavItem = {
   id: 'recipes',
@@ -80,7 +80,7 @@ const settings: NavItem = {
 const OWNER: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools, recipes] },
-  { id: 'operate', label: 'Operate', items: [jobs, workspaces, connections] },
+  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections] },
   { id: 'personal', label: 'Personal', items: [ask] },
   { id: 'admin', label: 'Admin', items: [developer, members, billing, settings] },
 ];
@@ -88,14 +88,14 @@ const OWNER: NavGroup[] = [
 const MEMBER: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools] },
-  { id: 'operate', label: 'Operate', items: [jobs, workspaces, connections] },
+  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections] },
   { id: 'personal', label: 'Personal', items: [ask] },
 ];
 
 const STANDALONE: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools, recipes] },
-  { id: 'operate', label: 'Operate', items: [jobs, workspaces, connections] },
+  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections] },
   { id: 'personal', label: 'Personal', items: [ask] },
   { id: 'admin', label: 'Admin', items: [developer, billing, settings] },
 ];
@@ -110,7 +110,7 @@ export function activeNavId(pathname: string): string {
   if (pathname === '/app' || pathname === '/app/') return 'dashboard';
   if (pathname.startsWith('/app/workspaces')) return 'workspaces';
   if (pathname.startsWith('/app/agents')) return 'agents';
-  if (pathname.startsWith('/app/jobs')) return 'jobs';
+  if (pathname.startsWith('/app/runs') || pathname.startsWith('/app/jobs')) return 'runs';
   if (pathname.startsWith('/app/tools')) return 'tools';
   if (pathname.startsWith('/app/connections')) return 'connections';
   if (pathname.startsWith('/app/recipes')) return 'recipes';
