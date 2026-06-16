@@ -244,6 +244,9 @@ export type {
   HarnessExecutionStatus,
   HarnessStep,
   ExecuteHarnessInput,
+  HarnessAssignment,
+  HarnessAssignmentStatus,
+  ResumeDecision,
   Spend,
   SpendByModel,
 } from './harnesses';

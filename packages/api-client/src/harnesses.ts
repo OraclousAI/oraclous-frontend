@@ -44,6 +44,25 @@ export interface ExecuteHarnessInput {
   readonly input: string;
 }
 
+/** PENDING (on the board) | CLAIMED (a human took it) | COMPLETED (output submitted). */
+export type HarnessAssignmentStatus = string;
+
+/** A human-actor task-board assignment: a run parked ESCALATED because a human is the entrypoint
+ * actor. Resolve it by claiming then completing with the human's output (→ run SUCCEEDED). */
+export interface HarnessAssignment {
+  readonly id: string;
+  readonly organisationId: string;
+  readonly executionId: string;
+  readonly harnessId: string;
+  readonly humanRole: string;
+  readonly status: HarnessAssignmentStatus;
+  readonly input: string;
+  readonly createdAt: string | null;
+}
+
+/** A human's decision on a mid-loop HITL pause: APPROVED resumes the loop, DENIED fails the run. */
+export type ResumeDecision = 'APPROVED' | 'DENIED';
+
 interface HarnessStepWire {
   readonly index: number;
   readonly kind: string;
@@ -70,6 +89,22 @@ interface HarnessExecutionWire {
 
 interface ExecutionListWire {
   readonly executions: readonly HarnessExecutionWire[];
+  readonly total: number;
+}
+
+interface HarnessAssignmentWire {
+  readonly id: string;
+  readonly organisation_id: string;
+  readonly execution_id: string;
+  readonly harness_id: string;
+  readonly human_role: string;
+  readonly status: string;
+  readonly input: string;
+  readonly created_at: string | null;
+}
+
+interface AssignmentListWire {
+  readonly assignments: readonly HarnessAssignmentWire[];
   readonly total: number;
 }
 
@@ -124,6 +159,19 @@ export interface HarnessesClient {
   getExecution(executionId: string): Promise<HarnessExecution>;
   /** Estimated BYOM provider spend, org-scoped; `since` is an ISO8601 lower bound (omit = all time). */
   spend(sinceIso?: string): Promise<Spend>;
+  /** The org's PENDING human-actor task-board assignments (runs parked ESCALATED on a human actor). */
+  listAssignments(): Promise<HarnessAssignment[]>;
+  /** Take a PENDING assignment (→ CLAIMED). */
+  claimAssignment(assignmentId: string): Promise<HarnessAssignment>;
+  /** Submit the human's output (→ COMPLETED); the parked run flips ESCALATED → SUCCEEDED. */
+  completeAssignment(assignmentId: string, output: string): Promise<HarnessAssignment>;
+  /** Resolve a mid-loop HITL pause: APPROVED resumes the loop, DENIED terminates the run FAILED.
+   * Returns the updated execution. */
+  resumeExecution(
+    executionId: string,
+    decision: ResumeDecision,
+    decisionReason?: string
+  ): Promise<HarnessExecution>;
 }
 
 function toExecution(w: HarnessExecutionWire): HarnessExecution {
@@ -146,6 +194,19 @@ function toExecution(w: HarnessExecutionWire): HarnessExecution {
       status: s.status,
       detail: s.detail ?? null,
     })),
+    createdAt: w.created_at,
+  };
+}
+
+function toAssignment(w: HarnessAssignmentWire): HarnessAssignment {
+  return {
+    id: w.id,
+    organisationId: w.organisation_id,
+    executionId: w.execution_id,
+    harnessId: w.harness_id,
+    humanRole: w.human_role,
+    status: w.status,
+    input: w.input,
     createdAt: w.created_at,
   };
 }
@@ -201,6 +262,43 @@ export function createHarnessesClient(transport: ApiTransport): HarnessesClient 
         totalOutputTokens: data.total_output_tokens,
         unpricedModels: data.unpriced_models ?? [],
       };
+    },
+    async listAssignments(): Promise<HarnessAssignment[]> {
+      const { data } = await transport.execute<AssignmentListWire>({
+        method: 'GET',
+        path: '/v1/harnesses/assignments',
+      });
+      const rows = Array.isArray(data?.assignments) ? data.assignments : [];
+      return rows.map(toAssignment);
+    },
+    async claimAssignment(assignmentId: string): Promise<HarnessAssignment> {
+      const { data } = await transport.execute<HarnessAssignmentWire>({
+        method: 'POST',
+        path: `/v1/harnesses/assignments/${encodeURIComponent(assignmentId)}/claim`,
+      });
+      return toAssignment(data);
+    },
+    async completeAssignment(assignmentId: string, output: string): Promise<HarnessAssignment> {
+      const { data } = await transport.execute<HarnessAssignmentWire>({
+        method: 'POST',
+        path: `/v1/harnesses/assignments/${encodeURIComponent(assignmentId)}/complete`,
+        body: { output },
+      });
+      return toAssignment(data);
+    },
+    async resumeExecution(
+      executionId: string,
+      decision: ResumeDecision,
+      decisionReason?: string
+    ): Promise<HarnessExecution> {
+      const body: Record<string, unknown> = { decision };
+      if (decisionReason !== undefined) body['decision_reason'] = decisionReason;
+      const { data } = await transport.execute<HarnessExecutionWire>({
+        method: 'POST',
+        path: `/v1/harnesses/${encodeURIComponent(executionId)}/resume`,
+        body,
+      });
+      return toExecution(data);
     },
   };
 }
