@@ -267,13 +267,15 @@ export function App() {
               }
             />
             <Route
-              path="my-space"
+              path="explore"
               element={
                 <Suspense fallback={<PageLoader />}>
                   <SecondMind />
                 </Suspense>
               }
             />
+            {/* Legacy /app/my-space → /app/explore (relabel, Nav-IA increment 4). */}
+            <Route path="my-space" element={<Navigate to="/app/explore" replace />} />
             <Route
               path="workspaces/:graphId/explorer"
               element={

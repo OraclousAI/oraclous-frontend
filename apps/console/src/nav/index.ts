@@ -12,7 +12,7 @@ import {
   IconSparkle,
   IconKey,
   IconGlobe,
-  IconMessage,
+  IconSearch,
   type IconProps,
 } from '../icons/index.js';
 
@@ -32,8 +32,9 @@ export interface NavGroup {
 
 // Item definitions — one source of truth, composed into groups per persona below. The Nav-IA journey
 // restructures the grouped spine without changing what each surface does. Connections is now a
-// first-class Operate item and Jobs is relabelled to Runs (increments 2–3). Relabelling Ask→Explore
-// and retiring the now near-empty "Personal" group land in increment 4.
+// first-class Operate item; Jobs is relabelled Runs and Ask relabelled Explore, both living in Operate
+// (increments 2–4), and the transitional "Personal" group is retired. Persona hygiene and dropping the
+// legacy /app/jobs + /app/my-space routes land in increment 5.
 const dashboard: NavItem = { id: 'dashboard', label: 'Dashboard', icon: IconHome, route: '/app' };
 const workspaces: NavItem = {
   id: 'workspaces',
@@ -50,7 +51,12 @@ const recipes: NavItem = {
   icon: IconSparkle,
   route: '/app/recipes',
 };
-const ask: NavItem = { id: 'mind', label: 'Ask', icon: IconMessage, route: '/app/my-space' };
+const explore: NavItem = {
+  id: 'explore',
+  label: 'Explore',
+  icon: IconSearch,
+  route: '/app/explore',
+};
 const developer: NavItem = {
   id: 'developer',
   label: 'Developer',
@@ -80,23 +86,20 @@ const settings: NavItem = {
 const OWNER: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools, recipes] },
-  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections] },
-  { id: 'personal', label: 'Personal', items: [ask] },
+  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections, explore] },
   { id: 'admin', label: 'Admin', items: [developer, members, billing, settings] },
 ];
 
 const MEMBER: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools] },
-  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections] },
-  { id: 'personal', label: 'Personal', items: [ask] },
+  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections, explore] },
 ];
 
 const STANDALONE: NavGroup[] = [
   { id: 'home', label: 'Home', items: [dashboard] },
   { id: 'build', label: 'Build', items: [agents, tools, recipes] },
-  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections] },
-  { id: 'personal', label: 'Personal', items: [ask] },
+  { id: 'operate', label: 'Operate', items: [runs, workspaces, connections, explore] },
   { id: 'admin', label: 'Admin', items: [developer, billing, settings] },
 ];
 
@@ -118,6 +121,6 @@ export function activeNavId(pathname: string): string {
   if (pathname.startsWith('/app/members')) return 'members';
   if (pathname.startsWith('/app/billing')) return 'billing';
   if (pathname.startsWith('/app/settings')) return 'settings';
-  if (pathname.startsWith('/app/my-space')) return 'mind';
+  if (pathname.startsWith('/app/explore') || pathname.startsWith('/app/my-space')) return 'explore';
   return '';
 }
