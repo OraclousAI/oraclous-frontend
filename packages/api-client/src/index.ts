@@ -258,3 +258,7 @@ export type { EngineClient, Job, JobState, SubmitJobInput, EngineActivityEvent }
 // ── Capability registry: harness (saved-agent) CRUD ──────────────────────────
 export { createCapabilitiesClient } from './capabilities';
 export type { CapabilitiesClient, HarnessCapability } from './capabilities';
+
+// ── Agent↔workspace bindings (curation edge owned by the registry; ADR-029 / G2) ──
+export { createBindingsClient } from './bindings';
+export type { BindingsClient, BoundAgent, BoundGraph } from './bindings';
