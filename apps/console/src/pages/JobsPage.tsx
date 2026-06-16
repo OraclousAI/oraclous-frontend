@@ -72,7 +72,7 @@ export default function JobsPage() {
               {running > 0 && <span className="dot" aria-hidden="true" />}
               {running > 0 ? `${running} running` : 'Runs'}
             </span>
-            <h1>Jobs</h1>
+            <h1>Runs</h1>
             <p className="sub">
               Recent agent runs, newest first. Open a run for its output and trace.
             </p>

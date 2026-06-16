@@ -156,7 +156,7 @@ export default function DashboardPage() {
     { to: '/app/agents', icon: IconBot, title: 'Configure agent', sub: 'Set tools + scope' },
     { to: '/app/tools', icon: IconDatabase, title: 'Connect a source', sub: 'Browse connectors' },
     ...(persona === 'member'
-      ? [{ to: '/app/my-space', icon: IconSparkle, title: 'Ask', sub: 'Chat with your agents' }]
+      ? [{ to: '/app/explore', icon: IconSparkle, title: 'Explore', sub: 'Chat with your agents' }]
       : [
           {
             to: '/app/recipes',
