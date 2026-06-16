@@ -55,6 +55,13 @@ export const IconBot = (p: IconProps) => (
     <path d="M9 17h6" />
   </Icon>
 );
+export const IconInfo = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4" />
+    <path d="M12 8h.01" />
+  </Icon>
+);
 export const IconPlug = (p: IconProps) => (
   <Icon {...p}>
     <path d="M9 2v6" />
