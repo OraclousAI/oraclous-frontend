@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDash } from '../../context/dash.js';
 import { useGraphs } from '../../lib/graphs.js';
 import { spendHeadline, useSpend } from '../../lib/spend.js';
-import { NAV_BY_PERSONA, activeNavId } from '../../nav/index.js';
+import { navForPersona, activeNavId } from '../../nav/index.js';
 import { Logo, Wordmark } from '../../icons/index.js';
 
 export function Sidebar({
@@ -26,7 +26,7 @@ export function Sidebar({
   const spendHead = spendHeadline(spend, spendLoading, spendError);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const groups = NAV_BY_PERSONA[persona];
+  const groups = navForPersona(persona);
   const activeId = activeNavId(pathname);
 
   // Navigate then let the shell close the mobile drawer.
