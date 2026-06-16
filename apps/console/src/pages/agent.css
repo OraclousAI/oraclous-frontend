@@ -207,6 +207,23 @@
   align-items: center;
   gap: 6px;
 }
+/* A gating-requirement marker in a section header (e.g. "model key required"). Neutral by default;
+   data-need='true' uses the warning tone (never mint — mint is live-signal only). Text stays --ink
+   in both states so it holds AA contrast. */
+.sec-h .req {
+  font-family: var(--font-mono);
+  font-size: var(--t-tiny-size);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+}
+.sec-h .req[data-need='true'] {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+}
 .sec-body {
   padding: 18px 20px;
 }
