@@ -340,6 +340,20 @@ function BuilderForm({
     entrypoint !== '' &&
     form.modelCredentialId !== null;
 
+  // Pre-save review: a read-only snapshot of what will be saved. The key shows only wired/not-set —
+  // never the credential id. Budget cells appear only when set, mirroring the detail Config grid.
+  const reviewCells: { k: string; v: string }[] = [
+    { k: 'name', v: form.name.trim() || '—' },
+    { k: 'model', v: form.model.trim() || '—' },
+    { k: 'model key', v: form.modelCredentialId !== null ? 'wired' : 'not set' },
+    { k: 'tools', v: String(form.caps.length) },
+    { k: 'entrypoint', v: entrypoint || '—' },
+  ];
+  if (/^\d+$/.test(form.maxToolCalls))
+    reviewCells.push({ k: 'max tool calls', v: form.maxToolCalls });
+  if (/^\d+$/.test(form.maxWallTime))
+    reviewCells.push({ k: 'max wall time', v: `${form.maxWallTime}s` });
+
   function buildManifest(principalOrgId: string): OhmManifest {
     // Merge over the saved manifest: only form-managed fields change.
     const metadata: OhmMetadata = {
@@ -732,6 +746,23 @@ function BuilderForm({
               placeholder="unlimited"
             />
           </label>
+        </div>
+      </section>
+
+      <section className="sec" aria-label="Review summary">
+        <div className="sec-h">
+          <div className="t">
+            <h2>Review</h2>
+            <span className="sub">what will be saved</span>
+          </div>
+        </div>
+        <div className="cfg-grid">
+          {reviewCells.map((c) => (
+            <div className="cfg-cell" key={c.k}>
+              <span className="k">{c.k}</span>
+              <span className="v">{c.v}</span>
+            </div>
+          ))}
         </div>
       </section>
 
