@@ -12,4 +12,4 @@ Commit-message policy is enforced by a hook in `.githooks/`. Activate once after
 git config core.hooksPath .githooks
 ```
 
-The hook rejects forbidden attribution trailers (`Co-Authored-By`, `Generated with/by`, `claude.ai`, `anthropic`, `paperclip.ing`, `🤖`). See `CLAUDE.md` for the expected commit format.
+The hook rejects forbidden attribution trailers (`Co-Authored-By`, `Generated with/by`, `claude.ai`, `anthropic`, `🤖`). See `CLAUDE.md` for the expected commit format.
