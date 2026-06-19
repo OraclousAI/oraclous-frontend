@@ -12,6 +12,7 @@ Work is tracked in **GitHub Issues** and shipped through **GitHub Pull Requests*
 
 - **Issues** describe the change and its acceptance criteria. Pick up the issue assigned to you (GitHub assignee) or one labelled ready; assignment and triage are done with GitHub assignees and labels. Ad-hoc work directed by a maintainer is fine — capture anything non-trivial as an issue so it has a home.
 - **Branches + PRs** are the unit of delivery. Branch off `main`, open a PR, get it reviewed, merge. `main` is protected by a **GitHub ruleset** (no admin bypass): the CI gate jobs + a **non-author review** + an up-to-date base must pass before merge. **No self-merge.**
+- **PR-BUNDLING LAW (non-negotiable).** **Never ship a one-commit-per-PR stream.** Bundle related concerns into ONE PR with **one commit per concern** (multiple commits per PR) — CI + non-author review run once per PR, so a separate PR per commit multiplies the cost. An issue with N sub-tasks ships as **one PR with N commits, never N PRs.** Default to fewer, bigger PRs.
 - **Reza Jahankohan** is the maintainer — the reviewer and merger, and the final human sign-off. Escalate to him when a decision is ambiguous, blocked, or out of policy.
 - **Enforced locally** via `core.hooksPath=.githooks`:
   - `pre-push` runs `lint` + `typecheck` + `format:check`; a failing push is blocked locally (§3).
